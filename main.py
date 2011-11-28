@@ -40,11 +40,15 @@ class NodeManager(gevent.Greenlet):
     def _run(self):
         for klass, identifier, address_book, network_spy, parameters \
             in self.build_greenlet_parameters():
-            node = gevent.spawn(
-                    klass, identifier, address_book, 
-                    network_spy, **parameters)
+            node = klass(identifier, address_book,
+                         network_spy, **parameters)
+            node.link(self.node_terminated_hook)
+            node.start()
         ## something here should say "process exceptions when they occur
         ## maybe make it an agent!
+
+    def node_terminated_hook(self, node):
+        pass
 
     def build_greenlet_parameters(self):
         return self.spawn_strategy(
@@ -196,8 +200,8 @@ class Node(Agent):
 class TLNode(Node):
     def __init__(self, identifier, address_book,
                  network_spy, *args, **kwargs):
-        super(TLNode, self).__init__(identifier, address_book, network_spy, *args, **kwargs)
         self.p = kwargs.pop('death_probability')
+        super(TLNode, self).__init__(identifier, address_book, network_spy, *args, **kwargs)
 
 def FAIL(_node):
     pass
@@ -235,7 +239,7 @@ def preferential_attachment(graph, sample_size=1):
             sample_size -= 1
 
 def introduce_self_to_popular(node, sample_size=1):
-    graph=node.graph
+    graph=node.network_spy
     nodes = preferential_attachment(graph, sample_size)
     for target_node in nodes:
         node.send(target_node, tl_accept_link)
@@ -269,10 +273,10 @@ def main(steps, activate_function, spawn_strategy, nodes_number, p):
 
 if __name__ == '__main__':
     network = main(
-        steps=1000,
+        steps=5,
         activate_function=tl_activate,
         spawn_strategy=uniform_spawn_strategy(TLNode),
-        nodes_number=100,
+        nodes_number=4,
         p=0.1)
     print network
     nx.draw(network)
