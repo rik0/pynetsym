@@ -139,6 +139,7 @@ class Agent(gevent.Greenlet):
             answer = self.process(message)
             if answer is not None:
                 self.send(message.sender, answer)
+            gevent.sleep(0)
 
     def _run(self):
         self.run_loop()
@@ -241,7 +242,7 @@ def introduce_self_to_popular(node, sample_size=1):
     graph=node.graph
     nodes = preferential_attachment(graph, sample_size)
     for target_node in nodes:
-        node.send(target_node, tl_accept_link)
+        node.send(target_node, tl_accept_link(node.id))
 
 
 def tl_activate(node):
