@@ -2,10 +2,10 @@ import logging
 import random
 import gevent
 import collections
-from gevent.greenlet import Greenlet
 
 import networkx as nx
 import itertools as it
+import matplotlib.pyplot as plt
 
 from gevent import queue
 
@@ -159,10 +159,7 @@ class Activator(Agent):
         self.send(node_id, self.activate_function)
 
     def simulation_ended(self):
-        pass
-#        for node_id in self.graph.nodes():
-#            self.send(node_id, Greenlet.kill)
-#        self.kill()
+        self.kill()
 
     def choose_node(self):
         return random.choice(self.graph.nodes())
@@ -230,7 +227,7 @@ def preferential_attachment(graph, sample_size=1):
 
     while 1:
         candidate = random.choice(population)
-        acceptance_probability = nx.degree(graph, candidate)
+        acceptance_probability = graph.degree(candidate)
         if (random.randint(0, number_of_edges) <= acceptance_probability
             and sample_size > 0):
             sample_size -= 1
@@ -271,12 +268,14 @@ def main(steps, activate_function, spawn_strategy, nodes_number, p):
     return graph
 
 
+
+
 if __name__ == '__main__':
     network = main(
-        steps=5,
+        steps=1000,
         activate_function=tl_activate,
         spawn_strategy=uniform_spawn_strategy(TLNode),
-        nodes_number=4,
+        nodes_number=100,
         p=0.1)
-    print network
     nx.draw(network)
+    plt.show()
