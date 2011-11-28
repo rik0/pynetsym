@@ -1,5 +1,3 @@
-from Carbon.Dialogs import ok
-import abc
 import logging
 import random
 import gevent
@@ -48,6 +46,7 @@ class NodeManager(gevent.Greenlet):
         ## maybe make it an agent!
 
     def node_terminated_hook(self, node):
+        print node
         pass
 
     def build_greenlet_parameters(self):
@@ -111,7 +110,7 @@ Message = collections.namedtuple('Message', 'sender payload')
 
 class Agent(gevent.Greenlet):
     def __init__(self, identifier, address_book, *args, **kwargs):
-        super(Agent, self).__init__(run=None, *args, **kwargs)
+        super(Agent, self).__init__(*args, **kwargs)
         self._queue = queue.Queue()
         self._id = identifier
         self._address_book = address_book
@@ -159,9 +158,10 @@ class Activator(Agent):
         self.send(node_id, self.activate_function)
 
     def simulation_ended(self):
-        for node_id in self.graph.nodes():
-            self.send(node_id, Greenlet.kill)
-        self.kill()
+        pass
+#        for node_id in self.graph.nodes():
+#            self.send(node_id, Greenlet.kill)
+#        self.kill()
 
     def choose_node(self):
         return random.choice(self.graph.nodes())
@@ -203,9 +203,6 @@ class TLNode(Node):
         self.p = kwargs.pop('death_probability')
         super(TLNode, self).__init__(identifier, address_book, graph, *args, **kwargs)
 
-def FAIL(_node):
-    pass
-
 def tl_accept_link(originating_node):
     def tl_accept_link_aux(node):
         graph = node.graph
@@ -237,7 +234,7 @@ def preferential_attachment(graph, sample_size=1):
             and sample_size > 0):
             sample_size -= 1
             yield candidate
-        elif sample_size == 0:
+        elif not sample_size:
             return
 
 def introduce_self_to_popular(node, sample_size=1):
