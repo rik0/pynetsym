@@ -233,10 +233,10 @@ def preferential_attachment(graph, sample_size=1):
     while 1:
         candidate = random.choice(population)
         acceptance_probability = nx.degree(graph, candidate)
-        if (random.randint(0, number_of_edges) < acceptance_probability
+        if (random.randint(0, number_of_edges) <= acceptance_probability
             and sample_size > 0):
-            yield candidate
             sample_size -= 1
+            yield candidate
         elif sample_size == 0:
             return
 
