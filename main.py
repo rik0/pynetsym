@@ -15,22 +15,22 @@ from gevent import queue
 def uniform_spawn_strategy(klass):
     def uniform_spawn_strategy_aux(
             identifiers, address_book,
-            network_spy, parameters):
+            graph, parameters):
         return it.izip(
             it.repeat(klass),
             identifiers,
             it.repeat(address_book),
-            it.repeat(network_spy),
+            it.repeat(graph),
             it.repeat(parameters))
     return uniform_spawn_strategy_aux
 
 class NodeManager(gevent.Greenlet):
     name = 'manager'
     def __init__(self, spawn_strategy,
-                 network_spy, address_book,
+                 graph, address_book,
                  network_size, **kwargs):
         self.spawn_strategy = spawn_strategy
-        self.network_spy = network_spy
+        self.graph = graph
         self.address_book = address_book
         self.network_size = network_size
         self.params = kwargs
@@ -38,10 +38,10 @@ class NodeManager(gevent.Greenlet):
         super(NodeManager, self).__init__()
 
     def _run(self):
-        for klass, identifier, address_book, network_spy, parameters \
+        for klass, identifier, address_book, graph, parameters \
             in self.build_greenlet_parameters():
             node = klass(identifier, address_book,
-                         network_spy, **parameters)
+                         graph, **parameters)
             node.link(self.node_terminated_hook)
             node.start()
         ## something here should say "process exceptions when they occur
@@ -53,7 +53,7 @@ class NodeManager(gevent.Greenlet):
     def build_greenlet_parameters(self):
         return self.spawn_strategy(
                 xrange(self.network_size),
-                self.address_book, self.network_spy,
+                self.address_book, self.graph,
                 self.params)
 
 class AddressingError(Exception):
@@ -149,9 +149,9 @@ class Agent(gevent.Greenlet):
 
 class Activator(Agent):
     name = 'activator'
-    def __init__(self, activate_function, network_spy, address_book):
+    def __init__(self, activate_function, graph, address_book):
         super(Activator, self).__init__(self.name, address_book)
-        self.network_spy = network_spy
+        self.graph = graph
         self.activate_function = activate_function
 
     def tick(self):
@@ -159,12 +159,12 @@ class Activator(Agent):
         self.send(node_id, self.activate_function)
 
     def simulation_ended(self):
-        for node_id in self.network_spy.nodes():
+        for node_id in self.graph.nodes():
             self.send(node_id, Greenlet.kill)
         self.kill()
 
     def choose_node(self):
-        return random.choice(self.network_spy.nodes())
+        return random.choice(self.graph.nodes())
 
 
 class Clock(Agent):
@@ -181,8 +181,8 @@ class Clock(Agent):
             self.send(Activator.name, activator_tick)
         self.send(Activator.name, activator_end)
 
-def make_activator(max_steps, activate_function, network_spy, address_book):
-    activator = Activator(activate_function, network_spy, address_book)
+def make_activator(max_steps, activate_function, graph, address_book):
+    activator = Activator(activate_function, graph, address_book)
     clock = Clock(max_steps, address_book)
     activator.start()
     gevent.sleep(0)
@@ -192,29 +192,29 @@ def make_activator(max_steps, activate_function, network_spy, address_book):
 
 class Node(Agent):
     def __init__(self, identifier, address_book,
-                 network_spy, *args, **kwargs):
+                 graph, *args, **kwargs):
         super(Node, self).__init__(identifier, address_book, *args, **kwargs)
-        self.network_spy = network_spy
-        self.network_spy.add_node(self.id)
+        self.graph = graph
+        self.graph.add_node(self.id)
 
 class TLNode(Node):
     def __init__(self, identifier, address_book,
-                 network_spy, *args, **kwargs):
+                 graph, *args, **kwargs):
         self.p = kwargs.pop('death_probability')
-        super(TLNode, self).__init__(identifier, address_book, network_spy, *args, **kwargs)
+        super(TLNode, self).__init__(identifier, address_book, graph, *args, **kwargs)
 
 def FAIL(_node):
     pass
 
 def tl_accept_link(originating_node):
     def tl_accept_link_aux(node):
-        graph = node.network_spy
+        graph = node.graph
         graph.add_edge(originating_node, node.id)
     return tl_accept_link_aux
 
 def tl_introduce(target_node):
     def introduce_aux(node):
-        graph = node.network_spy
+        graph = node.graph
         if graph.has_edge(node.id, target_node):
             return tl_introduction_failed
         else:
@@ -227,7 +227,7 @@ def tl_introduction_failed(node):
 
 def preferential_attachment(graph, sample_size=1):
     # try to use edges to make sampling easier!
-    number_of_edges = graph.no_edges()
+    number_of_edges = graph.number_of_edges()
     population = graph.nodes()
 
     while 1:
@@ -237,16 +237,18 @@ def preferential_attachment(graph, sample_size=1):
             and sample_size > 0):
             yield candidate
             sample_size -= 1
+        elif sample_size == 0:
+            return
 
 def introduce_self_to_popular(node, sample_size=1):
-    graph=node.network_spy
+    graph=node.graph
     nodes = preferential_attachment(graph, sample_size)
     for target_node in nodes:
         node.send(target_node, tl_accept_link)
 
 
 def tl_activate(node):
-    graph = node.network_spy
+    graph = node.graph
     neighbors = nx.neighbors(graph, node.id)
 
     if len(neighbors) > 1:
@@ -258,17 +260,17 @@ def tl_activate(node):
 
 
 def main(steps, activate_function, spawn_strategy, nodes_number, p):
-    network_spy = nx.Graph()
+    graph = nx.Graph()
     address_book = AddressBook()
-    node_manager = NodeManager(spawn_strategy, network_spy,
+    node_manager = NodeManager(spawn_strategy, graph,
                                 address_book,
                                 network_size=nodes_number,
                                 death_probability=p)
     node_manager.start()
-    activator = make_activator(steps, activate_function, network_spy, address_book)
+    activator = make_activator(steps, activate_function, graph, address_book)
     activator.join()
     node_manager.join()
-    return network_spy
+    return graph
 
 
 if __name__ == '__main__':
