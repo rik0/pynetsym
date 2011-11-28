@@ -4,6 +4,7 @@ import logging
 import random
 import gevent
 import collections
+from gevent.greenlet import Greenlet
 
 import networkx as nx
 import itertools as it
@@ -24,6 +25,7 @@ def uniform_spawn_strategy(klass):
     return uniform_spawn_strategy_aux
 
 class NodeManager(gevent.Greenlet):
+    name = 'manager'
     def __init__(self, spawn_strategy,
                  network_spy, address_book,
                  network_size, **kwargs):
@@ -32,18 +34,17 @@ class NodeManager(gevent.Greenlet):
         self.address_book = address_book
         self.network_size = network_size
         self.params = kwargs
+        self.simulation_terminated = False
         super(NodeManager, self).__init__()
 
     def _run(self):
         for klass, identifier, address_book, network_spy, parameters \
             in self.build_greenlet_parameters():
-            node = gevent.spawn_link(
+            node = gevent.spawn(
                     klass, identifier, address_book, 
                     network_spy, **parameters)
         ## something here should say "process exceptions when they occur
         ## maybe make it an agent!
-        while 1:
-            gevent.sleep(0)
 
     def build_greenlet_parameters(self):
         return self.spawn_strategy(
@@ -153,24 +154,32 @@ class Activator(Agent):
         node_id = self.choose_node()
         self.send(node_id, self.activate_function)
 
-class Clock(gevent.Greenlet):
+    def simulation_ended(self):
+        for node_id in self.network_spy.nodes():
+            self.send(node_id, Greenlet.kill)
+        self.kill()
+
+    def choose_node(self):
+        return random.choice(self.network_spy.nodes())
+
+
+class Clock(Agent):
     name = 'clock'
     def __init__(self, max_steps, address_book):
-        super(Clock, self).__init__()
+        super(Clock, self).__init__(self.name, address_book)
         self.max_steps = max_steps
-        self.address_book = address_book
-        self.activator = self.address_book.resolve(Activator.name)
+        self.activator = address_book.resolve(Activator.name)
 
     def _run(self):
+        activator_tick = type(self.activator).tick
+        activator_end = type(self.activator).simulation_ended
         for step in xrange(self.max_steps):
-           self.activator.deliver(Message(self.name, type(self.activator).tick))
-           gevent.sleep(0)
-        self.activator.join()
+            self.send(Activator.name, activator_tick)
+        self.send(Activator.name, activator_end)
 
 def make_activator(max_steps, activate_function, network_spy, address_book):
     activator = Activator(activate_function, network_spy, address_book)
     clock = Clock(max_steps, address_book)
-    activator.link(clock)
     activator.start()
     gevent.sleep(0)
     clock.start()
@@ -265,4 +274,5 @@ if __name__ == '__main__':
         spawn_strategy=uniform_spawn_strategy(TLNode),
         nodes_number=100,
         p=0.1)
-    nx.draw_graphviz(network)
+    print network
+    nx.draw(network)
