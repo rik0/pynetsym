@@ -1,14 +1,19 @@
+import os
+import sys
+
+import operator
 import logging
 import random
 import gevent
 import collections
+import argparse
 
 import networkx as nx
 import itertools as it
 import matplotlib.pyplot as plt
 
+from os import path
 from gevent import queue
-import operator
 
 
 def uniform_spawn_strategy(klass):
@@ -192,7 +197,9 @@ def make_activator(max_steps, activate_function, graph, address_book):
 class Node(Agent):
     def __init__(self, identifier, address_book,
                  graph, *args, **kwargs):
-        super(Node, self).__init__(identifier, address_book, *args, **kwargs)
+        super(Node, self).__init__(
+                identifier, address_book, 
+                *args, **kwargs)
         self.graph = graph
         self.graph.add_node(self.id)
 
@@ -200,7 +207,9 @@ class TLNode(Node):
     def __init__(self, identifier, address_book,
                  graph, *args, **kwargs):
         self.p = kwargs.pop('death_probability')
-        super(TLNode, self).__init__(identifier, address_book, graph, *args, **kwargs)
+        super(TLNode, self).__init__(
+                identifier, address_book, 
+                graph, *args, **kwargs)
 
 def tl_accept_link(originating_node):
     def tl_accept_link_aux(node):
@@ -263,7 +272,9 @@ def main(steps, activate_function, spawn_strategy, nodes_number, p):
                                 network_size=nodes_number,
                                 death_probability=p)
     node_manager.start()
-    activator = make_activator(steps, activate_function, graph, address_book)
+    activator = make_activator(
+            steps, activate_function, 
+            graph, address_book)
     activator.join()
     node_manager.join()
     return graph
@@ -294,11 +305,28 @@ def show_network(network):
     plt.hist(degree_dict.values(), 30)
     plt.show()
 
+
+def save_network(network, out, fmt):
+    fn = getattr(nx, 'write_' + fmt)
+    fn(network, out + '.' + fmt)
+
 if __name__ == '__main__':
+    CHOICES = ('dot', 'gexf', 'gml', 'gpickle',
+                'graphml', 'pajek', 'yaml')
+
+    parser = argparse.ArgumentParser(
+        description='Synthetic Network Generation Utility')
+    parser.add_argument('-s', '--steps', default=100)
+    parser.add_argument('-n', '--nodes', default=100)
+    parser.add_argument('-o', '--output', required=True)
+    parser.add_argument('-f', '--format', choices=CHOICES,
+                        default=CHOICES[0])
+    namespace = parser.parse_args(sys.argv[1:])
+
     network = main(
-        steps=100000,
+        steps=namespace.steps,
         activate_function=tl_activate,
         spawn_strategy=uniform_spawn_strategy(TLNode),
-        nodes_number=10000,
+        nodes_number=namespace.nodes,
         p=0.1)
-    show_network(network)
+    save_network(network, namespace.output, namespace.format)
