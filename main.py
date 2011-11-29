@@ -1,6 +1,7 @@
 import os
 import sys
 
+import time
 import operator
 import logging
 import random
@@ -306,6 +307,27 @@ def show_network(network):
     plt.show()
 
 
+class Timer(object):
+    @classmethod
+    def execution_printer(self, out):
+        def callback(timer):
+            elapsed_time = (timer.end_time - timer.start_time) * 1000
+            print >> out, 'Execution required %s ms.' % elapsed_time
+        return callback
+
+    def __init__(self, callback):
+        self.callback = callback
+
+    def __enter__(self):
+        self.start_time = time.time()
+
+    def __exit__(self, *_):
+        self.end_time = time.time()
+        self.callback(self)
+
+
+
+
 def save_network(network, out, fmt):
     fn = getattr(nx, 'write_' + fmt)
     fn(network, out + '.' + fmt)
@@ -316,17 +338,18 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Synthetic Network Generation Utility')
-    parser.add_argument('-s', '--steps', default=100)
-    parser.add_argument('-n', '--nodes', default=100)
+    parser.add_argument('-s', '--steps', default=100, type=int)
+    parser.add_argument('-n', '--nodes', default=100, type=int)
     parser.add_argument('-o', '--output', required=True)
     parser.add_argument('-f', '--format', choices=CHOICES,
                         default=CHOICES[0])
     namespace = parser.parse_args(sys.argv[1:])
 
-    network = main(
-        steps=namespace.steps,
-        activate_function=tl_activate,
-        spawn_strategy=uniform_spawn_strategy(TLNode),
-        nodes_number=namespace.nodes,
-        p=0.1)
+    with Timer(Timer.execution_printer(sys.stdout)):
+        network = main(
+            steps=namespace.steps,
+            activate_function=tl_activate,
+            spawn_strategy=uniform_spawn_strategy(TLNode),
+            nodes_number=namespace.nodes,
+            p=0.1)
     save_network(network, namespace.output, namespace.format)
