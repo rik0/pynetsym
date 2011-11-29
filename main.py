@@ -280,18 +280,6 @@ def main(steps, activate_function, spawn_strategy, nodes_number, p):
     node_manager.join()
     return graph
 
-
-def degree_distribution(degree_dict):
-    print degree_dict
-    groups = sorted(it.groupby(
-        sorted(degree_dict.iteritems(),
-               key=operator.itemgetter(1)),
-        operator.itemgetter(1)))
-
-    print dd
-    return dd
-
-
 def show_network(network):
     """show_network(nx.Graph network) -> None"""
     print 'Clustering coefficient', nx.clustering(network)
