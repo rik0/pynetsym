@@ -1,7 +1,5 @@
 import logging
 
-__author__ = 'enrico'
-
 class AddressingError(Exception):
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
@@ -33,8 +31,8 @@ class AddressBook(object):
     def resolve(self, identifier):
         try:
             return self.registry[identifier]
-        except KeyError:
-            raise AddressingError
+        except KeyError, e:
+            raise AddressingError(e)
 
     def _log_if_rebind(self, identifier, agent):
         try:
