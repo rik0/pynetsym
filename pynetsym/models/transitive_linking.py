@@ -1,10 +1,10 @@
 import random
 import networkx as nx
-from pynetsym.core import Node, introduce_self_to_popular, tl_introduce
+from .. import core
 
 __author__ = 'enrico'
 
-class TLNode(Node):
+class TLNode(core.Node):
     def __init__(self, identifier, address_book,
                  graph, *args, **kwargs):
         self.p = kwargs.pop('death_probability')
@@ -19,7 +19,7 @@ def tl_activate(node):
 
     if len(neighbors) > 1:
         node_a, node_b = random.sample(neighbors, 2)
-        node.send(node_a, tl_introduce(node_b))
+        node.send(node_a, core.tl_introduce(node_b))
         # if we have two friends that are connected, find new ones
 
-    introduce_self_to_popular(node)
+    core.introduce_self_to_popular(node)
