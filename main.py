@@ -8,6 +8,7 @@ import itertools as it
 import matplotlib.pyplot as plt
 
 from gevent import queue
+import operator
 
 
 def uniform_spawn_strategy(klass):
@@ -268,14 +269,36 @@ def main(steps, activate_function, spawn_strategy, nodes_number, p):
     return graph
 
 
+def degree_distribution(degree_dict):
+    print degree_dict
+    groups = sorted(it.groupby(
+        sorted(degree_dict.iteritems(),
+               key=operator.itemgetter(1)),
+        operator.itemgetter(1)))
 
+    print dd
+    return dd
+
+
+def show_network(network):
+    """show_network(nx.Graph network) -> None"""
+    print 'Clustering coefficient', nx.clustering(network)
+    print 'Diameter', nx.diameter(network)
+    print 'Assortativity', nx.degree_assortativity(network)
+    print 'CPL', nx.average_shortest_path_length(network)
+    plt.subplot(1, 2, 1)
+    nx.draw(network)
+    plt.subplot(1, 2, 2)
+    degree_dict = nx.degree(network)
+    #distribution = degree_distribution(degree_dict)
+    plt.hist(degree_dict.values(), 30)
+    plt.show()
 
 if __name__ == '__main__':
     network = main(
-        steps=1000,
+        steps=100000,
         activate_function=tl_activate,
         spawn_strategy=uniform_spawn_strategy(TLNode),
-        nodes_number=100,
+        nodes_number=10000,
         p=0.1)
-    nx.draw(network)
-    plt.show()
+    show_network(network)
