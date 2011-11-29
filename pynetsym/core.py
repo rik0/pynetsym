@@ -109,25 +109,10 @@ def introduce_self_to_popular(node, sample_size=1):
     graph=node.graph
     nodes = pa_utils.preferential_attachment(graph, sample_size)
     for target_node in nodes:
-        node.send(target_node, tl_accept_link(node.id))
+        node.send(target_node, make_accept_link(node.id))
 
-
-def tl_introduction_failed(node):
-    introduce_self_to_popular(node)
-
-
-def tl_introduce(target_node):
-    def introduce_aux(node):
-        graph = node.graph
-        if graph.has_edge(node.id, target_node):
-            return tl_introduction_failed
-        else:
-            node.send(target_node, tl_accept_link(node.id))
-    return introduce_aux
-
-
-def tl_accept_link(originating_node):
-    def tl_accept_link_aux(node):
+def make_accept_link(originating_node):
+    def accept_link(node):
         graph = node.graph
         graph.add_edge(originating_node, node.id)
-    return tl_accept_link_aux
+    return accept_link

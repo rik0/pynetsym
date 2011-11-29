@@ -8,7 +8,7 @@ from os import path
 from pynetsym.address_book import  AddressBook
 from pynetsym.core import uniform_spawn_strategy, NodeManager
 from pynetsym.generation import  make_activator
-from pynetsym.models.transitive_linking import TLNode, tl_activate
+from pynetsym.models.transitive_linking import Node, activate
 from pynetsym.timing import Timer
 
 
@@ -58,8 +58,8 @@ if __name__ == '__main__':
     with Timer(Timer.execution_printer(sys.stdout)):
         network = main(
             steps=namespace.steps,
-            activate_function=tl_activate,
-            spawn_strategy=uniform_spawn_strategy(TLNode),
+            activate_function=activate,
+            spawn_strategy=uniform_spawn_strategy(Node),
             nodes_number=namespace.nodes,
             p=0.1)
     save_network(network, namespace.output, namespace.format)
