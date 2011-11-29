@@ -14,11 +14,13 @@ def uniform_spawn_strategy(klass):
             it.repeat(address_book),
             it.repeat(graph),
             it.repeat(parameters))
+
     return uniform_spawn_strategy_aux
 
 
 class NodeManager(gevent.Greenlet):
     name = 'manager'
+
     def __init__(self, spawn_strategy,
                  graph, address_book,
                  network_size, **kwargs):
@@ -30,15 +32,18 @@ class NodeManager(gevent.Greenlet):
         self.simulation_terminated = False
         super(NodeManager, self).__init__()
 
+    def create_node(self, cls, identifier, address_book, graph, parameters):
+        node = cls(identifier, address_book,
+            graph, **parameters)
+        node.link(self.node_terminated_hook)
+        node.start()
+
     def _run(self):
-        for klass, identifier, address_book, graph, parameters \
-            in self.build_greenlet_parameters():
-            node = klass(identifier, address_book,
-                         graph, **parameters)
-            node.link(self.node_terminated_hook)
-            node.start()
-        ## something here should say "process exceptions when they occur
-        ## maybe make it an agent!
+        for klass, identifier, address_book, graph, parameters\
+        in self.build_greenlet_parameters():
+            self.create_node(klass, identifier, address_book, graph, parameters)
+            ## something here should say "process exceptions when they occur
+            ## maybe make it an agent!
 
     def node_terminated_hook(self, node):
         print node
@@ -46,9 +51,9 @@ class NodeManager(gevent.Greenlet):
 
     def build_greenlet_parameters(self):
         return self.spawn_strategy(
-                xrange(self.network_size),
-                self.address_book, self.graph,
-                self.params)
+            xrange(self.network_size),
+            self.address_book, self.graph,
+            self.params)
 
 Message = collections.namedtuple('Message', 'sender payload')
 
@@ -99,20 +104,22 @@ class Node(Agent):
     def __init__(self, identifier, address_book,
                  graph, *args, **kwargs):
         super(Node, self).__init__(
-                identifier, address_book,
-                *args, **kwargs)
+            identifier, address_book,
+            *args, **kwargs)
         self.graph = graph
         self.graph.add_node(self.id)
 
 
 def introduce_self_to_popular(node, sample_size=1):
-    graph=node.graph
+    graph = node.graph
     nodes = pa_utils.preferential_attachment(graph, sample_size)
     for target_node in nodes:
         node.send(target_node, make_accept_link(node.id))
+
 
 def make_accept_link(originating_node):
     def accept_link(node):
         graph = node.graph
         graph.add_edge(originating_node, node.id)
+
     return accept_link
