@@ -1,0 +1,16 @@
+% python main.py -o foo -f dot --nodes 100
+Execution required 58.128118515 ms.
+% python main.py -o foo -f dot --nodes 1000
+Execution required 182.864189148 ms.
+% python main.py -o foo -f dot --nodes 10000
+Execution required 2157.79805183 ms.
+% python main.py -o foo -f dot --nodes 100000
+Execution required 35390.4311657 ms.
+% python main.py -o foo -f dot --nodes 10000 
+Execution required 2169.08717155 ms.
+% python main.py -o foo -f dot --nodes 1000 --steps 100
+Execution required 193.383932114 ms.
+% python main.py -o foo -f dot --nodes 1000 --steps 1000
+Execution required 3410.65907478 ms.
+% python main.py -o foo -f dot --nodes 1000 --steps 10000
+Execution required 62405.7469368 ms.
