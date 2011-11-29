@@ -1,3 +1,4 @@
+
 import os
 import sys
 
@@ -230,21 +231,29 @@ def tl_introduce(target_node):
 def tl_introduction_failed(node):
     introduce_self_to_popular(node)
 
+def iter_random_choice(iterator, max_value):
+    choosen_index = random.randint(0, max_value)
+    for index, item in enumerate(iterator):
+        if index == choosen_index:
+            return item
+
+def random_edge(graph):
+    return iter_random_choice(
+            graph.edges_iter(),
+            graph.number_of_edges())
+
+def random_node(graph):
+    return iter_random_choice(
+            graph.nodes_iter(),
+            graph.number_of_nodes())
 
 def preferential_attachment(graph, sample_size=1):
-    # try to use edges to make sampling easier!
-    number_of_edges = graph.number_of_edges()
-    population = graph.nodes()
-
-    while 1:
-        candidate = random.choice(population)
-        acceptance_probability = graph.degree(candidate)
-        if (random.randint(0, number_of_edges) <= acceptance_probability
-            and sample_size > 0):
-            sample_size -= 1
-            yield candidate
-        elif not sample_size:
-            return
+    for _iteration in xrange(sample_size):
+        edge = random_edge(graph)
+        if edge is None:
+            yield random_node(graph)
+        else:
+            yield edge[0]
 
 def introduce_self_to_popular(node, sample_size=1):
     graph=node.graph
