@@ -327,22 +327,32 @@ class Timer(object):
 
 
 
+CHOICES = ('dot', 'gexf', 'gml', 'gpickle',
+        'graphml', 'pajek', 'yaml')
 
 def save_network(network, out, fmt):
+    if out is None and fmt is None:
+        return
+    elif out is None:
+        out = 'network'
+    elif fmt is None:
+        out, ext = path.splitext(out)
+        fmt = ext[1:]
+        if fmt not in CHOICES:
+            print "Error"
+            return
     fn = getattr(nx, 'write_' + fmt)
     fn(network, out + '.' + fmt)
 
 if __name__ == '__main__':
-    CHOICES = ('dot', 'gexf', 'gml', 'gpickle',
-                'graphml', 'pajek', 'yaml')
 
     parser = argparse.ArgumentParser(
         description='Synthetic Network Generation Utility')
     parser.add_argument('-s', '--steps', default=100, type=int)
     parser.add_argument('-n', '--nodes', default=100, type=int)
-    parser.add_argument('-o', '--output', required=True)
+    parser.add_argument('-o', '--output', default=None)
     parser.add_argument('-f', '--format', choices=CHOICES,
-                        default=CHOICES[0])
+                        default=None)
     namespace = parser.parse_args(sys.argv[1:])
 
     with Timer(Timer.execution_printer(sys.stdout)):
