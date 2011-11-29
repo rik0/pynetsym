@@ -1,9 +1,9 @@
-import random
-from pynetsym.core import Agent
+import core
+import rnd
 
 __author__ = 'enrico'
 
-class Activator(Agent):
+class Activator(core.Agent):
     name = 'activator'
     def __init__(self, activate_function, graph, address_book):
         super(Activator, self).__init__(self.name, address_book)
@@ -18,10 +18,9 @@ class Activator(Agent):
         self.kill()
 
     def choose_node(self):
-        return random.choice(self.graph.nodes())
+        return rnd.random_node(self.graph)
 
-
-class Clock(Agent):
+class Clock(core.Agent):
     name = 'clock'
     def __init__(self, max_steps, address_book):
         super(Clock, self).__init__(self.name, address_book)
