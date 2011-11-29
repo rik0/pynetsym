@@ -2,7 +2,7 @@ import collections
 import itertools as it
 import gevent
 import gevent.queue as queue
-from pynetsym.pa_utils import preferential_attachment
+import pa_utils
 
 def uniform_spawn_strategy(klass):
     def uniform_spawn_strategy_aux(
@@ -107,7 +107,7 @@ class Node(Agent):
 
 def introduce_self_to_popular(node, sample_size=1):
     graph=node.graph
-    nodes = preferential_attachment(graph, sample_size)
+    nodes = pa_utils.preferential_attachment(graph, sample_size)
     for target_node in nodes:
         node.send(target_node, tl_accept_link(node.id))
 

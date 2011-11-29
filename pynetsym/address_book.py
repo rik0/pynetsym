@@ -1,6 +1,4 @@
-from exceptions import Exception, KeyError
 import logging
-from pynetsym.core import Agent
 
 __author__ = 'enrico'
 
@@ -22,18 +20,15 @@ class AddressBook(object):
 
 
     def unregister(self, id_or_agent):
-        if isinstance(id_or_agent, Agent):
-            self._unregister_by_value(id_or_agent)
-        else:
+        try:
             self.registry.pop(id_or_agent)
-
-    def _unregister_by_value(self, agent):
-        for k, v in self.registry.iteritems():
-            if v is agent:
-                break
-        else:
-            return
-        self.registry.pop(k)
+        except KeyError:
+            for k, v in self.registry.iteritems():
+                if v is id_or_agent:
+                    break
+            else:
+                return
+            self.registry.pop(k)
 
     def resolve(self, identifier):
         try:
