@@ -34,12 +34,13 @@ class Node(core.Node):
         graph = self.graph
         neighbors = nx.neighbors(graph, self.id)
 
-        if len(neighbors) > 1:
-            node_a, node_b = random.sample(neighbors, 2)
+        possible_links = [link for link in it.combinations(neighbors, 2)
+                                if not graph.has_edge(*link)]
+        if possible_links:
+            node_a, node_b = random.choice(possible_links)
             self.send(node_a, make_introduce(node_b))
-            # if we have two friends that are connected, find new ones
-
-        core.introduce_self_to_popular(self)
+        else:
+            core.introduce_self_to_popular(self)
 
 
 def make_introduce(target_node):
