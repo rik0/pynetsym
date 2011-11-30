@@ -18,43 +18,6 @@ def uniform_spawn_strategy(klass):
     return uniform_spawn_strategy_aux
 
 
-class NodeManager(gevent.Greenlet):
-    name = 'manager'
-
-    def __init__(self, spawn_strategy,
-                 graph, address_book,
-                 network_size, **kwargs):
-        self.spawn_strategy = spawn_strategy
-        self.graph = graph
-        self.address_book = address_book
-        self.network_size = network_size
-        self.params = kwargs
-        self.simulation_terminated = False
-        super(NodeManager, self).__init__()
-
-    def create_node(self, cls, identifier, address_book, graph, parameters):
-        node = cls(identifier, address_book,
-            graph, **parameters)
-        node.link(self.node_terminated_hook)
-        node.start()
-
-    def _run(self):
-        for klass, identifier, address_book, graph, parameters\
-        in self.build_greenlet_parameters():
-            self.create_node(klass, identifier, address_book, graph, parameters)
-            ## something here should say "process exceptions when they occur
-            ## maybe make it an agent!
-
-    def node_terminated_hook(self, node):
-        print node
-        pass
-
-    def build_greenlet_parameters(self):
-        return self.spawn_strategy(
-            xrange(self.network_size),
-            self.address_book, self.graph,
-            self.params)
-
 Message = collections.namedtuple('Message', 'sender payload')
 
 class Agent(gevent.Greenlet):
@@ -99,6 +62,26 @@ class Agent(gevent.Greenlet):
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
 
+class NodeManager(Agent):
+    name = 'manager'
+
+    def __init__(self, graph, address_book, generation_feed):
+        super(NodeManager, self).__init__(NodeManager.name, address_book)
+        self.graph = graph
+        self.generation_feed = generation_feed
+
+    def _run(self):
+        self.generation_feed(self)
+        self.run_loop()
+
+    def create_node(self, cls, identifier, parameters):
+        node = cls(identifier, self._address_book, self.graph, **parameters)
+        node.link(self.node_terminated_hook)
+        node.start()
+
+    def node_terminated_hook(self, node):
+        print node
+        pass
 
 class Node(Agent):
     def __init__(self, identifier, address_book,

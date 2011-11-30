@@ -8,12 +8,11 @@ from os import path
 from pynetsym.address_book import  AddressBook
 from pynetsym.core import uniform_spawn_strategy, NodeManager
 from pynetsym.generation import  make_activator
-from pynetsym.models.transitive_linking import Node, activate
-from pynetsym.timing import Timer
-
+from pynetsym.models import transitive_linking
+from pynetsym import timing
 
 CHOICES = ('dot', 'gexf', 'gml', 'gpickle',
-        'graphml', 'pajek', 'yaml')
+           'graphml', 'pajek', 'yaml')
 
 def save_network(network, out, fmt):
     if out is None and fmt is None:
@@ -29,37 +28,37 @@ def save_network(network, out, fmt):
     fn = getattr(nx, 'write_' + fmt)
     fn(network, out + '.' + fmt)
 
-def main(steps, activate_function, spawn_strategy, nodes_number, p):
+
+def main(steps, activate_function, network_size, p):
     graph = nx.Graph()
     address_book = AddressBook()
-    node_manager = NodeManager(spawn_strategy, graph,
-                                address_book,
-                                network_size=nodes_number,
-                                death_probability=p)
+    node_manager = NodeManager(graph, address_book,
+        transitive_linking.make_setup(
+            network_size,
+            death_probability=p))
     node_manager.start()
+
     activator = make_activator(
-            steps, activate_function,
-            graph, address_book)
+        steps, activate_function,
+        graph, address_book)
     activator.join()
     node_manager.join()
     return graph
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(
         description='Synthetic Network Generation Utility')
     parser.add_argument('-s', '--steps', default=100, type=int)
     parser.add_argument('-n', '--nodes', default=100, type=int)
     parser.add_argument('-o', '--output', default=None)
     parser.add_argument('-f', '--format', choices=CHOICES,
-                        default=None)
+        default=None)
     namespace = parser.parse_args(sys.argv[1:])
 
-    with Timer(Timer.execution_printer(sys.stdout)):
+    with timing.Timer(timing.Timer.execution_printer(sys.stdout)):
         network = main(
             steps=namespace.steps,
-            activate_function=activate,
-            spawn_strategy=uniform_spawn_strategy(Node),
-            nodes_number=namespace.nodes,
+            activate_function=transitive_linking.activate,
+            network_size=namespace.nodes,
             p=0.1)
     save_network(network, namespace.output, namespace.format)

@@ -3,6 +3,8 @@ import rnd
 
 __author__ = 'enrico'
 
+# TODO: activator shall activate, destroy & create nodes
+# TODO: the functions shall be parameters (choice functions and actions?)
 class Activator(core.Agent):
     name = 'activator'
     def __init__(self, activate_function, graph, address_book):
