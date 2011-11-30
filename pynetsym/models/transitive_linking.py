@@ -13,12 +13,12 @@ def make_parser(parent):
     return parser
 
 
-def make_setup(network_size, **params):
+def make_setup(network_size, death_probability):
     def setup(network_manager):
         generation_seed = it.izip(
             it.repeat(Node),
             xrange(network_size),
-            it.repeat(params))
+            it.repeat(dict(death_probability=death_probability)))
         for cls, identifier, node_params in generation_seed:
             network_manager.create_node(cls, identifier, node_params)
 
