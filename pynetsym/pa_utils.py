@@ -4,8 +4,7 @@ __author__ = 'enrico'
 
 def preferential_attachment(graph, sample_size=1):
     for _iteration in xrange(sample_size):
-        edge = rnd.random_edge(graph)
-        if edge is None:
-            yield rnd.random_node(graph)
+        if graph.number_of_edges():
+            yield rnd.random_edge(graph)[0]
         else:
-            yield edge[0]
+            yield rnd.random_node(graph)
