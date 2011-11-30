@@ -3,24 +3,9 @@ import logging
 import gevent
 import pa_utils
 
-import itertools as it
 import gevent.queue as queue
 
 from abc import abstractmethod, ABCMeta
-
-def uniform_spawn_strategy(klass):
-    def uniform_spawn_strategy_aux(
-            identifiers, address_book,
-            graph, parameters):
-        return it.izip(
-            it.repeat(klass),
-            identifiers,
-            it.repeat(address_book),
-            it.repeat(graph),
-            it.repeat(parameters))
-
-    return uniform_spawn_strategy_aux
-
 
 Message = collections.namedtuple('Message', 'sender payload')
 
