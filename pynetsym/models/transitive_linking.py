@@ -38,8 +38,8 @@ class Node(core.Node):
             node_a, node_b = random.sample(neighbors, 2)
             self.send(node_a, make_introduce(node_b))
             # if we have two friends that are connected, find new ones
-
-        core.introduce_self_to_popular(self)
+        else:
+            core.introduce_self_to_popular(self)
 
 
 def make_introduce(target_node):
