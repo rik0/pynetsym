@@ -42,6 +42,10 @@ class Node(core.Node):
         else:
             core.introduce_self_to_popular(self)
 
+#        n = graph.number_of_nodes()
+#        m = graph.number_of_edges()
+#        print m, float(m)/(n*n), len(possible_links)
+
 
 def make_introduce(target_node):
     def introduce(node):
