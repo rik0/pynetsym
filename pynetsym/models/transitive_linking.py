@@ -1,9 +1,16 @@
+import argparse
 import random
 import networkx as nx
 import itertools as it
 from .. import core
 
 __author__ = 'enrico'
+
+def make_parser(parent):
+    parser = argparse.ArgumentParser(parents=[parent,])
+    parser.add_argument('-n', '--network-size', default=100, type=int)
+    parser.add_argument('--death-probability', default=0.01, type=float)
+    return parser
 
 
 def make_setup(network_size, **params):

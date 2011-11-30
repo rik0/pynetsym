@@ -9,7 +9,7 @@ from pynetsym.address_book import  AddressBook
 from pynetsym.core import uniform_spawn_strategy, NodeManager
 from pynetsym.generation import  make_activator
 from pynetsym.models import transitive_linking
-from pynetsym import timing
+from pynetsym import timing, plugins
 
 CHOICES = ('dot', 'gexf', 'gml', 'gpickle',
            'graphml', 'pajek', 'yaml')
@@ -29,36 +29,50 @@ def save_network(network, out, fmt):
     fn(network, out + '.' + fmt)
 
 
-def main(steps, activate_function, network_size, p):
-    graph = nx.Graph()
-    address_book = AddressBook()
-    node_manager = NodeManager(graph, address_book,
-        transitive_linking.make_setup(
-            network_size,
-            death_probability=p))
-    node_manager.start()
-
-    activator = make_activator(
-        steps, activate_function,
-        graph, address_book)
-    activator.join()
-    node_manager.join()
-    return graph
-
-if __name__ == '__main__':
+def base_parser():
     parser = argparse.ArgumentParser(
+        add_help=False,
         description='Synthetic Network Generation Utility')
     parser.add_argument('-s', '--steps', default=100, type=int)
-    parser.add_argument('-n', '--nodes', default=100, type=int)
     parser.add_argument('-o', '--output', default=None)
-    parser.add_argument('-f', '--format', choices=CHOICES,
-        default=None)
-    namespace = parser.parse_args(sys.argv[1:])
+    parser.add_argument('-f', '--format', choices=CHOICES, default=None)
+    return parser
+
+
+def parse_arguments(default_module):
+    parent_parser = base_parser()
+    try:
+        module_name = sys.argv[1]
+    except IndexError:
+        module_name = default_module
+    module = plugins.load_plugin(module_name)
+    parser = module.make_parser(parent=parent_parser)
+    namespace = parser.parse_args(sys.argv[2:])
+    arguments_dictionary = vars(namespace)
+    return arguments_dictionary, module
+
+
+def main():
+    arguments_dictionary, module = parse_arguments(default_module='transitive_linking')
+    output = arguments_dictionary.pop('output')
+    format = arguments_dictionary.pop('format')
+    steps = arguments_dictionary.pop('steps')
+
+    graph = nx.Graph()
 
     with timing.Timer(timing.Timer.execution_printer(sys.stdout)):
-        network = main(
-            steps=namespace.steps,
-            activate_function=transitive_linking.activate,
-            network_size=namespace.nodes,
-            p=0.1)
-    save_network(network, namespace.output, namespace.format)
+        address_book = AddressBook()
+        node_manager = NodeManager(graph, address_book,
+            module.make_setup(**arguments_dictionary))
+        node_manager.start()
+
+        activator = make_activator(
+            steps, module.activate,
+            graph, address_book)
+        activator.join()
+        node_manager.join()
+    save_network(graph, output, format)
+
+
+if __name__ == '__main__':
+    main()
