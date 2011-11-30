@@ -2,7 +2,7 @@ import argparse
 import random
 import networkx as nx
 import itertools as it
-from .. import core
+from .. import core, pa_utils
 
 __author__ = 'enrico'
 
@@ -39,7 +39,7 @@ class Node(core.Node):
             self.send(node_a, make_introduce(node_b))
             # if we have two friends that are connected, find new ones
         else:
-            core.introduce_self_to_popular(self)
+            self.link_to(pa_utils.preferential_attachment)
 
 
 def make_introduce(target_node):
@@ -54,4 +54,4 @@ def make_introduce(target_node):
 
 
 def introduction_failed(node):
-    core.introduce_self_to_popular(node)
+    node.link_to(pa_utils.preferential_attachment)

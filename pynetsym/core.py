@@ -1,7 +1,6 @@
 import collections
 import logging
 import gevent
-import pa_utils
 
 import gevent.queue as queue
 
@@ -138,12 +137,9 @@ class Node(Agent):
     def activate(self):
         pass
 
-
-def introduce_self_to_popular(node, sample_size=1):
-    graph = node.graph
-    nodes = pa_utils.preferential_attachment(graph, sample_size)
-    for target_node in nodes:
-        node.send(target_node, make_accept_link(node.id))
+    def link_to(self, criterion):
+        target_node = criterion(self.graph)
+        self.send(target_node, make_accept_link(self.id))
 
 
 def make_accept_link(originating_node):
