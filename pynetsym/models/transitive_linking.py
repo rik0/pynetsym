@@ -30,17 +30,16 @@ class Node(core.Node):
         self.death_probability = death_probability
         super(Node, self).__init__(identifier, address_book, graph)
 
+    def activate(self):
+        graph = self.graph
+        neighbors = nx.neighbors(graph, self.id)
 
-def activate(node):
-    graph = node.graph
-    neighbors = nx.neighbors(graph, node.id)
+        if len(neighbors) > 1:
+            node_a, node_b = random.sample(neighbors, 2)
+            self.send(node_a, make_introduce(node_b))
+            # if we have two friends that are connected, find new ones
 
-    if len(neighbors) > 1:
-        node_a, node_b = random.sample(neighbors, 2)
-        node.send(node_a, make_introduce(node_b))
-        # if we have two friends that are connected, find new ones
-
-    core.introduce_self_to_popular(node)
+        core.introduce_self_to_popular(self)
 
 
 def make_introduce(target_node):

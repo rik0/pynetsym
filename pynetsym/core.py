@@ -1,8 +1,12 @@
 import collections
-import itertools as it
+import logging
 import gevent
-import gevent.queue as queue
 import pa_utils
+
+import itertools as it
+import gevent.queue as queue
+
+from abc import abstractmethod, ABCMeta
 
 def uniform_spawn_strategy(klass):
     def uniform_spawn_strategy_aux(
@@ -19,6 +23,53 @@ def uniform_spawn_strategy(klass):
 
 
 Message = collections.namedtuple('Message', 'sender payload')
+
+class AddressingError(Exception):
+    def __init__(self, *args, **kwargs):
+        super(AddressingError, self).__init__(*args, **kwargs)
+
+class AddressBook(object):
+    def __init__(self):
+        self.registry = {}
+
+    def register(self, identifier, agent, check=None):
+        if check is None:
+            self._log_if_rebind(identifier, agent)
+            self.registry[identifier] = agent
+        elif check(identifier, agent):
+            self.registry[identifier] = agent
+
+
+    def unregister(self, id_or_agent):
+        try:
+            self.registry.pop(id_or_agent)
+        except KeyError:
+            for k, v in self.registry.iteritems():
+                if v is id_or_agent:
+                    break
+            else:
+                return
+            self.registry.pop(k)
+
+    def resolve(self, identifier):
+        try:
+            return self.registry[identifier]
+        except KeyError, e:
+            raise AddressingError(e)
+
+    def _log_if_rebind(self, identifier, agent):
+        try:
+            old_agent = self.registry[identifier]
+            if old_agent is agent:
+                pass
+            else:
+                logging.warning(
+                    "Rebinding agent %s from %s to %s",
+                    identifier, old_agent, agent)
+        except KeyError:
+            # ok
+            pass
+        return True
 
 class Agent(gevent.Greenlet):
     def __init__(self, identifier, address_book):
@@ -67,6 +118,7 @@ class Agent(gevent.Greenlet):
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
 
+
 class NodeManager(Agent):
     name = 'manager'
 
@@ -88,11 +140,18 @@ class NodeManager(Agent):
         print node
         pass
 
+
 class Node(Agent):
+    __metaclass__ = ABCMeta
+
     def __init__(self, identifier, address_book, graph):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
         self.graph.add_node(self.id)
+
+    @abstractmethod
+    def activate(self):
+        pass
 
 
 def introduce_self_to_popular(node, sample_size=1):

@@ -5,11 +5,7 @@ import argparse
 import networkx as nx
 
 from os import path
-from pynetsym.address_book import  AddressBook
-from pynetsym.core import uniform_spawn_strategy, NodeManager
-from pynetsym.generation import  make_activator
-from pynetsym.models import transitive_linking
-from pynetsym import timing, plugins
+from pynetsym import timing, plugins, core, generation
 
 CHOICES = ('dot', 'gexf', 'gml', 'gpickle',
            'graphml', 'pajek', 'yaml')
@@ -61,14 +57,17 @@ def main():
     graph = nx.Graph()
 
     with timing.Timer(timing.Timer.execution_printer(sys.stdout)):
-        address_book = AddressBook()
-        node_manager = NodeManager(graph, address_book,
+        address_book = core.AddressBook()
+        node_manager = core.NodeManager(graph, address_book,
             module.make_setup(**arguments_dictionary))
         node_manager.start()
 
-        activator = make_activator(
-            steps, module.activate,
-            graph, address_book)
+        activator = generation.Activator(graph, address_book)
+        activator.start()
+
+        clock = generation.Clock(steps, address_book)
+        clock.start()
+
         activator.join()
         node_manager.join()
     save_network(graph, output, format)
