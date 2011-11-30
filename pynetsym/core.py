@@ -36,8 +36,13 @@ class Agent(gevent.Greenlet):
         self._queue.put(message)
 
     def send(self, receiver_id, payload):
-        sender = self._address_book.resolve(receiver_id)
-        sender.deliver(Message(self.id, payload))
+        receiver = self._address_book.resolve(receiver_id)
+        if callable(payload):
+            receiver.deliver(Message(self.id, payload))
+        else:
+            unbound_method = getattr(type(receiver), payload)
+            receiver.deliver(Message(self.id, unbound_method))
+
 
     def read(self):
         return self._queue.get()

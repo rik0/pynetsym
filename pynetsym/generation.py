@@ -30,11 +30,9 @@ class Clock(core.Agent):
         self.activator = address_book.resolve(Activator.name)
 
     def _run(self):
-        activator_tick = type(self.activator).tick
-        activator_end = type(self.activator).simulation_ended
         for step in xrange(self.max_steps):
-            self.send(Activator.name, activator_tick)
-        self.send(Activator.name, activator_end)
+            self.send(Activator.name, 'tick')
+        self.send(Activator.name, 'simulation_ended')
 
 
 def make_activator(max_steps, activate_function, graph, address_book):
