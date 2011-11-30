@@ -21,8 +21,8 @@ def uniform_spawn_strategy(klass):
 Message = collections.namedtuple('Message', 'sender payload')
 
 class Agent(gevent.Greenlet):
-    def __init__(self, identifier, address_book, *args, **kwargs):
-        super(Agent, self).__init__(*args, **kwargs)
+    def __init__(self, identifier, address_book):
+        super(Agent, self).__init__()
         self._queue = queue.Queue()
         self._id = identifier
         self._address_book = address_book
@@ -84,11 +84,8 @@ class NodeManager(Agent):
         pass
 
 class Node(Agent):
-    def __init__(self, identifier, address_book,
-                 graph, *args, **kwargs):
-        super(Node, self).__init__(
-            identifier, address_book,
-            *args, **kwargs)
+    def __init__(self, identifier, address_book, graph):
+        super(Node, self).__init__(identifier, address_book)
         self.graph = graph
         self.graph.add_node(self.id)
 

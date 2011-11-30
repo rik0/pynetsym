@@ -26,12 +26,9 @@ def make_setup(network_size, death_probability):
 
 
 class Node(core.Node):
-    def __init__(self, identifier, address_book,
-                 graph, *args, **kwargs):
-        self.p = kwargs.pop('death_probability')
-        super(Node, self).__init__(
-            identifier, address_book,
-            graph, *args, **kwargs)
+    def __init__(self, identifier, address_book, graph, death_probability):
+        self.death_probability = death_probability
+        super(Node, self).__init__(identifier, address_book, graph)
 
 
 def activate(node):
