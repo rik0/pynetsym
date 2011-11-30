@@ -56,7 +56,7 @@ def main():
 
     graph = nx.Graph()
 
-    with timing.Timer(timing.Timer.execution_printer(sys.stdout)):
+    with timing.Timer(timing.execution_printer(sys.stdout)):
         address_book = core.AddressBook()
         node_manager = core.NodeManager(graph, address_book,
             module.make_setup(**arguments_dictionary))
