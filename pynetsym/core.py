@@ -134,8 +134,11 @@ class Node(Agent):
     def activate(self):
         pass
 
-    def link_to(self, criterion):
-        target_node = criterion(self.graph)
+    def link_to(self, criterion_or_node):
+        if callable(criterion_or_node):
+            target_node = criterion_or_node(self.graph)
+        else:
+            target_node = criterion_or_node
         self.send(target_node, Node.accept_link, originating_node=self.id)
         
     def accept_link(self, originating_node):
