@@ -1,4 +1,5 @@
-import core
+import sys
+import core, timing
 import rnd
 
 __author__ = 'enrico'
@@ -32,3 +33,20 @@ class Clock(core.Agent):
         for step in xrange(self.max_steps):
             self.send(Activator.name, 'tick')
         self.send(Activator.name, 'simulation_ended')
+
+
+def generate(graph, module, steps, additional_arguments):
+    with timing.Timer(timing.execution_printer(sys.stdout)):
+        address_book = core.AddressBook()
+        node_manager = core.NodeManager(graph, address_book,
+                                        module.make_setup(**additional_arguments))
+        node_manager.start()
+
+        activator = Activator(graph, address_book)
+        activator.start()
+
+        clock = Clock(steps, address_book)
+        clock.start()
+
+        activator.join()
+        node_manager.join()
