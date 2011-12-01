@@ -1,10 +1,9 @@
 import unittest
-import gevent
 
 import networkx as nx
 
 from pynetsym import generation
-from pynetsym.models import transitive_linking_b
+from pynetsym.models import transitive_linking_pa
 
 
 class TestTransitiveLinkingRun(unittest.TestCase):
@@ -12,5 +11,5 @@ class TestTransitiveLinkingRun(unittest.TestCase):
         self.graph = nx.Graph()
 
     def test(self):
-        generation.generate(self.graph, transitive_linking_b, 1000,
+        generation.generate(self.graph, transitive_linking_pa, 1000,
                             network_size=100, death_probability=0.01)
