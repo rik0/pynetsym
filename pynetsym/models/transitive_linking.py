@@ -1,6 +1,5 @@
 import argparse
 import random
-import networkx as nx
 import itertools as it
 from .. import core, pa_utils, rnd
 
@@ -35,7 +34,7 @@ class Node(core.Node):
 
     def introduction(self):
         graph = self.graph
-        neighbors = nx.neighbors(graph, self.id)
+        neighbors = graph.neighbors(self.id)
         if len(neighbors) > 1:
             for _ in xrange(Node.MAX_TRIALS):
                 node_a, node_b = random.sample(neighbors, 2)
