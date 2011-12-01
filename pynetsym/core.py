@@ -121,16 +121,20 @@ class NodeManager(Agent):
 
     def _run(self):
         self.generation_feed(self)
-        #self.run_loop()
+        self.run_loop()
 
     def create_node(self, cls, identifier, parameters):
         node = cls(identifier, self._address_book, self.graph, **parameters)
-        node.link(node_terminated_hook)
+        node.link_value(self.node_terminated_hook)
+        node.link_exception(self.node_failed_hook)
         node.start()
 
-def node_terminated_hook(node):
-    print node
+    def node_failed_hook(self, node):
+        print node.exception
 
+
+    def node_terminated_hook(self, node):
+        pass
 
 class Node(Agent):
     def __init__(self, identifier, address_book, graph):

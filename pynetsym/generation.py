@@ -52,4 +52,4 @@ def generate(
         clock.start()
 
         activator.join()
-        node_manager.join()
+        #node_manager.join()
