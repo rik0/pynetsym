@@ -10,7 +10,7 @@ def execution_printer(out):
     return callback
 
 class Timer(object):
-    def __init__(self, callback=execution_printer(sys.stdout)):
+    def __init__(self, callback=None):
         self.callback = callback
 
     def __enter__(self):
@@ -18,4 +18,5 @@ class Timer(object):
 
     def __exit__(self, *_):
         self.end_time = time.time()
-        self.callback(self)
+        if callable(self.callback):
+            self.callback(self)

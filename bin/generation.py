@@ -6,7 +6,7 @@ import argparse
 
 import networkx as nx
 
-from pynetsym import plugins, generation, io
+from pynetsym import plugins, generation, io, timing
 
 def base_parser():
     parser = argparse.ArgumentParser(
@@ -39,7 +39,9 @@ def main(args):
 
     graph = nx.Graph()
 
-    generation.generate(graph, module, steps, arguments_dictionary)
+    generation.generate(graph, module, steps,
+                        timer_callback=timing.execution_printer(sys.stdout),
+                        **arguments_dictionary)
     io.save_network(graph, output_path, format)
 
 

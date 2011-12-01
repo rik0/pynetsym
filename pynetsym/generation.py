@@ -35,8 +35,11 @@ class Clock(core.Agent):
         self.send(Activator.name, 'simulation_ended')
 
 
-def generate(graph, module, steps, additional_arguments):
-    with timing.Timer(timing.execution_printer(sys.stdout)):
+def generate(
+    graph, module, steps,
+    timer_callback=None,
+    **additional_arguments):
+    with timing.Timer(timer_callback):
         address_book = core.AddressBook()
         node_manager = core.NodeManager(graph, address_book,
                                         module.make_setup(**additional_arguments))
