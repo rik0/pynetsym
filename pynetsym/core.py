@@ -1,5 +1,4 @@
 import collections
-import logging
 import gevent
 
 import gevent.queue as queue
@@ -12,48 +11,45 @@ class AddressingError(Exception):
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
 
+# TODO: we should streamline the API to avoid which occur in registering an agent
+#       with an identifier different from its "address"
 class AddressBook(object):
     def __init__(self):
         self.registry = {}
 
-    def register(self, identifier, agent, check=None):
-        if check is None:
-            self._log_if_rebind(identifier, agent)
-            self.registry[identifier] = agent
-        elif check(identifier, agent):
-            self.registry[identifier] = agent
+    def _check_same_agent(self, agent, identifier):
+        old_agent = self.registry[identifier]
+        if old_agent is agent:
+            pass
+        else:
+            message = ("Rebinding agent %s from %s to %s" %
+                       (identifier, old_agent, agent))
+            raise AddressingError(message)
 
+    def register(self, identifier, agent):
+        if identifier in self.registry:
+            self._check_same_agent(agent, identifier)
+        else:
+            self.registry[identifier] = agent
 
     def unregister(self, id_or_agent):
         try:
             self.registry.pop(id_or_agent)
         except KeyError:
-            for k, v in self.registry.iteritems():
-                if v is id_or_agent:
-                    break
-            else:
-                return
-            self.registry.pop(k)
+            try:
+                self.registry.pop(id_or_agent.id)
+            except (AttributeError, KeyError), e:
+                raise AddressingError(e)
+
+    def rebind(self, id, new_agent):
+        self.unregister(id)
+        self.register(id, new_agent)
 
     def resolve(self, identifier):
         try:
             return self.registry[identifier]
         except KeyError, e:
             raise AddressingError(e)
-
-    def _log_if_rebind(self, identifier, agent):
-        try:
-            old_agent = self.registry[identifier]
-            if old_agent is agent:
-                pass
-            else:
-                logging.warning(
-                    "Rebinding agent %s from %s to %s",
-                    identifier, old_agent, agent)
-        except KeyError:
-            # ok
-            pass
-        return True
 
 class Agent(gevent.Greenlet):
     def __init__(self, identifier, address_book):
