@@ -42,21 +42,14 @@ class Node(core.Node):
         possible_links = self.find_possible_links(graph, neighbors)
         if possible_links:
             node_a, node_b = random.choice(possible_links)
-            self.send(node_a, make_introduce(node_b))
+            self.send(node_a, 'introduce_to', target_node=node_b)
         else:
             self.link_to(pa_utils.preferential_attachment)
+
+    def introduce_to(self, target_node):
+        self.send(target_node, core.make_accept_link(self.id))
 
 #        n = graph.number_of_nodes()
 #        m = graph.number_of_edges()
 #        print m, float(m)/(n*n), len(possible_links)
 
-
-def make_introduce(target_node):
-    def introduce(node):
-        graph = node.graph
-        if graph.has_edge(node.id, target_node):
-            return introduction_failed
-        else:
-            node.send(target_node, core.make_accept_link(node.id))
-
-    return introduce

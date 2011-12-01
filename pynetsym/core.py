@@ -1,4 +1,5 @@
 import collections
+import functools
 import gevent
 
 import gevent.queue as queue
@@ -66,14 +67,14 @@ class Agent(gevent.Greenlet):
     def deliver(self, message):
         self._queue.put(message)
 
-    def send(self, receiver_id, payload):
+    def send(self, receiver_id, payload, **additional_parameters):
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
-            receiver.deliver(Message(self.id, payload))
+            func = functools.partial(payload, **additional_parameters)
         else:
             unbound_method = getattr(type(receiver), payload)
-            receiver.deliver(Message(self.id, unbound_method))
-
+            func = functools.partial(unbound_method, **additional_parameters)
+        receiver.deliver(Message(self.id, func))
 
     def read(self):
         return self._queue.get()
