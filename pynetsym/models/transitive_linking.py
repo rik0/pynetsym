@@ -2,7 +2,7 @@ import argparse
 import random
 import networkx as nx
 import itertools as it
-from .. import core, pa_utils
+from .. import core, pa_utils, rnd
 
 __author__ = 'enrico'
 
@@ -33,10 +33,9 @@ class Node(core.Node):
         self.death_probability = death_probability
         super(Node, self).__init__(identifier, address_book, graph)
 
-    def activate(self):
+    def introduction(self):
         graph = self.graph
         neighbors = nx.neighbors(graph, self.id)
-
         if len(neighbors) > 1:
             for _ in xrange(Node.MAX_TRIALS):
                 node_a, node_b = random.sample(neighbors, 2)
@@ -48,9 +47,21 @@ class Node(core.Node):
         else:
             self.link_to(pa_utils.preferential_attachment)
 
+    def activate(self):
+        if random.random() < self.death_probability:
+            self.regenerate()
+        else:
+            self.introduction()
+
+
     def introduce_to(self, target_node):
         self.send(target_node, 'accept_link', originating_node=self.id)
 
+    def regenerate(self):
+        self.graph.remove_node(self.id)
+        target_node = rnd.random_node(self.graph)
+        self.link_to(target_node)
+        
 
 
 
