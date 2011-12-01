@@ -30,12 +30,16 @@ class Node(core.Node):
         self.death_probability = death_probability
         super(Node, self).__init__(identifier, address_book, graph)
 
+    def find_possible_links(self, graph, neighbors):
+        possible_links = [link for link in it.combinations(neighbors, 2)
+                          if not graph.has_edge(*link)]
+        return possible_links
+
     def activate(self):
         graph = self.graph
         neighbors = nx.neighbors(graph, self.id)
 
-        possible_links = [link for link in it.combinations(neighbors, 2)
-                                if not graph.has_edge(*link)]
+        possible_links = self.find_possible_links(graph, neighbors)
         if possible_links:
             node_a, node_b = random.choice(possible_links)
             self.send(node_a, make_introduce(node_b))
@@ -56,7 +60,3 @@ def make_introduce(target_node):
             node.send(target_node, core.make_accept_link(node.id))
 
     return introduce
-
-
-def introduction_failed(node):
-    node.link_to(pa_utils.preferential_attachment)
