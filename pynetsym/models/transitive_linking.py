@@ -25,7 +25,10 @@ def make_setup(network_size, death_probability):
     return setup
 
 
+
 class Node(core.Node):
+    MAX_TRIALS = 10
+
     def __init__(self, identifier, address_book, graph, death_probability):
         self.death_probability = death_probability
         super(Node, self).__init__(identifier, address_book, graph)
@@ -35,17 +38,18 @@ class Node(core.Node):
         neighbors = nx.neighbors(graph, self.id)
 
         if len(neighbors) > 1:
-            node_a, node_b = random.sample(neighbors, 2)
-            self.send(node_a, 'introduce_to', target_node=node_b)
+            for _ in xrange(Node.MAX_TRIALS):
+                node_a, node_b = random.sample(neighbors, 2)
+                if not graph.has_edge(node_a, node_b):
+                    self.send(node_a, 'introduce_to', target_node=node_b)
+                    break
+            else:
+                self.link_to(pa_utils.preferential_attachment)
         else:
             self.link_to(pa_utils.preferential_attachment)
 
     def introduce_to(self, target_node):
-        graph = self.graph
-        if graph.has_edge(self.id, target_node):
-            return Node.introduction_failed
-        else:
-            self.send(target_node, 'accept_link', originating_node=self.id)
+        self.send(target_node, 'accept_link', originating_node=self.id)
 
     def introduction_failed(self):
         self.link_to(pa_utils.preferential_attachment)
