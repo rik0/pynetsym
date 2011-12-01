@@ -136,12 +136,7 @@ class Node(Agent):
 
     def link_to(self, criterion):
         target_node = criterion(self.graph)
-        self.send(target_node, make_accept_link(self.id))
-
-
-def make_accept_link(originating_node):
-    def accept_link(node):
-        graph = node.graph
-        graph.add_edge(originating_node, node.id)
-
-    return accept_link
+        self.send(target_node, Node.accept_link, originating_node=self.id)
+        
+    def accept_link(self, originating_node):
+        self.graph.add_edge(originating_node, self.id)

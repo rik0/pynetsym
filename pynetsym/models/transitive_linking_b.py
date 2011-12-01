@@ -47,8 +47,8 @@ class Node(core.Node):
             self.link_to(pa_utils.preferential_attachment)
 
     def introduce_to(self, target_node):
-        self.send(target_node, core.make_accept_link(self.id))
-
+        self.send(target_node, Node.accept_link, originating_node=self.id)
+        
 #        n = graph.number_of_nodes()
 #        m = graph.number_of_edges()
 #        print m, float(m)/(n*n), len(possible_links)

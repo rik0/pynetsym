@@ -45,7 +45,7 @@ class Node(core.Node):
         if graph.has_edge(self.id, target_node):
             return Node.introduction_failed
         else:
-            self.send(target_node, core.make_accept_link(self.id))
+            self.send(target_node, Node.accept_link, originating_node=self.id)
 
     def introduction_failed(self):
         self.link_to(pa_utils.preferential_attachment)
