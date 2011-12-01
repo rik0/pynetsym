@@ -72,7 +72,14 @@ class Agent(gevent.Greenlet):
         if callable(payload):
             func = functools.partial(payload, **additional_parameters)
         else:
-            unbound_method = getattr(type(receiver), payload)
+            receiver_class = type(receiver)
+            try:
+                unbound_method = getattr(receiver_class, payload)
+            except AttributeError:
+                additional_parameters = dict(
+                    name=payload, additional_parameters=additional_parameters
+                )
+                unbound_method = getattr(receiver_class, 'unsupported_message')
             func = functools.partial(unbound_method, **additional_parameters)
         receiver.deliver(Message(self.id, func))
 
@@ -92,6 +99,10 @@ class Agent(gevent.Greenlet):
             if answer is not None:
                 self.send(message.sender, answer)
             self.cooperate()
+
+    def unsupported_message(self, name, additional_parameters):
+        print ('%s received "%s" message with parameters %s: could not process.' %
+                    (self, name, additional_parameters))
 
     def _run(self):
         self.run_loop()
@@ -114,25 +125,18 @@ class NodeManager(Agent):
 
     def create_node(self, cls, identifier, parameters):
         node = cls(identifier, self._address_book, self.graph, **parameters)
-        node.link(self.node_terminated_hook)
+        node.link(node_terminated_hook)
         node.start()
 
-    def node_terminated_hook(self, node):
-        print node
-        pass
+def node_terminated_hook(node):
+    print node
 
 
 class Node(Agent):
-    __metaclass__ = ABCMeta
-
     def __init__(self, identifier, address_book, graph):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
         self.graph.add_node(self.id)
-
-    @abstractmethod
-    def activate(self):
-        pass
 
     def link_to(self, criterion_or_node):
         if callable(criterion_or_node):
