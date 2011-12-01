@@ -51,9 +51,6 @@ class Node(core.Node):
     def introduce_to(self, target_node):
         self.send(target_node, 'accept_link', originating_node=self.id)
 
-    def introduction_failed(self):
-        self.link_to(pa_utils.preferential_attachment)
-
 
 
 
