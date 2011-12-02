@@ -27,10 +27,10 @@ def make_setup(network_size, death_probability):
 
 class Node(core.Node):
     MAX_TRIALS = 10
-    CRITERION = pa_utils.preferential_attachment
 
     def __init__(self, identifier, address_book, graph, death_probability):
         self.death_probability = death_probability
+        self.CRITERION = pa_utils.preferential_attachment
         super(Node, self).__init__(identifier, address_book, graph)
 
     def introduction(self):
