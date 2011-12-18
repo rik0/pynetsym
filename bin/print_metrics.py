@@ -1,12 +1,38 @@
 import sys
 import argparse
 import matplotlib
+import math
+import random
 
 import numpy as np
 import networkx as nx
 
 from pynetsym import io
 from matplotlib import pyplot as plt
+
+def estimate_s(q, delta, eps):
+    delta2 = delta * delta
+    delta3 = (1-delta)*(1-delta)
+    return (2. / (q*q)) * math.log(2./eps) * delta3 / delta2
+
+def approximate_cpl(graph, q=0.5, delta=0.15, eps=0.05):
+    assert isinstance(graph, nx.Graph)
+    s = estimate_s(q, delta, eps)
+    s = int(math.ceil(s))
+    if graph.number_of_nodes() <= s:
+        sample = graph.nodes_iter()
+    else:
+        sample = random.sample(graph.adj.keys(), s)
+
+    averages = []
+    for node in sample:
+        path_lengths = nx.single_source_shortest_path_length(graph, node)
+        average = sum(path_lengths.itervalues())/float(len(path_lengths))
+        averages.append(average)
+    averages.sort()
+    median_index = int(len(averages) * q + 1)
+    return averages[median_index]
+
 
 def ccdf_from_hst(hst):
     hst = np.array(hst, dtype=float)
@@ -52,14 +78,16 @@ def process_network(G, namespace):
     else: components = None
     if namespace.cpl:
         if namespace.approximate_cpl:
-            print 'Approximate CPL not implemented.'
+            average_shortest_path_length = approximate_cpl
+        else:
+            average_shortest_path_length = nx.average_shortest_path_length
         if components is None:
             components = nx.connected_component_subgraphs(G)
-            for i, g in enumerate(g for g in components if
-                    float(len(g))/float(len(G)) >
-                    namespace.component_size):
-                print 'CPL %d: (%f)' % (i, float(len(g))/float(len(G)))
-                print nx.average_shortest_path_length(g)
+        for i, g in enumerate(g for g in components if
+                float(len(g))/float(len(G)) >
+                namespace.component_size):
+            print 'CPL %d: (%f)' % (i, float(len(g))/float(len(G)))
+            print average_shortest_path_length(g)
     if namespace.assortativity:
         print 'Assortativity: NOT IMPLEMENTED.'
     if namespace.degree_distribution:
