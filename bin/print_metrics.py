@@ -8,6 +8,12 @@ import networkx as nx
 from pynetsym import io
 from matplotlib import pyplot as plt
 
+def ccdf_from_hst(hst):
+    hst = np.array(hst, dtype=float)
+    sm = np.sum(hst)
+    A = np.vstack(hst for _ in hst)
+    L = np.triu(A)
+    return np.sum(L, axis=1)/sm
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -33,6 +39,8 @@ def build_parser():
     return parser
 
 def process_network(G, namespace):
+    print 'Nodes:', len(G)
+    print 'Edges:', G.number_of_edges()
     if namespace.clustering_coefficient:
         print 'Clustering Coefficient:', nx.average_clustering(G)
     if namespace.components:
@@ -57,12 +65,22 @@ def process_network(G, namespace):
     if namespace.degree_distribution:
         hst = nx.degree_histogram(G)
 
+        plt.subplot(121)
         plt.xscale('log')
         plt.yscale('log')
         plt.title("Degree Distribution")
         plt.ylabel("Occurrencies")
         plt.xlabel("Degree")
-        plt.plot(range(len(hst)), hst)
+        plt.plot(range(len(hst)), hst, marker='+')
+
+        plt.subplot(122)
+        ccdf = ccdf_from_hst(hst)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.title("CCDF Degree Distribution")
+        plt.ylabel("$P(X>x)$")
+        plt.xlabel("Degree")
+        plt.plot(range(len(ccdf)), ccdf, color='red')
 
         if namespace.degree_distribution_out is None:
             plt.show()
