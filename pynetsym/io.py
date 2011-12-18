@@ -27,4 +27,4 @@ def read_network(network_path, fmt=None, **kwargs):
         if fmt not in FORMATS:
             raise IOError("Did not undestand format from filename %s." % network_path)
     fn = getattr(nx, 'read_' + fmt)
-    fn(network_path, **kwargs)
+    return fn(network_path, **kwargs)

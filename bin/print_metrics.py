@@ -18,8 +18,7 @@ def build_parser():
             default=True)
     parser.add_argument('--components', action='store_true',
             default=True)
-    parser.add_argument('--component-size', action='store_const',
-            default=0.1, type=float)
+    parser.add_argument('--component-size', default=0.1, type=float)
     parser.add_argument('--cpl', action='store_true', default=True)
     parser.add_argument('--approximate-cpl', action='store_true',
             default=False)
@@ -28,8 +27,7 @@ def build_parser():
             default=True)
     parser.add_argument('--degree-distribution', action='store_true',
             default=True)
-    parser.add_argument('--degree-distribution-out',
-            action='store_const', default=None)
+    parser.add_argument('--degree-distribution-out', default=None)
     parser.add_argument('paths', metavar='paths', type=str, nargs='+')
 
     return parser
@@ -62,7 +60,7 @@ def process_network(G, namespace):
         plt.xscale('log')
         plt.yscale('log')
         plt.title("Degree Distribution")
-        plt.ylabel("count")
+        plt.ylabel("Occurrencies")
         plt.xlabel("Degree")
         plt.plot(range(len(hst)), hst)
 
@@ -83,3 +81,4 @@ def main(namespace):
 if __name__ == '__main__':
     parser = build_parser()
     namespace = parser.parse_args()
+    main(namespace)
