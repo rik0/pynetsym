@@ -1,3 +1,4 @@
+import sys
 import importlib
 
 class PluginLoader(object):
@@ -12,7 +13,9 @@ class PluginLoader(object):
                 return importlib.import_module(name, path)
             except ImportError:
                 pass
-        raise ImportError
+        message = ('Could not find module %s among %s considering %s' %
+            (name, cls.DEFAULT_PLUGINS_PATH, sys.path))
+        raise ImportError(message)
 
     @classmethod
     def add_patha(cls, path):
