@@ -28,3 +28,12 @@ def read_network(network_path, fmt=None, **kwargs):
             raise IOError("Did not undestand format from filename %s." % network_path)
     fn = getattr(nx, 'read_' + fmt)
     return fn(network_path, **kwargs)
+
+def distribution_to_csv(distribution, fileobj, **kwargs):
+    import csv
+
+    csv_writer = csv.writer(fileobj, **kwargs)
+    for row in distribution:
+        csv_writer.writerow(row)
+
+
