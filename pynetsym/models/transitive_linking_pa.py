@@ -4,7 +4,7 @@ from pynetsym.models import transitive_linking
 
 class Node(transitive_linking.Node):
     def __init__(self, identifier, address_book, graph, death_probability):
-        self.criterion = choice_criteria.preferential_attachment
+        self.criterion = choice_criteria.preferential_attachment_edge
         super(Node, self).__init__(identifier, address_book, graph, death_probability)
 
 make_parser = transitive_linking.make_parser
