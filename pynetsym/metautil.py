@@ -1,9 +1,6 @@
 import abc
 import inspect
-import pprint
-import types
 import decorator
-import functools as ft
 
 def copy_doc(cls):
     """Copy documentation from method with same name of cls
@@ -23,15 +20,20 @@ def copy_doc(cls):
     return copy_doc_aux
 
 
-@decorator.decorator
-def stub(f, *args, **kw):
-    pass
 
 def extract_interface(cls, debug=False):
     """
 
     """
-    to_skip = ['__metaclass__']
+
+    class _T(object):
+        __metaclass__ = abc.ABCMeta
+
+    @decorator.decorator
+    def stub(_f, *_args, **_kw):
+        pass
+
+    to_skip = set(dir(_T)) - set(dir(type))
     def should_process(name):
         if name in to_skip:
             return False
