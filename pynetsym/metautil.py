@@ -23,6 +23,13 @@ def copy_doc(cls):
 
 def extract_interface(cls, debug=False):
     """
+    @extract_interface(cls)
+    class new_cls(super_cls):
+        __metaclass__ = abc.ABCMeta
+        pass
+
+    Extracts the public methods from cls and adds them as abstract methods to new_cls.
+    new_cls is required to have a subclass of abc.ABCMeta as metaclass.
 
     """
 
@@ -34,6 +41,8 @@ def extract_interface(cls, debug=False):
         pass
 
     to_skip = set(dir(_T)) - set(dir(type))
+    to_skip.update(['__str__'])
+
     def should_process(name):
         if name in to_skip:
             return False
@@ -42,6 +51,13 @@ def extract_interface(cls, debug=False):
         return True
 
     def processor(new_cls):
+        try:
+            if not issubclass(new_cls.__metaclass__, abc.ABCMeta):
+                raise TypeError("Class metaclass should be abc.ABCMeta")
+        except AttributeError:
+            raise TypeError("Class metaclass should be abc.ABCMeta")
+
+        new_abstract_methods = set()
         for name, method in inspect.getmembers(cls):
             if callable(method):
                 if should_process(name):
@@ -51,6 +67,11 @@ def extract_interface(cls, debug=False):
                         if debug: print name
                     else:
                         setattr(new_cls, name, abc.abstractmethod(stub(func)))
+                        new_abstract_methods.add(name)
+        else:
+            # add the new abstract methods to the class
+            new_cls.__abstractmethods__ |=  new_abstract_methods
+            new_cls.__abstractmethods__ = frozenset(new_cls.__abstractmethods__)
         return new_cls
 
     return processor

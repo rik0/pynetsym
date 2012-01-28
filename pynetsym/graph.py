@@ -2,14 +2,9 @@ import abc
 import networkx as nx
 from pynetsym import metautil
 
-
+@metautil.extract_interface(nx.Graph)
 class Graph(object):
     __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    @metautil.copy_doc(nx.Graph)
-    def add_node(self, node): pass
-
 
     #nx.Graph.add_cycle                nx.Graph.copy                     nx.Graph.nbunch_iter              nx.Graph.remove_edges_from
     #nx.Graph.add_edge                 nx.Graph.degree                   nx.Graph.neighbors                nx.Graph.remove_node
@@ -22,3 +17,6 @@ class Graph(object):
     #nx.Graph.adjacency_iter           nx.Graph.is_directed              nx.Graph.number_of_selfloops
     #nx.Graph.adjacency_list           nx.Graph.is_multigraph            nx.Graph.order
     #nx.Graph.clear                    nx.Graph.mro                      nx.Graph.remove_edge
+
+class AdjacencyMatrixGraph(Graph):
+    pass
