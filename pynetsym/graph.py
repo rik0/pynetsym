@@ -1,5 +1,8 @@
 import abc
 import networkx as nx
+import heapq
+import bisect
+
 from pynetsym import metautil
 
 @metautil.extract_interface(nx.Graph)
@@ -19,4 +22,22 @@ class Graph(object):
     #nx.Graph.clear                    nx.Graph.mro                      nx.Graph.remove_edge
 
 class AdjacencyMatrixGraph(Graph):
-    pass
+    def __init__(self):
+        self._nodes = []
+        self._edges = []
+
+    def add_node(self, node, **attrs):
+        index = bisect.bisect_left(self._nodes, node)
+        if not self._nodes[index] != node:
+            heapq.heappush(self._nodes, node)
+
+    def nodes(self):
+        return self._nodes.copy()
+
+    def add_edge(self, start, end):
+        index = bisect.bisect_left(self._edges, (start, end))
+        if self._edges[index] != start, end:
+            self.add_node(start)
+            self.add_node(end)
+            heapq.heappush(self._edges, (start, end))
+
