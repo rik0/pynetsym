@@ -1,1 +1,3 @@
 networks
+.idea
+*.pyc

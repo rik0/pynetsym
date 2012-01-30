@@ -52,8 +52,7 @@ def build_parser():
             default=True)
     parser.add_argument('--component-size', default=0.1, type=float)
     parser.add_argument('--cpl', action='store_true', default=True)
-    parser.add_argument('--approximate-cpl', action='store_true',
-            default=False)
+    parser.add_argument('--approximate-cpl', default=False, type=bool)
     parser.add_argument('--diameter', action='store_true', default=True)
     parser.add_argument('--assortativity', action='store_true',
             default=True)
@@ -80,6 +79,7 @@ def process_network(G, namespace):
         if namespace.approximate_cpl:
             average_shortest_path_length = approximate_cpl
         else:
+            print 'Using full slow CPL'
             average_shortest_path_length = nx.average_shortest_path_length
         if components is None:
             components = nx.connected_component_subgraphs(G)
