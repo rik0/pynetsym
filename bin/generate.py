@@ -6,7 +6,7 @@ import argparse
 
 import networkx as nx
 
-from pynetsym import plugins, generation, io, timing
+from pynetsym import plugins, generation, ioutil, timing
 
 def base_parser():
     parser = argparse.ArgumentParser(
@@ -14,7 +14,7 @@ def base_parser():
         description='Synthetic Network Generation Utility')
     parser.add_argument('-s', '--steps', default=100, type=int)
     parser.add_argument('-o', '--output', default=None)
-    parser.add_argument('-f', '--format', choices=io.FORMATS, default=None)
+    parser.add_argument('-f', '--format', choices=ioutil.FORMATS, default=None)
     return parser
 
 
@@ -42,7 +42,7 @@ def main(args):
     generation.generate(graph, module, steps,
                         timer_callback=timing.execution_printer(sys.stdout),
                         **arguments_dictionary)
-    io.save_network(graph, output_path, format)
+    ioutil.save_network(graph, output_path, format)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ import random
 import numpy as np
 import networkx as nx
 
-from pynetsym import io
+from pynetsym import ioutil
 from matplotlib import pyplot as plt
 
 def estimate_s(q, delta, eps):
@@ -119,7 +119,7 @@ def process_network(G, namespace):
 
 def main(namespace):
     for network_path in namespace.paths:
-        G = io.read_network(network_path)
+        G = ioutil.read_network(network_path)
         process_network(G, namespace)
 
 
