@@ -21,10 +21,9 @@ def distribution(s):
 
 class Node(core.Node):
     def __init__(self, identifier, address_book, graph,
-                 gamma, edges, probability, strategy=None):
+                 gamma, probability, strategy=None):
         super(Node, self).__init__(identifier, address_book, graph)
         self.gamma = gamma
-        self.edges = edges
         self.p = probability
         if strategy is None:
             self.strategy = self._select_strategy()
@@ -52,7 +51,7 @@ class Node(core.Node):
             core.NodeManager.name, 'create_node', cls=Node,
             identifier=identifier,
             parameters=dict(
-                gamma=self.gamma, edges=self.edges, property=self.p,
+                gamma=self.gamma, property=self.p,
                 strategy=Node.passive_strategy))
         self.send(identifier, 'accept_link', originating_node=self.id)
 
@@ -81,20 +80,3 @@ def make_parser(parent):
     parser.add_argument('-e', '--edges', default=4, type=int)
 
     return parser
-
-
-def make_setup(network_size, gamma, edges, probability, node_cls=Node):
-    def setup(node_manager):
-        generation_seed = it.izip(
-            it.repeat(node_cls),
-            it.islice(identifiers, 0, network_size),
-            it.repeat(
-                dict(
-                    gamma=gamma,
-                    edges=edges,
-                    probability=probability)))
-        for cls, identifier, node_params in generation_seed:
-            node_manager.create_node(cls, identifier, node_params)
-
-    return setup
-

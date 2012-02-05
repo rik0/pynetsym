@@ -114,13 +114,16 @@ class Agent(gevent.Greenlet):
 class NodeManager(Agent):
     name = 'manager'
 
-    def __init__(self, graph, address_book, generation_feed):
+    def __init__(self, graph, address_book, configurator):
         super(NodeManager, self).__init__(NodeManager.name, address_book)
         self.graph = graph
-        self.generation_feed = generation_feed
+        self.configurator = configurator
 
     def _run(self):
-        self.generation_feed(self)
+        if callable(self.configurator):
+            self.configurator(self)
+        else:
+            self.configurator.setup(self)
         self.run_loop()
 
     def create_node(self, cls, identifier, parameters):
@@ -131,7 +134,6 @@ class NodeManager(Agent):
 
     def node_failed_hook(self, node):
         print node.exception
-
 
     def node_terminated_hook(self, node):
         pass

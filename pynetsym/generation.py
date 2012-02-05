@@ -68,7 +68,8 @@ class Configurator(object):
 
 
 class SingleNodeConfigurator(Configurator):
-    def __init__(self, **additional_arguments):
+    def __init__(self, network_size, **additional_arguments):
+        self.network_size = network_size
         self.node_arguments, additional_arguments = util.splitdict(
             additional_arguments, self.node_options )
         super(SingleNodeConfigurator, self).__init__(**additional_arguments)
@@ -86,12 +87,10 @@ class SingleNodeConfigurator(Configurator):
         pass
 
     def setup(self, node_manager):
-        generation_seed = it.izip(
-            it.repeat(self.node_cls),
-            it.islice(self.identifiers_seed, 0, self.network_size),
-            it.repeat(self.node_arguments))
-        for cls, identifier, node_params in generation_seed:
-            node_manager.create_node(cls, identifier, node_params)
+        for identifier in it.islice(
+            self.identifiers_seed, 0, self.network_size):
+            node_manager.create_node(
+                self.node_cls, identifier, self.node_arguments)
 
 
 def generate(graph, module, steps, timer_callback=None, **additional_args):
@@ -110,12 +109,10 @@ def generate(graph, module, steps, timer_callback=None, **additional_args):
     :return: None
     """
     with timing.Timer(timer_callback):
-        configurator = module.Configurator(**additional_args)
-
         address_book = core.AddressBook()
         node_manager = core.NodeManager(
             graph, address_book,
-            module.make_setup(**additional_args))
+            module.Configurator(**additional_args))
         node_manager.start()
 
         try:
