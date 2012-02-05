@@ -1,17 +1,30 @@
+import abc
 import sys
 import core, timing
 import rnd
+import itertools as it
 
 __author__ = 'enrico'
 
 # TODO: activator shall activate, destroy & create nodes
 # TODO: the functions shall be parameters (choice functions and actions?)
 class Activator(core.Agent):
+    """
+    The Activator chooses what happens at each step of the simulation.
+
+    The tick method is called at each simulation step. The default behavior
+    is to call choose_node to select a random node and send it an activate
+    message.
+
+    tick, simulation_ended and choose_node are meant to be overrode by
+    implementations.
+    """
     name = 'activator'
 
-    def __init__(self, graph, address_book):
+    def __init__(self, graph, address_book, **additional_parameters):
         super(Activator, self).__init__(self.name, address_book)
         self.graph = graph
+        locals().update(additional_parameters)
 
     def tick(self):
         node_id = self.choose_node()
@@ -22,7 +35,6 @@ class Activator(core.Agent):
 
     def choose_node(self):
         return rnd.random_node(self.graph)
-
 
 class Clock(core.Agent):
     name = 'clock'
@@ -36,6 +48,39 @@ class Clock(core.Agent):
         for step in xrange(self.max_steps):
             self.send(Activator.name, 'tick')
         self.send(Activator.name, 'simulation_ended')
+
+
+class Setup(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def activator_options(self):
+        pass
+
+    @abc.abstractmethod
+    def setup(self, node_manager):
+        pass
+
+
+class SingleNodeSetup(Setup):
+    def __init__(self, network_size):
+        self.network_size = network_size
+
+    @abc.abstractproperty
+    def identifiers_seed(self):
+        pass
+
+    @abc.abstractproperty
+    def node_cls(self):
+        pass
+
+    def setup(self, node_manager):
+        generation_seed = it.izip(
+            it.repeat(self.node_cls),
+            it.islice(self.identifiers_seed, 0, self.network_size),
+            it.repeat(self.node_properties))
+        for cls, identifier, node_params in generation_seed:
+            node_manager.create_node(cls, identifier, node_params)
 
 
 def generate(graph, module, steps, timer_callback=None, **additional_args):
