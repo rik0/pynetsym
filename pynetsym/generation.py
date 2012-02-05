@@ -3,6 +3,7 @@ import sys
 import core, timing
 import rnd
 import itertools as it
+import util
 
 __author__ = 'enrico'
 
@@ -50,10 +51,14 @@ class Clock(core.Agent):
         self.send(Activator.name, 'simulation_ended')
 
 
-class Setup(object):
+class Configurator(object):
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+    def __init__(self, **additional_arguments):
+        self.activator_arguments = util.subdict(
+            additional_arguments, self.activator_options)
+
+    @abc.abstractproperty
     def activator_options(self):
         pass
 
@@ -62,9 +67,11 @@ class Setup(object):
         pass
 
 
-class SingleNodeSetup(Setup):
-    def __init__(self, network_size):
-        self.network_size = network_size
+class SingleNodeConfigurator(Configurator):
+    def __init__(self, **additional_arguments):
+        self.node_arguments, additional_arguments = util.splitdict(
+            additional_arguments, self.node_options )
+        super(SingleNodeConfigurator, self).__init__(**additional_arguments)
 
     @abc.abstractproperty
     def identifiers_seed(self):
@@ -74,11 +81,15 @@ class SingleNodeSetup(Setup):
     def node_cls(self):
         pass
 
+    @abc.abstractproperty
+    def node_options(self):
+        pass
+
     def setup(self, node_manager):
         generation_seed = it.izip(
             it.repeat(self.node_cls),
             it.islice(self.identifiers_seed, 0, self.network_size),
-            it.repeat(self.node_properties))
+            it.repeat(self.node_arguments))
         for cls, identifier, node_params in generation_seed:
             node_manager.create_node(cls, identifier, node_params)
 
@@ -99,6 +110,8 @@ def generate(graph, module, steps, timer_callback=None, **additional_args):
     :return: None
     """
     with timing.Timer(timer_callback):
+        configurator = module.Configurator(**additional_args)
+
         address_book = core.AddressBook()
         node_manager = core.NodeManager(
             graph, address_book,

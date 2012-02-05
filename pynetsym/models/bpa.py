@@ -64,7 +64,8 @@ class Activator(generation.Activator):
     pass
 
 
-class Setup(generation.SingleNodeSetup):
+class Configurator(generation.SingleNodeConfigurator):
+    identifiers_seed = identifiers
     node_cls = Node
     node_options = {'probability', 'gamma'}
     activator_cls = Activator
