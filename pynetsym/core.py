@@ -15,6 +15,12 @@ class AddressingError(Exception):
 # TODO: we should streamline the API to avoid which occur in registering an agent
 #       with an identifier different from its "address"
 class AddressBook(object):
+    """
+    The Address book holds information on every agent in the system.
+
+    An agent that is not in the AddressBook is virtually unreachable.
+
+    """
     def __init__(self):
         self.registry = {}
 
@@ -28,12 +34,24 @@ class AddressBook(object):
             raise AddressingError(message)
 
     def register(self, identifier, agent):
+        """
+        Binds the identifier with the agent
+
+        :raise: AddressingError if :param: identifier is already bound.
+        """
         if identifier in self.registry:
             self._check_same_agent(agent, identifier)
         else:
             self.registry[identifier] = agent
 
     def unregister(self, id_or_agent):
+        """
+        Unbinds the specified agent.
+
+        It is valid to pass both an Agent or an agent id.
+        :raise: AddressingError if id was not bound.
+
+        """
         try:
             self.registry.pop(id_or_agent)
         except KeyError:
@@ -43,16 +61,41 @@ class AddressBook(object):
                 raise AddressingError(e)
 
     def rebind(self, id, new_agent):
+        """
+        Removes any existing binding of id and binds id with the new agent.
+
+        :raise: AddressingError if id was not bound.
+
+        """
         self.unregister(id)
         self.register(id, new_agent)
 
+    def force_rebind(self, id, new_agent):
+        """
+        Like rebind, but always succeds.
+
+        """
+        try:
+            self.rebind(id, new_agent)
+        except AddressingError:
+            self.register(id, new_agent)
+
     def resolve(self, identifier):
+        """
+        Resolves :param: identifier to the actual agent.
+
+        :raise: AddressingError if the agent is not registered.
+        """
         try:
             return self.registry[identifier]
         except KeyError, e:
             raise AddressingError(e)
 
 class Agent(gevent.Greenlet):
+    """
+    An Agent is the basic class of the simulation. Agents communicate
+    asynchronously with themselves.
+    """
     def __init__(self, identifier, address_book):
         super(Agent, self).__init__()
         self._queue = queue.Queue()
