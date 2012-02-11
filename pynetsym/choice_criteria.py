@@ -1,5 +1,5 @@
 import random
-from . import rnd
+import rnd
 
 def preferential_attachment_edge(graph):
     if graph.number_of_edges():
@@ -9,6 +9,7 @@ def preferential_attachment_edge(graph):
 
 
 def preferential_attachment(graph):
+    print graph
     m = graph.number_of_egdes() + graph.number_of_nodes()
     while 1:
         n = rnd.random_node(graph)

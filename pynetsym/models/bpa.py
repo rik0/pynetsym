@@ -3,6 +3,7 @@ import fractions
 
 import itertools as it
 import random
+import choice_criteria
 import generation
 
 from pynetsym import core
@@ -53,10 +54,12 @@ class Node(core.Node):
             parameters=dict(
                 gamma=self.gamma, property=self.p,
                 strategy=Node.passive_strategy))
+
         self.send(identifier, 'accept_link', originating_node=self.id)
 
     def linker_strategy(self):
         pass
+
 
 
 class Activator(generation.Activator):
