@@ -4,11 +4,12 @@ import gevent
 
 import gevent.queue as queue
 
-from abc import abstractmethod, ABCMeta
-
 Message = collections.namedtuple('Message', 'sender payload')
 
 class AddressingError(Exception):
+    """
+    Error signaling that something with the addressing of a message went wrong.
+    """
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
 
@@ -146,15 +147,38 @@ class Agent(gevent.Greenlet):
 
 
     def read(self):
+        """
+        Read a single message from the queue. It should not be called directly
+        unless you really know what you are doing.
+        """
         return self._queue.get()
 
     def process(self, message):
+        """
+        Processes the message. This means calling the message payload with
+        self as argument.
+
+        """
         return message.payload(self)
 
     def cooperate(self):
+        """
+        Release control
+
+        """
         gevent.sleep()
 
     def run_loop(self):
+        """
+        Agent main run loop.
+
+        1. read a message from the queue
+        2. process the message and elaborate the answer
+        3. if the answer is not None, send it to the original message
+        4. release control
+        :w
+
+        """
         while 1:
             message = self.read()
             answer = self.process(message)
@@ -163,6 +187,9 @@ class Agent(gevent.Greenlet):
             self.cooperate()
 
     def unsupported_message(self, name, additional_parameters):
+        """
+        Prints out something if we received a message we could not process.
+        """
         print ('%s received "%s" message with parameters %s: could not process.' %
                     (self, name, additional_parameters))
 
