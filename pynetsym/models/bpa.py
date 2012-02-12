@@ -3,10 +3,9 @@ import fractions
 
 import itertools as it
 import random
-import choice_criteria
-import generation
 
 from pynetsym import core
+from pynetsym import generation
 
 identifiers = it.count()
 
