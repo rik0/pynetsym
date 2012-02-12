@@ -5,6 +5,7 @@ import gevent
 import gevent.queue as queue
 
 Message = collections.namedtuple('Message', 'sender payload')
+"""An immutable object that is used to send a message among agents"""
 
 class AddressingError(Exception):
     """
@@ -172,11 +173,10 @@ class Agent(gevent.Greenlet):
         """
         Agent main run loop.
 
-        1. read a message from the queue
-        2. process the message and elaborate the answer
-        3. if the answer is not None, send it to the original message
-        4. release control
-        :w
+            1. read a message from the queue
+            2. process the message and elaborate the answer
+            3. if the answer is not None, send it to the original message
+            4. release control
 
         """
         while 1:
