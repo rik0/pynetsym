@@ -96,17 +96,18 @@ class SingleNodeConfigurator(Configurator):
 def generate(graph, module, steps, timer_callback=None, **additional_args):
     """
     Starts the actual simulation
-    :param graph: is a NetworkX compatible graph (better if one of pynetsym.graph)
-    :param module: a simulation module. In fact it needs to have a make_setup
+
+    @param graph: is a NetworkX compatible graph (better if one of pynetsym.graph)
+    @param module: a simulation module. In fact it needs to have a make_setup
         method that returns a function taking a NodeManager as argument and
         commanding it how to setup the simulation. Optionally it may have
         an Activator callable attribute that returns an instance of an
         Activator that actually carries on the simulation
-    :param steps: the number of steps to perform
-    :param timer_callback: a function passed as sole argument to a
+    @param steps: the number of steps to perform
+    @param timer_callback: a function passed as sole argument to a
         pynetsym.timing.Timer
-    :param additional_args: these are forwarded to module.make_setup
-    :return: None
+    @type timer_callback: callable
+    @param additional_args: these are forwarded to module.make_setup
     """
     with timing.Timer(timer_callback):
         address_book = core.AddressBook()

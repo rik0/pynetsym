@@ -114,13 +114,12 @@ class Agent(gevent.Greenlet):
         """
         Send a message to the specified agent.
 
-        :param receiver_id: the id of the receiving agent
-        :param payload: the name of the receiving agent method or
-            a function taking the agent as its first argument (unbound
-            methods are just perfect).
-        :param additional_parameters: additional parameters to be passed
-            to the function
-        :return:
+        @param receiver_id: the id of the receiving agent
+        @param payload: the name of the receiving agent method or a function
+            taking the agent as its first argument (unbound methods are just
+            perfect).
+        @param additional_parameters: additional parameters to be passed to
+            the function
         """
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
