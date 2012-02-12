@@ -24,15 +24,16 @@ def copy_doc(cls):
 
 def extract_interface(cls, debug=False):
     """
+    Extracts the public methods from cls and adds them as abstract methods to new_cls.
+    new_cls is required to have a subclass of abc.ABCMeta as metaclass.
+
     ::
         @extract_interface(cls)
         class new_cls(super_cls):
             __metaclass__ = abc.ABCMeta
             pass
 
-    Extracts the public methods from cls and adds them as abstract methods to new_cls.
-    new_cls is required to have a subclass of abc.ABCMeta as metaclass.
-
+    @requires: cls to be an ABC
     """
 
     class _T(object):

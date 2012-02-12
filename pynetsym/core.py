@@ -37,7 +37,9 @@ class AddressBook(object):
         """
         Binds the identifier with the agent
 
-        :raise: AddressingError if :param: identifier is already bound.
+        @param identifier: the identifier to bind the agent to
+        @param agent: the agent to bind
+        @raise AddressingError: if identifier is already bound.
         """
         if identifier in self.registry:
             self._check_same_agent(agent, identifier)
@@ -48,8 +50,9 @@ class AddressBook(object):
         """
         Unbinds the specified agent.
 
-        It is valid to pass both an Agent or an agent id.
-        :raise: AddressingError if id was not bound.
+        @param id_or_agent: the id or the agent to bind
+        @type id_or_agent: id | Agent
+        @raise AddressingError: if id was not bound.
 
         """
         try:
@@ -64,7 +67,7 @@ class AddressBook(object):
         """
         Removes any existing binding of id and binds id with the new agent.
 
-        :raise: AddressingError if id was not bound.
+        @raise AddressingError: if id was not bound.
 
         """
         self.unregister(id)
@@ -84,7 +87,7 @@ class AddressBook(object):
         """
         Resolves :param: identifier to the actual agent.
 
-        :raise: AddressingError if the agent is not registered.
+        @raise AddressingError: if the agent is not registered.
         """
         try:
             return self.registry[identifier]
@@ -105,6 +108,11 @@ class Agent(gevent.Greenlet):
 
     @property
     def id(self):
+        """
+        The node identifier.
+        @rtype: string | int
+        @attention: In fact, the only requirement is that it is hashable
+        """
         return self._id
 
     def _deliver(self, message):
@@ -166,7 +174,12 @@ class Agent(gevent.Greenlet):
 
 
 class NodeManager(Agent):
-    name = 'manager'
+    """
+    The class responsible to create nodes.
+
+    """
+
+    name = 'manager' #: @ivar: the registered name in the L{address book<AddressBook>}
 
     def __init__(self, graph, address_book, configurator):
         super(NodeManager, self).__init__(NodeManager.name, address_book)
@@ -181,24 +194,52 @@ class NodeManager(Agent):
         self.run_loop()
 
     def create_node(self, cls, identifier, parameters):
+        """
+        Creates a new node.
+
+        @param cls: the factory creating the new node. Usually the node class.
+        @type cls: callable
+        @param identifier: the identifier to bind the new node to
+        @type identifier: L{identifier<Node.id>}
+        @param parameters: the parameters that are forwarded to the node for
+            creation
+        @type parameters: dict
+        """
         node = cls(identifier, self._address_book, self.graph, **parameters)
         node.link_value(self.node_terminated_hook)
         node.link_exception(self.node_failed_hook)
         node.start()
 
     def node_failed_hook(self, node):
-        print node.exception
+        """
+        Hooks an exception in the node. This implementation only prints stuff.
+
+        @param node: the node that failed.
+        @type node: Node
+        """
+        print >> std.error, "Node failed: {}\n{}".format(node, node.exception)
 
     def node_terminated_hook(self, node):
         pass
 
 class Node(Agent):
+    """
+    A Node in the social network.
+    """
     def __init__(self, identifier, address_book, graph):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
         self.graph.add_node(self.id)
 
     def link_to(self, criterion_or_node):
+        """
+        Sends an 'accept_link' message to the specified node.
+
+        @param criterion_or_node: The node to link may be an identifier
+            or a callable extracting the node from the graph
+        @type criterion_or_node: id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
+        @return:
+        """
         if callable(criterion_or_node):
             target_node = criterion_or_node(self.graph)
         else:
@@ -206,4 +247,10 @@ class Node(Agent):
         self.send(target_node, Node.accept_link, originating_node=self.id)
 
     def accept_link(self, originating_node):
+        """
+        Accepts an 'accept_link' message (modifying the network).
+
+        @param originating_node: the node that required the connection
+        @type originating_node: id
+        """
         self.graph.add_edge(originating_node, self.id)
