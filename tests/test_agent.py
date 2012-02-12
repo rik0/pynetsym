@@ -24,7 +24,7 @@ class TestAgent(TestCase):
             node_a.kill()
 
         message = core.Message(None, answer)
-        self.agent_a.deliver(message)
+        self.agent_a._deliver(message)
         self.agent_a.join()
         self.assertEqual(42, self.value)
 

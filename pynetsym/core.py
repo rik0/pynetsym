@@ -72,7 +72,7 @@ class AddressBook(object):
 
     def force_rebind(self, id, new_agent):
         """
-        Like rebind, but always succeds.
+        Like rebind, but always succeeds.
 
         """
         try:
@@ -107,10 +107,21 @@ class Agent(gevent.Greenlet):
     def id(self):
         return self._id
 
-    def deliver(self, message):
+    def _deliver(self, message):
         self._queue.put(message)
 
     def send(self, receiver_id, payload, **additional_parameters):
+        """
+        Send a message to the specified agent.
+
+        :param receiver_id: the id of the receiving agent
+        :param payload: the name of the receiving agent method or
+            a function taking the agent as its first argument (unbound
+            methods are just perfect).
+        :param additional_parameters: additional parameters to be passed
+            to the function
+        :return:
+        """
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
             func = functools.partial(payload, **additional_parameters)
@@ -124,7 +135,8 @@ class Agent(gevent.Greenlet):
                 )
                 unbound_method = getattr(receiver_class, 'unsupported_message')
             func = functools.partial(unbound_method, **additional_parameters)
-        receiver.deliver(Message(self.id, func))
+        receiver._deliver(Message(self.id, func))
+
 
     def read(self):
         return self._queue.get()
@@ -193,6 +205,6 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         self.send(target_node, Node.accept_link, originating_node=self.id)
-        
+
     def accept_link(self, originating_node):
         self.graph.add_edge(originating_node, self.id)
