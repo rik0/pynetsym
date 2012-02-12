@@ -1,0 +1,12 @@
+1. Queue unhandled messages: this may be useful. When the agent is eventually
+    created, it gets all the messages. We may however have too many messages
+    accumulated. Perhaps we need some pruning strategy here.
+    It may be not a good idea at all.
+2. Catch addressing errors and? This is how erlang works. However, it may not
+    be appropriate for Python.
+3. Execute instructions on creation: rather easy to do, inexpensive. Still,
+    may not be what we need now.
+4. Decorators to select what needs to be done if a method is called. E.g.,
+    check that is a method meant to be called "from outside".
+5. Do we want that we *must* specifiy the node address when creating it?
+    Does this not lead to subtle bugs?
