@@ -4,6 +4,44 @@ import gevent
 
 import gevent.queue as queue
 
+def answers(method):
+    """
+    Marks a message to which we expect response. Accordingly to options
+    a method answering to such message that does not return anything raises
+    exceptions or logs an error or is ignored.
+    @param method: the method to decorate
+    @return: the decorated method
+    """
+    method.answers = True
+    return method
+
+def message_processor(method):
+    """
+    Marks a method that actually processes a message
+    @param method: the method to decorate
+    @return: the decorated method
+    """
+    method.message_processor = True
+    return method
+
+def is_message_processor(method):
+    """
+    Returns True if method is a message processor
+    @param method: the method to check
+    @return: True if method is a message processor
+    """
+    return (hasattr(method, 'message_processor')
+            and method.message_processor)
+
+def does_answer(method):
+    """
+    Returns True if method should answer.
+    @param method: the method to check
+    @return: True if method should answer
+    """
+    return (hasattr(method, 'answers')
+            and method.answers)
+
 #: An immutable object that is used to send a message among agents.
 Message = collections.namedtuple('Message', 'sender payload')
 
@@ -101,12 +139,19 @@ class Agent(gevent.Greenlet):
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
-    def __init__(self, identifier, address_book):
+
+    IGNORE = 0
+    LOG_ERROR = 1
+    EXCEPTION = 2
+
+    def __init__(self, identifier, address_book, error_level=LOG_ERROR):
         super(Agent, self).__init__()
         self._queue = queue.Queue()
         self._id = identifier
         self._address_book = address_book
         self._address_book.register(identifier, self)
+        self._err_level = error_level
+
 
     @property
     def id(self):
@@ -178,6 +223,7 @@ class Agent(gevent.Greenlet):
             3. if the answer is not None, send it to the original message
             4. release control
 
+        @attention: checks regarding message_processor and similar are not made
         """
         while 1:
             message = self.read()
