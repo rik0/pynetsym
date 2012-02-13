@@ -51,4 +51,72 @@ class TestAddressBook(unittest.TestCase):
             int_value,
             self.address_book.create_id_from_hint(int_value))
 
+    def test_hint_fails_if_improper_type(self):
+        self.assertRaises(
+            TypeError,
+            self.address_book.create_id_from_hint,
+            5.6 )
+
+        self.assertRaises(
+            TypeError,
+            self.address_book.create_id_from_hint,
+            object())
+
+    def test_id_starts_with_string(self):
+        str_value = 'foo'
+        self.address_book.register(str_value, FakeAgent())
+        new_id = self.address_book.create_id_from_hint(str_value)
+        self.assert_(new_id.startswith(str_value), "Starts with substring")
+
+    def test_generated_id_is_random_str(self):
+        str_value = 'foo'
+        self.address_book.register(str_value, FakeAgent())
+        new_id = self.address_book.create_id_from_hint(str_value)
+        another_id = self.address_book.create_id_from_hint(str_value)
+        self.assertNotEqual(new_id, another_id)
+
+    def test_generated_not_random_int(self):
+        int_value = 7
+        self.address_book.register(int_value, FakeAgent())
+        new_id = self.address_book.create_id_from_hint(int_value)
+        another_id = self.address_book.create_id_from_hint(int_value)
+        self.assertEqual(new_id, another_id)
+
+    def test_generated_key_tries_not_to_increase(self):
+        int_value = 1
+        self.address_book.register(int_value, FakeAgent())
+        new_id = self.address_book.create_id_from_hint(int_value)
+        self.assert_(new_id < int_value)
+        self.assert_(new_id >= 0)
+
+    def test_generated_key_non_negative(self):
+        int_value = 0
+        self.address_book.register(int_value, FakeAgent())
+        new_id = self.address_book.create_id_from_hint(int_value)
+        self.assert_(new_id >= 0)
+
+    def test_generated_key_below_range(self):
+        min_key = 3
+        keys = set(range(min_key, 7))
+        [self.address_book.register(k, FakeAgent()) for k in keys]
+        new_id = self.address_book.create_id_from_hint(min_key)
+        self.assertEqual(new_id, min_key - 1)
+
+    def test_generated_key_above_range(self):
+        min_key = 0
+        max_key = 7
+        keys = set(range(min_key, max_key))
+        [self.address_book.register(k, FakeAgent()) for k in keys]
+        new_id = self.address_book.create_id_from_hint(min_key)
+        self.assertEqual(new_id, max_key)
+
+
+    def test_generated_key_in_range(self):
+        min_key = 0
+        max_key = 7
+        keys = set(range(min_key, max_key))
+        missing = keys.pop()
+        [self.address_book.register(k, FakeAgent()) for k in keys]
+        new_id = self.address_book.create_id_from_hint(min_key)
+        self.assertEqual(new_id, missing)
 

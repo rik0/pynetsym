@@ -5,6 +5,7 @@ import gevent
 import itertools as it
 
 import gevent.queue as queue
+import sys
 
 from pynetsym import rnd
 
@@ -165,6 +166,7 @@ class AddressBook(object):
         @param hint: the starting identifier
         @type hint: int|str
         @return: an identifier no agent is registered to.
+        @raise TypeError: if hint is not string or int
         """
         if (hint not in self.registry
             and isinstance(hint, (numbers.Integral, basestring))):
@@ -176,14 +178,23 @@ class AddressBook(object):
             max_key = numeric_keys[-1]
             free_keys = (set(xrange(min_key, max_key + 1))
                          - set(numeric_keys))
-            return free_keys.pop()
+            if free_keys:
+                return free_keys.pop()
+            else:
+                ## keys from min_key to max_key are taken
+                ## try a smaller key, otherwise, try greater
+                ## we want to keep the keys as bounded as possible
+                if min_key - 1 >= 0:
+                    return min_key - 1
+                else:
+                    return max_key + 1
         elif isinstance(hint, basestring):
             return ''.join(
                 it.chain(hint, '#',
                          it.islice(rnd.random_printable_chars(),
                                    0, self.RAND_CHARS)))
         else:
-            raise AddressingError(
+            raise TypeError(
                 "Could not build identifier from {}".format(hint))
 
 
@@ -349,9 +360,16 @@ class NodeManager(Agent):
         @param node: the node that failed.
         @type node: Node
         """
-        print >> std.error, "Node failed: {}\n{}".format(node, node.exception)
+        print >> sys.stderr, "Node failed: {}\n{}".format(node, node.exception)
 
     def node_terminated_hook(self, node):
+        """
+        Hooks a node termination. Usually nothing has to be done.
+
+        @param node: the node that terminated.
+        @type node: Node
+
+        """
         pass
 
 
