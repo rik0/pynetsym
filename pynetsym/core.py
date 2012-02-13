@@ -1,8 +1,12 @@
 import collections
 import functools
+import numbers
 import gevent
+import itertools as it
 
 import gevent.queue as queue
+
+from pynetsym import rnd
 
 def answers(method):
     """
@@ -15,6 +19,7 @@ def answers(method):
     method.answers = True
     return method
 
+
 def message_processor(method):
     """
     Marks a method that actually processes a message
@@ -24,6 +29,7 @@ def message_processor(method):
     method.message_processor = True
     return method
 
+
 def is_message_processor(method):
     """
     Returns True if method is a message processor
@@ -32,6 +38,7 @@ def is_message_processor(method):
     """
     return (hasattr(method, 'message_processor')
             and method.message_processor)
+
 
 def does_answer(method):
     """
@@ -50,6 +57,7 @@ class AddressingError(Exception):
     Error signaling that something with the addressing of a message went wrong.
 
     """
+
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
 
@@ -61,6 +69,10 @@ class AddressBook(object):
     An agent that is not in the AddressBook is virtually unreachable.
 
     """
+
+    #: ivar: Number of random characters appended to duplicate string id
+    RAND_CHARS = 6
+
     def __init__(self):
         self.registry = {}
 
@@ -100,7 +112,7 @@ class AddressBook(object):
         except KeyError:
             try:
                 self.registry.pop(id_or_agent.id)
-            except (AttributeError, KeyError), e:
+            except (AttributeError, KeyError) as e:
                 raise AddressingError(e)
 
     def rebind(self, id, new_agent):
@@ -133,6 +145,47 @@ class AddressBook(object):
             return self.registry[identifier]
         except KeyError, e:
             raise AddressingError(e)
+
+    def agents(self):
+        """
+        Return the sequence of agent addresses.
+
+        """
+        return self.registry.keys()
+
+    def create_id_from_hint(self, hint):
+        """
+        Creates a valid identifier starting from hint.
+        If hint was not bound to an agent, it is hint. Otherwise, if
+        hint is a string, builds a string appending random characters to
+        hint. If hint was an integer, it returns a random number among
+        the free identifiers between the minimum and the maximum registered
+        numbers. If such set is empty, return the lowest free integer number.
+
+        @param hint: the starting identifier
+        @type hint: int|str
+        @return: an identifier no agent is registered to.
+        """
+        if (hint not in self.registry
+            and isinstance(hint, (numbers.Integral, basestring))):
+            return hint
+        elif isinstance(hint, numbers.Integral):
+            numeric_keys = sorted(k for k in self.registry.iterkeys()
+            if isinstance(k, numbers.Integral))
+            min_key = numeric_keys[0]
+            max_key = numeric_keys[-1]
+            free_keys = (set(xrange(min_key, max_key + 1))
+                         - set(numeric_keys))
+            return free_keys.pop()
+        elif isinstance(hint, basestring):
+            return ''.join(
+                it.chain(hint, '#',
+                         it.islice(rnd.random_printable_chars(),
+                                   0, self.RAND_CHARS)))
+        else:
+            raise AddressingError(
+                "Could not build identifier from {}".format(hint))
+
 
 class Agent(gevent.Greenlet):
     """
@@ -236,8 +289,9 @@ class Agent(gevent.Greenlet):
         """
         Prints out something if we received a message we could not process.
         """
-        print ('%s received "%s" message with parameters %s: could not process.' %
-                    (self, name, additional_parameters))
+        print (
+            '%s received "%s" message with parameters %s: could not process.' %
+            (self, name, additional_parameters))
 
     def _run(self):
         self.run_loop()
@@ -278,10 +332,15 @@ class NodeManager(Agent):
             creation
         @type parameters: dict
         """
-        node = cls(identifier, self._address_book, self.graph, **parameters)
-        node.link_value(self.node_terminated_hook)
-        node.link_exception(self.node_failed_hook)
-        node.start()
+        try:
+            node = cls(identifier, self._address_book,
+                       self.graph, **parameters)
+        except AddressingError:
+            unique_id = self._address_book.create_id_from_hint(identifier)
+        else:
+            node.link_value(self.node_terminated_hook)
+            node.link_exception(self.node_failed_hook)
+            node.start()
 
     def node_failed_hook(self, node):
         """
@@ -295,10 +354,12 @@ class NodeManager(Agent):
     def node_terminated_hook(self, node):
         pass
 
+
 class Node(Agent):
     """
     A Node in the social network.
     """
+
     def __init__(self, identifier, address_book, graph):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph

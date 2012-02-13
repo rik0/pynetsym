@@ -1,4 +1,6 @@
 import random
+import string
+import itertools as it
 
 def _iter_random_choice(iterator, max_value):
     chosen_index = random.randrange(0, max_value)
@@ -35,3 +37,11 @@ def random_node(graph):
         return _iter_random_choice(
             graph.nodes_iter(),
             max_value)
+
+def random_printable_chars():
+    """
+    Yield an infinite sequence of printable characters.
+
+    """
+    while 1:
+        yield random.choice(string.printable)
