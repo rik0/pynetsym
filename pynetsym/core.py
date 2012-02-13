@@ -4,18 +4,18 @@ import gevent
 
 import gevent.queue as queue
 
+#: An immutable object that is used to send a message among agents.
 Message = collections.namedtuple('Message', 'sender payload')
-"""An immutable object that is used to send a message among agents"""
 
 class AddressingError(Exception):
     """
     Error signaling that something with the addressing of a message went wrong.
+
     """
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
 
-# TODO: we should streamline the API to avoid which occur in registering an agent
-#       with an identifier different from its "address"
+# TODO: we should streamline the API to avoid what occurs when registering an agent with an identifier different from its "address"
 class AddressBook(object):
     """
     The Address book holds information on every agent in the system.
