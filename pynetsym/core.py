@@ -331,27 +331,28 @@ class NodeManager(Agent):
             self.configurator.setup(self)
         self.run_loop()
 
-    def create_node(self, cls, identifier, parameters):
+    def create_node(self, cls, identifier_hint, parameters):
         """
         Creates a new node.
 
         @param cls: the factory creating the new node. Usually the node class.
         @type cls: callable
-        @param identifier: the identifier to bind the new node to
-        @type identifier: L{identifier<Node.id>}
+        @param identifier_hint: the identifier to bind the new node to
+        @type identifier_hint: L{identifier<Node.id>}
         @param parameters: the parameters that are forwarded to the node for
             creation
         @type parameters: dict
+        @return: the actual identifier
+        @rtype: int | str
         """
-        try:
-            node = cls(identifier, self._address_book,
-                       self.graph, **parameters)
-        except AddressingError:
-            unique_id = self._address_book.create_id_from_hint(identifier)
-        else:
-            node.link_value(self.node_terminated_hook)
-            node.link_exception(self.node_failed_hook)
-            node.start()
+
+        identifier = self._address_book.create_id_from_hint(identifier_hint)
+        node = cls(identifier, self._address_book,
+                   self.graph, **parameters)
+        node.link_value(self.node_terminated_hook)
+        node.link_exception(self.node_failed_hook)
+        node.start()
+        return identifier
 
     def node_failed_hook(self, node):
         """
