@@ -49,15 +49,18 @@ class Node(core.Node):
         identifier = identifiers.next()
         self.send(
             core.NodeManager.name, 'create_node', cls=Node,
-            identifier=identifier,
+            identifier_hint=identifier,
             parameters=dict(
-                gamma=self.gamma, property=self.p,
+                gamma=self.gamma, probability=self.p,
                 strategy=Node.passive_strategy))
 
+    def created_node(self, identifier):
         self.send(identifier, 'accept_link', originating_node=self.id)
 
     def linker_strategy(self):
         pass
+
+
 
 
 

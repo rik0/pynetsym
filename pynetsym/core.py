@@ -255,7 +255,6 @@ class Agent(gevent.Greenlet):
             func = functools.partial(unbound_method, **additional_parameters)
         receiver._deliver(Message(self.id, func))
 
-
     def read(self):
         """
         Read a single message from the queue. It should not be called directly
@@ -293,7 +292,11 @@ class Agent(gevent.Greenlet):
             message = self.read()
             answer = self.process(message)
             if answer is not None:
-                self.send(message.sender, answer)
+                try:
+                    answer, answer_parameters = answer
+                except ValueError:
+                    answer_parameters = {}
+                self.send(message.sender, answer, **answer_parameters)
             self.cooperate()
 
     def unsupported_message(self, name, additional_parameters):
@@ -352,7 +355,7 @@ class NodeManager(Agent):
         node.link_value(self.node_terminated_hook)
         node.link_exception(self.node_failed_hook)
         node.start()
-        return identifier
+        return 'created_node', dict(identifier=identifier)
 
     def node_failed_hook(self, node):
         """
