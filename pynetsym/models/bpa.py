@@ -63,7 +63,6 @@ class Node(core.Node):
 
 
 
-
 class Activator(generation.Activator):
     pass
 

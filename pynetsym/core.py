@@ -50,8 +50,7 @@ def does_answer(method):
     return (hasattr(method, 'answers')
             and method.answers)
 
-#: An immutable object that is used to send a message among agents.
-Message = collections.namedtuple('Message', 'sender payload')
+Message = collections.namedtuple('Message', 'sender payload') #: An immutable object that is used to send a message among agents.
 
 class AddressingError(Exception):
     """
@@ -71,8 +70,7 @@ class AddressBook(object):
 
     """
 
-    #: ivar: Number of random characters appended to duplicate string id
-    RAND_CHARS = 6
+    RAND_CHARS = 6 #: ivar: Number of random characters appended to duplicate string id
 
     def __init__(self):
         self.registry = {}
@@ -209,6 +207,17 @@ class Agent(gevent.Greenlet):
     EXCEPTION = 2
 
     def __init__(self, identifier, address_book, error_level=LOG_ERROR):
+        """
+        Creates an Agent object
+        @param identifier: the identifier the agent has in the system
+        @type identifier: int|str
+        @param address_book: the address book where we want to register
+        @type address_book: AddressBook
+        @param error_level: describe what should happen when a message
+            cannot be delivered
+        @type error_level: int (IGNORE|LOG_ERROR|EXCEPTION)
+        @return: the Agent
+        """
         super(Agent, self).__init__()
         self._queue = queue.Queue()
         self._id = identifier
@@ -383,6 +392,16 @@ class Node(Agent):
     """
 
     def __init__(self, identifier, address_book, graph):
+        """
+        Create a Node in the network.
+        @param identifier: the identifier to bind the Node to
+        @type identifier: int|str
+        @param address_book: the address book where we want to register
+        @type address_book: AddressBook
+        @param graph: the graph backing the social network
+        @type graph: networkx.Graph
+        @return: the Node
+        """
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
         self.graph.add_node(self.id)
