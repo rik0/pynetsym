@@ -51,7 +51,7 @@ class Simulation():
 
 
     def __init__(self):
-        self.graph = self.Graph()
+        self.graph = self.graph_type()
 
     @abc.abstractproperty
     def simulation_options(self):
@@ -122,7 +122,7 @@ class Simulation():
 
 
     def run(self, args=sys.argv):
-        arguments_dictionary = self.parse_arguments(args)
+        arguments_dictionary = self.parse_arguments(args[1:])
         self.output_path = arguments_dictionary.pop('output')
         self.format = arguments_dictionary.pop('format')
         steps = arguments_dictionary.pop('steps')
