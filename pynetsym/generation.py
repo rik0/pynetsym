@@ -113,7 +113,7 @@ def generate(graph, module, steps, timer_callback=None, **additional_args):
         address_book = core.AddressBook()
         node_manager = core.NodeManager(
             graph, address_book,
-            module.Configurator(**additional_args))
+            module.configurator(**additional_args))
         node_manager.start()
 
         try:

@@ -1,10 +1,11 @@
 import argparse
 import fractions
+import heapq
 
 import itertools as it
 import random
 
-from pynetsym import core
+from pynetsym import core, rnd
 from pynetsym import generation
 
 identifiers = it.count()
@@ -58,7 +59,17 @@ class Node(core.Node):
         self.send(identifier, 'accept_link', originating_node=self.id)
 
     def linker_strategy(self):
-        pass
+        while 1:
+            nodes = [node for node in self.graph.nodes() if
+                     self.id not in self.graph[node]]
+#            nodes =
+#            while 1:
+#                node = nodes.
+#            if (node in self.graph[self.id]
+#                or (self.graph.degree(node) <
+#                    random.randint()
+#                continue
+#            elif
 
 
 
