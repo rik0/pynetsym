@@ -17,11 +17,9 @@ class Simulation():
         """
         Factory used to create the Activator.
 
-        The preferred method to deal with this in the subclasses is just:
-
-        ::
-            class SimulationSubclass(simulation.Simulation):
-                class activator(generation.Activator):
+        The preferred method to deal with this in the subclasses is just::
+            class SimulationSubclass(Simulation):
+                class activator(Activator):
                     # ...
 
         @rtype: generation.Activator
@@ -38,11 +36,9 @@ class Simulation():
         """
         Factory used to create the clock.
 
-        The preferred method to deal with this in the subclasses is just:
-
-        ::
-            class SimulationSubclass(simulation.Simulation):
-                class clock(generation.Clock):
+        The preferred method to deal with this in the subclasses is just::
+            class SimulationSubclass(Simulation):
+                class clock(Clock):
                     # ...
 
         @rtype: generation.Clock
@@ -70,11 +66,9 @@ class Simulation():
         """
         Returns the builder of the Configurator to be passed to NodeManager
 
-        The preferred way to use it in the subclasses is just:
-
-        ::
-            class SimulationSubclass(simulation.Simulation):
-                class configurator(generation.Configurator):
+        The preferred way to use it in the subclasses is just::
+            class SimulationSubclass(Simulation):
+                class configurator(Configurator):
                     # ...
 
         @rtype: generation.Configurator
