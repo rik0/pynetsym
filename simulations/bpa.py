@@ -5,8 +5,6 @@ import random
 from pynetsym import simulation, core, generation
 
 
-identifiers = it.count()
-
 def distribution(s):
     parts = [fractions.Fraction(part) for part in s.split(':')]
     if sum(parts) != 1:
@@ -70,9 +68,7 @@ class Node(core.Node):
 
 
 class BPA(simulation.Simulation):
-
     class configurator(generation.SingleNodeConfigurator):
-        identifiers_seed = identifiers
         node_cls = Node
         node_options = {'probability', 'gamma'}
         activator_cls = simulation.Simulation.activator

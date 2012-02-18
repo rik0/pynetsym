@@ -74,9 +74,9 @@ class SingleNodeConfigurator(Configurator):
             additional_arguments, self.node_options )
         super(SingleNodeConfigurator, self).__init__(**additional_arguments)
 
-    @abc.abstractproperty
+    @property
     def identifiers_seed(self):
-        pass
+        return it.count()
 
     @abc.abstractproperty
     def node_cls(self):
