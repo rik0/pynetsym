@@ -6,6 +6,42 @@ import networkx
 from pynetsym import ioutil, core, generation
 
 class Simulation():
+    """
+    A subclass of Simulation describes a specific kind of simulation.
+
+    Some parameters have to be overridden to customize behavior. Most of
+    these parameters may be class parameters in the overridden class as well
+    as instance variables. It is for example acceptable to define an
+    enclosed class `activator` that "satisfies" the need for an L{activator}
+    attribute.
+        1. L{Simulation.activator}: the callable that creates the activator
+            for the simulation
+        2. L{Simulation.graph_type}: the callable that creates the graph
+            which holds the network.
+        3. L{Simulation.clock}: the callable that creates the clock in the
+            simulation
+        4. L{Simulation.simulation_options}
+        5. L{Simulation.configurator}
+
+    Of these, L{Simulation.activator}, L{Simulation.graph_type} and
+    L{Simulation.clock} have sensible default values (respectively,
+    L{generation.Activator}, L{networkx.Graph} and L{generation.Clock}.
+    The other arguments need to be supplied by the subclass.
+
+    The preferred way to deal with these options is like::
+        class SimulationSubclass(Simulation):
+            class activator(Activator):
+                # ...
+
+            class configurator(generation.SingleNodeConfigurator):
+                node_cls = Node
+                node_options = {...}
+                activator_options = {...}
+
+            simulation_options = (
+                ('-b', '--bar', dict(default=..., type=...))
+
+    """
     basic_options = (
         ("-s", "--steps", dict(default=100, type=int)),
         ("-o", "--output", dict(default=None)),
@@ -16,38 +52,25 @@ class Simulation():
     def activator(self):
         """
         Factory used to create the Activator.
-
-        The preferred method to deal with this in the subclasses is just::
-            class SimulationSubclass(Simulation):
-                class activator(Activator):
-                    # ...
-
-        @rtype: generation.Activator
+        @rtype: callable(graph, address_book)
         """
         return generation.Activator
 
     @property
     def graph_type(self):
-        """Returns the factory used to build the graph."""
+        """
+        Returns the factory used to build the graph.
+        @rtype: callable
+        """
         return networkx.Graph
 
     @property
     def clock(self):
         """
         Factory used to create the clock.
-
-        The preferred method to deal with this in the subclasses is just::
-            class SimulationSubclass(Simulation):
-                class clock(Clock):
-                    # ...
-
-        @rtype: generation.Clock
+        @rtype: callable(int steps, address_book) -> core.Clock
         """
         return generation.Clock
-
-
-    def __init__(self):
-        self.graph = self.graph_type()
 
     @abc.abstractproperty
     def simulation_options(self):
@@ -65,14 +88,11 @@ class Simulation():
     def configurator(self):
         """
         Returns the builder of the Configurator to be passed to NodeManager
-
-        The preferred way to use it in the subclasses is just::
-            class SimulationSubclass(Simulation):
-                class configurator(Configurator):
-                    # ...
-
-        @rtype: generation.Configurator
+        @rtype: callable
         """
+
+    def __init__(self):
+        self.graph = self.graph_type()
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
@@ -83,6 +103,13 @@ class Simulation():
         return parser
 
     def parse_arguments(self, args):
+        """
+        Parses an array of command line options into a dictionary
+        @param args: the command line options to parse
+        @type args: [str]
+        @return: a dictionary of options
+        @rtype: {str:any}
+        """
         parser = self._build_parser()
         namespace = parser.parse_args(args)
         arguments_dictionary = vars(namespace)
@@ -115,8 +142,34 @@ class Simulation():
             self._load_line(option_element, parser)
 
 
-    def run(self, args=sys.argv):
+    def run(self, args=None, **kwargs):
+        """
+        Runs the simulation.
+        @param args: an array of command line options which is parsed with
+            L{parse_arguments}. Default value=None. If it is None and no
+            options have been passed with kwargs, sys.argv[1:] is processed
+        @param kwargs: option relevant for the model can be passed as keyword
+            options and they override values in args.
+        @keyword steps: the number of simulations steps to perform
+        @keyword output: the output file to save the network in
+        @keyword format: the format to save the network in
+        @attention: output and format are presently not working and are vestiges
+            of an older version. However, we plan to add support for "easy"
+            saving of networks which may make use of them and thus have not
+            removed the options right now.
+        @return: None
+
+        @warning: The idea here is either to call this method with all keyword
+            arguments or with no arguments at all (in the case the program
+            is run as a standalone script). However, it also makes sense to
+            override (in the standalone script case) individual options.
+            Deliberately mixing arguments passed with an array in args and
+            keywords arguments (although working) is strongly discouraged.
+        """
+        if args is None:
+            args = [] if kwargs else sys.argv[1:]
         arguments_dictionary = self.parse_arguments(args[1:])
+        arguments_dictionary.update(kwargs)
         self.output_path = arguments_dictionary.pop('output')
         self.format = arguments_dictionary.pop('format')
         steps = arguments_dictionary.pop('steps')
