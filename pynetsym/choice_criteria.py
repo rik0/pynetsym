@@ -9,8 +9,7 @@ def preferential_attachment_edge(graph):
 
 
 def preferential_attachment(graph):
-    print graph
-    m = graph.number_of_egdes() + graph.number_of_nodes()
+    m = graph.number_of_edges() + graph.number_of_nodes()
     while 1:
         n = rnd.random_node(graph)
         k = graph.degree(n) + 1
@@ -19,7 +18,7 @@ def preferential_attachment(graph):
             return n
 
 def preferential_attachment0(graph):
-    m = graph.number_of_egdes()
+    m = graph.number_of_edges()
     while 1:
         n = rnd.random_node(graph)
         k = graph.degree(n)

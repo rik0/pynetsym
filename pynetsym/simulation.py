@@ -168,7 +168,7 @@ class Simulation():
         """
         if args is None:
             args = [] if kwargs else sys.argv[1:]
-        arguments_dictionary = self.parse_arguments(args[1:])
+        arguments_dictionary = self.parse_arguments(args)
         arguments_dictionary.update(kwargs)
         self.output_path = arguments_dictionary.pop('output')
         self.format = arguments_dictionary.pop('format')

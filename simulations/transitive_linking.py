@@ -2,13 +2,15 @@ import random
 from pynetsym import generation
 from pynetsym import core, rnd
 from pynetsym import simulation
+from pynetsym import choice_criteria
 
 class Node(core.Node):
     MAX_TRIALS = 10
 
-    def __init__(self, identifier, address_book, graph, death_probability):
+    def __init__(self, identifier, address_book,
+                 graph, death_probability, criterion):
         self.death_probability = death_probability
-        self.criterion = rnd.random_node
+        self.criterion = criterion
         super(Node, self).__init__(identifier, address_book, graph)
 
     def introduction(self):
@@ -42,11 +44,15 @@ class Node(core.Node):
 class TL(simulation.Simulation):
     simulation_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
-        ('--death-probability', dict(default=0.01, type=float)))
+        ('--death-probability', dict(default=0.01, type=float)),
+        ('--preferential-attachment', dict(
+            dest='criterion', action='store_const',
+            const=choice_criteria.preferential_attachment,
+            default=rnd.random_node)))
 
     class configurator(generation.SingleNodeConfigurator):
         node_cls = Node
-        node_options = {"death_probability"}
+        node_options = {"death_probability", "criterion"}
         activator_options = {}
 
 
