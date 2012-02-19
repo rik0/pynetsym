@@ -43,9 +43,7 @@ def ccdf_from_hst(hst):
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        add_help=True,
-        description='Simple Network Analyzer'
-    )
+        description='Simple Network Analyzer' )
     parser.add_argument('--clustering-coefficient', action='store_true',
             default=True)
     parser.add_argument('--components', action='store_true',
