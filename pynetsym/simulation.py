@@ -1,9 +1,13 @@
 import abc
 import argparse
+import itertools as it
 import sys
 import networkx
 
-from pynetsym import ioutil, core, generation
+from pynetsym import ioutil, core
+import pynetsym.core
+import pynetsym.rnd
+import pynetsym.util
 
 class Simulation():
     """
@@ -54,7 +58,7 @@ class Simulation():
         Factory used to create the Activator.
         @rtype: callable(graph, address_book)
         """
-        return generation.Activator
+        return Activator
 
     @property
     def graph_type(self):
@@ -70,7 +74,7 @@ class Simulation():
         Factory used to create the clock.
         @rtype: callable(int steps, address_book) -> core.Clock
         """
-        return generation.Clock
+        return Clock
 
     @abc.abstractproperty
     def simulation_options(self):
@@ -188,3 +192,87 @@ class Simulation():
 
         activator.join()
 
+
+class Activator(core.Agent):
+    """
+    The Activator chooses what happens at each step of the simulation.
+
+    The tick method is called at each simulation step. The default behavior
+    is to call choose_node to select a random node and send it an activate
+    message.
+
+    tick, simulation_ended and choose_node are meant to be overrode by
+    implementations.
+    """
+    name = 'activator'
+
+    def __init__(self, graph, address_book, **additional_parameters):
+        super(Activator, self).__init__(self.name, address_book)
+        self.graph = graph
+        locals().update(additional_parameters)
+
+    def tick(self):
+        node_id = self.choose_node()
+        self.send(node_id, 'activate')
+
+    def simulation_ended(self):
+        self.kill()
+
+    def choose_node(self):
+        return rnd.random_node(self.graph)
+
+
+class Clock(core.Agent):
+    name = 'clock'
+
+    def __init__(self, max_steps, address_book):
+        super(Clock, self).__init__(self.name, address_book)
+        self.max_steps = max_steps
+        self.activator = address_book.resolve(Activator.name)
+
+    def _run(self):
+        for step in xrange(self.max_steps):
+            self.send(Activator.name, 'tick')
+        self.send(Activator.name, 'simulation_ended')
+
+
+class Configurator(object):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **additional_arguments):
+        self.activator_arguments = util.subdict(
+            additional_arguments, self.activator_options)
+
+    @abc.abstractproperty
+    def activator_options(self):
+        pass
+
+    @abc.abstractmethod
+    def setup(self, node_manager):
+        pass
+
+
+class SingleNodeConfigurator(Configurator):
+    def __init__(self, network_size, **additional_arguments):
+        self.network_size = network_size
+        self.node_arguments, additional_arguments = util.splitdict(
+            additional_arguments, self.node_options )
+        super(SingleNodeConfigurator, self).__init__(**additional_arguments)
+
+    @property
+    def identifiers_seed(self):
+        return it.count()
+
+    @abc.abstractproperty
+    def node_cls(self):
+        pass
+
+    @abc.abstractproperty
+    def node_options(self):
+        pass
+
+    def setup(self, node_manager):
+        for identifier in it.islice(
+            self.identifiers_seed, 0, self.network_size):
+            node_manager.create_node(
+                self.node_cls, identifier, self.node_arguments)

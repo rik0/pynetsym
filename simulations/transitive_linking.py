@@ -1,5 +1,4 @@
 import random
-from pynetsym import generation
 from pynetsym import core, rnd
 from pynetsym import simulation
 from pynetsym import choice_criteria
@@ -50,7 +49,7 @@ class TL(simulation.Simulation):
             const=choice_criteria.preferential_attachment,
             default=rnd.random_node)))
 
-    class configurator(generation.SingleNodeConfigurator):
+    class configurator(simulation.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
         activator_options = {}

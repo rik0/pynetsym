@@ -1,8 +1,7 @@
 import fractions
-import itertools as it
 import random
 
-from pynetsym import simulation, core, generation
+from pynetsym import simulation, core
 
 
 def distribution(s):
@@ -40,7 +39,7 @@ class Node(core.Node):
         pass
 
     def inviter_strategy(self):
-        identifier = identifiers.next()
+        identifier = BPA.configurator.identifiers_seed.next()
         self.send(
             core.NodeManager.name, 'create_node', cls=Node,
             identifier_hint=identifier,
@@ -68,7 +67,7 @@ class Node(core.Node):
 
 
 class BPA(simulation.Simulation):
-    class configurator(generation.SingleNodeConfigurator):
+    class configurator(simulation.SingleNodeConfigurator):
         node_cls = Node
         node_options = {'probability', 'gamma'}
         activator_cls = simulation.Simulation.activator

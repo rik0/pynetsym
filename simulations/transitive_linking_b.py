@@ -3,7 +3,7 @@ from . import transitive_linking
 import random
 import itertools as it
 
-from pynetsym import simulation, rnd, choice_criteria, generation
+from pynetsym import simulation, rnd, choice_criteria
 
 
 class Node(transitive_linking.Node):
@@ -33,7 +33,7 @@ class TL(simulation.Simulation):
             const=choice_criteria.preferential_attachment,
             default=rnd.random_node)))
 
-    class configurator(generation.SingleNodeConfigurator):
+    class configurator(simulation.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
         activator_options = {}
