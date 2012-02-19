@@ -1,6 +1,5 @@
 import random
 import string
-import itertools as it
 
 def _iter_random_choice(iterator, max_value):
     chosen_index = random.randrange(0, max_value)

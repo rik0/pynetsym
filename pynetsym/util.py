@@ -1,4 +1,8 @@
+"""
+Generic utility functions are defined here.
 
+For example functions to manipulate primitive data types and such.
+"""
 
 def subdict(dct, keys, on_error=None):
     """

@@ -1,5 +1,4 @@
 import time
-import sys
 
 __author__ = 'enrico'
 

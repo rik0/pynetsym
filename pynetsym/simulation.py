@@ -4,10 +4,7 @@ import itertools as it
 import sys
 import networkx
 
-from pynetsym import ioutil, core
-import pynetsym.core
-import pynetsym.rnd
-import pynetsym.util
+from pynetsym import ioutil, core, util
 
 class Simulation():
     """
