@@ -54,6 +54,3 @@ class TL(simulation.Simulation):
         node_options = {"death_probability", "criterion"}
         activator_options = {}
 
-
-
-

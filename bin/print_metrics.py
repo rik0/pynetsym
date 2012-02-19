@@ -1,45 +1,10 @@
-import sys
 import argparse
-import matplotlib
-import math
-import random
 
-import numpy as np
 import networkx as nx
 
 from pynetsym import ioutil
 from matplotlib import pyplot as plt
-
-def estimate_s(q, delta, eps):
-    delta2 = delta * delta
-    delta3 = (1-delta)*(1-delta)
-    return (2. / (q*q)) * math.log(2./eps) * delta3 / delta2
-
-def approximate_cpl(graph, q=0.5, delta=0.15, eps=0.05):
-    assert isinstance(graph, nx.Graph)
-    s = estimate_s(q, delta, eps)
-    s = int(math.ceil(s))
-    if graph.number_of_nodes() <= s:
-        sample = graph.nodes_iter()
-    else:
-        sample = random.sample(graph.adj.keys(), s)
-
-    averages = []
-    for node in sample:
-        path_lengths = nx.single_source_shortest_path_length(graph, node)
-        average = sum(path_lengths.itervalues())/float(len(path_lengths))
-        averages.append(average)
-    averages.sort()
-    median_index = int(len(averages) * q + 1)
-    return averages[median_index]
-
-
-def ccdf_from_hst(hst):
-    hst = np.array(hst, dtype=float)
-    sm = np.sum(hst)
-    A = np.vstack(hst for _ in hst)
-    L = np.triu(A)
-    return np.sum(L, axis=1)/sm
+import pynetsym
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -100,7 +65,7 @@ def process_network(G, namespace):
         plt.plot(range(len(hst)), hst, marker='+')
 
         plt.subplot(122)
-        ccdf = ccdf_from_hst(hst)
+        ccdf = pynetsym.mathutil.ccdf(hst)
         plt.xscale('log')
         plt.yscale('log')
         plt.title("CCDF Degree Distribution")

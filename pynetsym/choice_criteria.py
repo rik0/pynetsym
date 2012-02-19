@@ -1,5 +1,5 @@
+from pynetsym import rnd
 import random
-import rnd
 
 def preferential_attachment_edge(graph):
     if graph.number_of_edges():

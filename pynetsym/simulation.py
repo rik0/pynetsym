@@ -4,9 +4,9 @@ import itertools as it
 import sys
 import networkx
 
-from pynetsym import ioutil, core, util
+from pynetsym import ioutil, core, util, rnd
 
-class Simulation():
+class Simulation(object):
     """
     A subclass of Simulation describes a specific kind of simulation.
 
@@ -47,7 +47,7 @@ class Simulation():
         ("-s", "--steps", dict(default=100, type=int)),
         ("-o", "--output", dict(default=None)),
         ("-f", "--format", dict(choices=ioutil.FORMATS, default=None)))
-    """the basic options all simulations share. Do not override."""
+    """the basic options all generation_models share. Do not override."""
 
     @property
     def activator(self):
@@ -151,14 +151,16 @@ class Simulation():
             options have been passed with kwargs, sys.argv[1:] is processed
         @param kwargs: option relevant for the model can be passed as keyword
             options and they override values in args.
-        @keyword steps: the number of simulations steps to perform
+        @keyword steps: the number of generation_models steps to perform
         @keyword output: the output file to save the network in
         @keyword format: the format to save the network in
         @attention: output and format are presently not working and are vestiges
             of an older version. However, we plan to add support for "easy"
             saving of networks which may make use of them and thus have not
             removed the options right now.
-        @return: None
+        @return: The current simulation so that it is easier to create
+            one-liners
+        @rtype: Simulation
 
         @warning: The idea here is either to call this method with all keyword
             arguments or with no arguments at all (in the case the program
@@ -188,6 +190,12 @@ class Simulation():
         clock.start()
 
         activator.join()
+        return self
+
+    @classmethod
+    def main(cls):
+        sim = cls()
+        return sim.run()
 
 
 class Activator(core.Agent):

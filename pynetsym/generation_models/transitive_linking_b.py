@@ -1,5 +1,3 @@
-from . import transitive_linking
-
 import random
 import itertools as it
 
