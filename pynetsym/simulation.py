@@ -4,7 +4,7 @@ import itertools as it
 import sys
 import networkx
 
-from pynetsym import ioutil, core, util, rnd
+from pynetsym import ioutil, core, util, rnd, timing
 
 class Simulation(object):
     """
@@ -143,7 +143,8 @@ class Simulation(object):
             self._load_line(option_element, parser)
 
 
-    def run(self, args=None, **kwargs):
+    def run(self, callback=timing.TimeLogger(sys.stdout),
+            *args, **kwargs):
         """
         Runs the simulation.
         @param args: an array of command line options which is parsed with
@@ -186,11 +187,12 @@ class Simulation(object):
         activator = self.activator(self.graph, address_book)
         activator.start()
 
-        clock = self.clock(steps, address_book)
-        clock.start()
+        with timing.Timer(callback):
+            clock = self.clock(steps, address_book)
+            clock.start()
 
-        activator.join()
-        return self
+            activator.join()
+            return self
 
     @classmethod
     def main(cls):

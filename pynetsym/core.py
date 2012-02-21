@@ -209,9 +209,11 @@ class AbstractAgent(object):
     LOG_ERROR = 1
     EXCEPTION = 2
 
-    def __init__(self, identifier, address_book, error_level=LOG_ERROR):
+    def initialize(self, identifier, address_book, error_level=LOG_ERROR):
         """
-        Creates an Agent object
+        Initializes the Agent object setting variables and registering
+        the agent in the address book.
+
         @param identifier: the identifier the agent has in the system
         @type identifier: int|str
         @param address_book: the address book where we want to register
@@ -227,7 +229,7 @@ class AbstractAgent(object):
         self._err_level = error_level
 
     @abc.abstractmethod
-    def _deliver(self, message):
+    def deliver(self, message):
         """
         Delivers message to this agent.
         @param message: the message
@@ -285,7 +287,7 @@ class AbstractAgent(object):
                 )
                 unbound_method = getattr(receiver_class, 'unsupported_message')
             func = functools.partial(unbound_method, **additional_parameters)
-        receiver._deliver(Message(self.id, func))
+        receiver.deliver(Message(self.id, func))
 
     def process(self, message):
         """
@@ -329,11 +331,14 @@ class AbstractAgent(object):
         return '%s(%s)' % (type(self), self.id)
 
 class Agent(gevent.Greenlet, AbstractAgent):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, identifier, address_book,
+                 error_level=AbstractAgent.LOG_ERROR,
+                 *args, **kwargs):
         super(Agent, self).__init__(*args, **kwargs)
+        self.initialize(identifier, address_book, error_level)
         self._queue = queue.Queue()
 
-    def _deliver(self, message):
+    def deliver(self, message):
         self._queue.put(message)
 
     def read(self):
