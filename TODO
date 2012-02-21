@@ -9,4 +9,11 @@
 4. Decorators to select what needs to be done if a method is called. E.g.,
     check that is a method meant to be called "from outside".
 5. Do we want that we *must* specifiy the node address when creating it?
-    Does this not lead to subtle bugs?
+    Does this not lead to subtle bugs?: probably fixed. Now we have just
+    hinting.
+6. Devise the interface for something gathering simulation results.
+    Probably np.array is the right class to hold the results. Because it is
+    very easy to plot/save/whatever.
+7. Find a good way to work both with networkx or other kinds of graphs.
+8. Profile the transitive linking (regardless of how it scales).
+
