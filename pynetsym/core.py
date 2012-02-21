@@ -1,3 +1,4 @@
+import abc
 import collections
 import functools
 import numbers
@@ -196,11 +197,13 @@ class AddressBook(object):
                 "Could not build identifier from {}".format(hint))
 
 
-class Agent(gevent.Greenlet):
+class AbstractAgent(object):
     """
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
+
+    __metaclass__ = abc.ABCMeta
 
     IGNORE = 0
     LOG_ERROR = 1
@@ -218,13 +221,36 @@ class Agent(gevent.Greenlet):
         @type error_level: int (IGNORE|LOG_ERROR|EXCEPTION)
         @return: the Agent
         """
-        super(Agent, self).__init__()
-        self._queue = queue.Queue()
         self._id = identifier
         self._address_book = address_book
         self._address_book.register(identifier, self)
         self._err_level = error_level
 
+    @abc.abstractmethod
+    def _deliver(self, message):
+        """
+        Delivers message to this agent.
+        @param message: the message
+        @type message: Message
+        """
+        pass
+
+    @abc.abstractmethod
+    def read(self):
+        """
+        Reads the next message that was sent to this agent.
+        @attention: It is not really meant to be called directly.
+        @return: Message
+        """
+        pass
+
+    @abc.abstractmethod
+    def cooperate(self):
+        """
+        Release control
+
+        """
+        pass
 
     @property
     def id(self):
@@ -234,9 +260,6 @@ class Agent(gevent.Greenlet):
         @attention: In fact, the only requirement is that it is hashable
         """
         return self._id
-
-    def _deliver(self, message):
-        self._queue.put(message)
 
     def send(self, receiver_id, payload, **additional_parameters):
         """
@@ -264,13 +287,6 @@ class Agent(gevent.Greenlet):
             func = functools.partial(unbound_method, **additional_parameters)
         receiver._deliver(Message(self.id, func))
 
-    def read(self):
-        """
-        Read a single message from the queue. It should not be called directly
-        unless you really know what you are doing.
-        """
-        return self._queue.get()
-
     def process(self, message):
         """
         Processes the message. This means calling the message payload with
@@ -278,13 +294,6 @@ class Agent(gevent.Greenlet):
 
         """
         return message.payload(self)
-
-    def cooperate(self):
-        """
-        Release control
-
-        """
-        gevent.sleep()
 
     def run_loop(self):
         """
@@ -316,12 +325,34 @@ class Agent(gevent.Greenlet):
             '%s received "%s" message with parameters %s: could not process.' %
             (self, name, additional_parameters))
 
-    def _run(self):
-        self.run_loop()
-
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
 
+class Agent(gevent.Greenlet, AbstractAgent):
+    def __init__(self, *args, **kwargs):
+        super(Agent, self).__init__(*args, **kwargs)
+        self._queue = queue.Queue()
+
+    def _deliver(self, message):
+        self._queue.put(message)
+
+    def read(self):
+        """
+        Reads the next message that was sent to this agent.
+        @attention: It is not really meant to be called directly.
+        @return: Message
+        """
+        return self._queue.get()
+
+    def cooperate(self):
+        """
+        Release control
+
+        """
+        gevent.sleep()
+
+    def _run(self):
+        self.run_loop()
 
 class NodeManager(Agent):
     """
