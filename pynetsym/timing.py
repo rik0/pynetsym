@@ -45,6 +45,12 @@ class TimeLogger(object):
 
 class Timer(object):
     def __init__(self, callback=None):
+        """
+        Constructs a Timer object
+        @param callback: a callable that is called when we are done taking
+            the time and that is passed the present timer object
+        @type callback: callable
+        """
         self.callback = callback
         self._start_time = None
         self._end_time = None
@@ -67,15 +73,27 @@ class Timer(object):
             raise TimerStateError("Not yet __exited__.")
         return self._end_time
 
-    def __enter__(self):
+    def tic(self):
+        """
+        Starts taking the time.
+        """
         self._end_time = None
         self._start_time = time.time()
 
+    def __enter__(self):
+        self.tic()
+
+    def toc(self):
+        """
+        Stops taking the time (and calls the callback if not none)
+        """
+        self._end_time = time.time()
+        if callable(self.callback):
+            return self.callback(self)
+
     def __exit__(self, type, value, traceback):
         if type is None and value is None and traceback is None:
-            self._end_time = time.time()
-            if callable(self.callback):
-                self.callback(self)
+            self.toc()
 
     @property
     def elapsed_time(self):
@@ -84,3 +102,22 @@ class Timer(object):
             return (self.end_time - self.start_time) * 1000
         except AttributeError:
             raise TimerStateError()
+
+
+def tictoc(callback, func, *args, **kwargs):
+    """
+    Calls func in a timer passing callable as the result.
+    @param callback: the callable to execute after the execution
+    @type callback: callable
+    @param func: the function to benchmark
+    @type func: callable
+    @param args: Additional arguments passed to func
+    @param kwargs: Additional arguments passed to func
+    @return: func return value
+    """
+    t = Timer(callback)
+    t.tic()
+    try:
+        return func()
+    finally:
+        t.toc()
