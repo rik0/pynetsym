@@ -97,7 +97,7 @@ class Simulation(object):
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
-            add_help=False,
+            add_help=True,
             description='Synthetic Network Generation Utility')
         self._load_arguments(parser, self.basic_options)
         self._load_arguments(parser, self.simulation_options)
@@ -170,7 +170,7 @@ class Simulation(object):
             Deliberately mixing arguments passed with an array in args and
             keywords arguments (although working) is strongly discouraged.
         """
-        if args is None:
+        if not args:
             args = [] if kwargs else sys.argv[1:]
         arguments_dictionary = self.parse_arguments(args)
         arguments_dictionary.update(kwargs)
