@@ -1,8 +1,8 @@
 import random
 import itertools as it
 
+from . import transitive_linking
 from pynetsym import simulation, rnd, choice_criteria
-
 
 class Node(transitive_linking.Node):
     def find_possible_links(self, graph, neighbors):
