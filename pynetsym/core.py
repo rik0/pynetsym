@@ -51,7 +51,11 @@ def does_answer(method):
     return (hasattr(method, 'answers')
             and method.answers)
 
-Message = collections.namedtuple('Message', 'sender payload') #: An immutable object that is used to send a message among agents.
+_M = collections.namedtuple('Message', 'sender payload')
+class Message(_M):
+    """
+    An immutable object that is used to send a message among agents.
+    """
 
 class AddressingError(Exception):
     """
@@ -62,13 +66,16 @@ class AddressingError(Exception):
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
 
-# TODO: we should streamline the API to avoid what occurs when registering an agent with an identifier different from its "address"
 class AddressBook(object):
     """
     The Address book holds information on every agent in the system.
 
     An agent that is not in the AddressBook is virtually unreachable.
 
+    @todo: Change the API so that the identifier is not chosen from outside.
+        The API change should take into account:
+            1. how it works with different Graph implementations (e.g., igraph)
+            2. how it works with different back-ends (e.g., asside)
     """
 
     RAND_CHARS = 6 #: ivar: Number of random characters appended to duplicate string id
@@ -76,7 +83,7 @@ class AddressBook(object):
     def __init__(self):
         self.registry = {}
 
-    def _check_same_agent(self, agent, identifier):
+    def _check_same_agent_or_fail(self, agent, identifier):
         old_agent = self.registry[identifier]
         if old_agent is agent:
             pass
@@ -94,7 +101,7 @@ class AddressBook(object):
         @raise AddressingError: if identifier is already bound.
         """
         if identifier in self.registry:
-            self._check_same_agent(agent, identifier)
+            self._check_same_agent_or_fail(agent, identifier)
         else:
             self.registry[identifier] = agent
 
@@ -283,9 +290,11 @@ class AbstractAgent(object):
                 unbound_method = getattr(receiver_class, payload)
             except AttributeError:
                 additional_parameters = dict(
-                    name=payload, additional_parameters=additional_parameters
-                )
-                unbound_method = getattr(receiver_class, 'unsupported_message')
+                    name=payload,
+                    additional_parameters=additional_parameters)
+                unbound_method = getattr(
+                    receiver_class,
+                    'unsupported_message')
             func = functools.partial(unbound_method, **additional_parameters)
         receiver.deliver(Message(self.id, func))
 
