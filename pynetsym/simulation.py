@@ -2,9 +2,8 @@ import abc
 import argparse
 import itertools as it
 import sys
-import networkx
 
-from pynetsym import ioutil, core, util, rnd, timing
+from pynetsym import ioutil, core, util, rnd, timing, backend
 
 class Simulation(object):
     """
@@ -26,7 +25,7 @@ class Simulation(object):
 
     Of these, L{Simulation.activator}, L{Simulation.graph_type} and
     L{Simulation.clock} have sensible default values (respectively,
-    L{generation.Activator}, L{networkx.Graph} and L{generation.Clock}.
+    L{generation.Activator}, L{backend.NXGraph} and L{generation.Clock}.
     The other arguments need to be supplied by the subclass.
 
     The preferred way to deal with these options is like::
@@ -63,7 +62,7 @@ class Simulation(object):
         Returns the factory used to build the graph.
         @rtype: callable
         """
-        return networkx.Graph
+        return backend.NXGraph
 
     @property
     def clock(self):
