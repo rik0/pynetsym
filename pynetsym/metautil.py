@@ -78,3 +78,15 @@ def extract_interface(cls, debug=False):
         return new_cls
 
     return processor
+
+class classproperty(property):
+    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
+        fget = fget if fget is None else classmethod(fget)
+        fset = fset if fset is None else classmethod(fset)
+        fdel = fdel if fdel is None else classmethod(fdel)
+        super(classproperty, self).__init__(fget, fset, fdel, doc)
+
+    def __get__(self, obj, type=None):
+        return self.fget.__get__(None, type)()
+
+

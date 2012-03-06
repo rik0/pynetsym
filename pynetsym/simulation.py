@@ -1,9 +1,8 @@
-import abc
 import argparse
-import itertools as it
 import sys
 
-from pynetsym import ioutil, core, util, rnd, timing, backend
+from pynetsym import ioutil, core, timing, backend, metautil
+from pynetsym.node_manager import NodeManager
 
 class Simulation(object):
     """
@@ -48,7 +47,7 @@ class Simulation(object):
         ("-f", "--format", dict(choices=ioutil.FORMATS, default=None)))
     """the basic options all generation_models share. Do not override."""
 
-    @property
+    @metautil.classproperty
     def activator(self):
         """
         Factory used to create the Activator.
@@ -56,7 +55,7 @@ class Simulation(object):
         """
         return Activator
 
-    @property
+    @metautil.classproperty
     def graph_type(self):
         """
         Returns the factory used to build the graph.
@@ -64,7 +63,7 @@ class Simulation(object):
         """
         return backend.NXGraph
 
-    @property
+    @metautil.classproperty
     def clock(self):
         """
         Factory used to create the clock.
@@ -72,7 +71,7 @@ class Simulation(object):
         """
         return Clock
 
-    @abc.abstractproperty
+    @metautil.classproperty
     def simulation_options(self):
         """
         Returns a sequence of tuples:
@@ -83,8 +82,10 @@ class Simulation(object):
 
         @rtype: [(str, str, dict)]
         """
+        return []
 
-    @abc.abstractproperty
+    #TODO: fixme
+    @metautil.classproperty
     def configurator(self):
         """
         Returns the builder of the Configurator to be passed to NodeManager
@@ -178,7 +179,7 @@ class Simulation(object):
         steps = arguments_dictionary.pop('steps')
 
         address_book = core.AddressBook()
-        node_manager = core.NodeManager(
+        node_manager = NodeManager(
             self.graph, address_book,
             self.configurator(**arguments_dictionary))
         node_manager.start()
@@ -225,7 +226,7 @@ class Activator(core.Agent):
         self.kill()
 
     def choose_node(self):
-        return rnd.random_node(self.graph)
+        return self.graph.random_node()
 
 
 class Clock(core.Agent):
@@ -242,43 +243,4 @@ class Clock(core.Agent):
         self.send(Activator.name, 'simulation_ended')
 
 
-class Configurator(object):
-    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **additional_arguments):
-        self.activator_arguments = util.subdict(
-            additional_arguments, self.activator_options)
-
-    @abc.abstractproperty
-    def activator_options(self):
-        pass
-
-    @abc.abstractmethod
-    def setup(self, node_manager):
-        pass
-
-
-class SingleNodeConfigurator(Configurator):
-    def __init__(self, network_size, **additional_arguments):
-        self.network_size = network_size
-        self.node_arguments, additional_arguments = util.splitdict(
-            additional_arguments, self.node_options )
-        super(SingleNodeConfigurator, self).__init__(**additional_arguments)
-
-    @property
-    def identifiers_seed(self):
-        return it.count()
-
-    @abc.abstractproperty
-    def node_cls(self):
-        pass
-
-    @abc.abstractproperty
-    def node_options(self):
-        pass
-
-    def setup(self, node_manager):
-        for identifier in it.islice(
-            self.identifiers_seed, 0, self.network_size):
-            node_manager.create_node(
-                self.node_cls, identifier, self.node_arguments)

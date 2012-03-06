@@ -2,6 +2,7 @@ import fractions
 import random
 
 from pynetsym import simulation, core
+from pynetsym.node_manager import NodeManager
 
 
 def distribution(s):
@@ -41,7 +42,7 @@ class Node(core.Node):
     def inviter_strategy(self):
         identifier = BPA.configurator.identifiers_seed.next()
         self.send(
-            core.NodeManager.name, 'create_node', cls=Node,
+            NodeManager.name, 'create_node', cls=Node,
             identifier_hint=identifier,
             parameters=dict(
                 gamma=self.gamma, probability=self.p,

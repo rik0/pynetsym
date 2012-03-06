@@ -1,7 +1,7 @@
 import random
 import igraph
 from pynetsym import core, rnd
-from pynetsym import simulation
+from pynetsym import simulation, node_manager
 from pynetsym import choice_criteria
 
 class Node(core.Node):
@@ -50,7 +50,7 @@ class TL(simulation.Simulation):
             const=choice_criteria.preferential_attachment,
             default=rnd.random_node)))
 
-    class configurator(simulation.SingleNodeConfigurator):
+    class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
         activator_options = {}

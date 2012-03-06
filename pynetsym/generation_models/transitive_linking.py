@@ -1,5 +1,5 @@
 import random
-from pynetsym import core, rnd
+from pynetsym import core, node_manager
 from pynetsym import simulation
 from pynetsym import choice_criteria
 
@@ -37,7 +37,7 @@ class Node(core.Node):
 
     def regenerate(self):
         self.graph.remove_node(self.id)
-        target_node = rnd.random_node(self.graph)
+        target_node = self.graph.random_node()
         self.link_to(target_node)
 
 class TL(simulation.Simulation):
@@ -47,9 +47,9 @@ class TL(simulation.Simulation):
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',
             const=choice_criteria.preferential_attachment,
-            default=rnd.random_node)))
+            default=simulation.Simulation.graph_type)))
 
-    class configurator(simulation.SingleNodeConfigurator):
+    class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
         activator_options = {}
