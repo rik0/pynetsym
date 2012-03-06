@@ -17,13 +17,30 @@ class Graph(object):
         """
 
     @abc.abstractmethod
-    def random_node(self, strategy=None):
+    def random_node(self):
+        """
+        Return a random node chosen uniformly.
+        @return: a node
+        @rtype: int
+        """
         pass
+
+    def preferential_attachment_node(self):
+        """
+        Return a random node chosen according to preferential attachment
+        @return: a node
+        @rtype: int
+        """
+        return self.random_edge()[0]
 
     @abc.abstractmethod
-    def random_edge(self, strategy=None):
+    def random_edge(self):
+        """
+        Return a random edge chosen uniformly
+        @return: an edge
+        @rtype: int, int
+        """
         pass
-
 
 try:
     import networkx as nx
@@ -34,7 +51,7 @@ except ImportError, e:
             raise ImportError("Could not find networkx")
 else:
     class NXGraph(nx.Graph, Graph):
-        def random_node(self, strategy):
+        def random_node(self):
             """Draw a random node from the graph.
 
             Returns a node index or None if the graph has no nodes.
@@ -53,14 +70,17 @@ else:
                     max_value)
 
         def random_edge(self):
-            """Draw a random edge from the graph.
+            """
+            Draw a random edge from the graph.
 
             Returns (node_id, node_id) pair or None if the graph has no edges.
 
-            This is relatively safe, although horribly slow."""
+            This is relatively safe, although horribly slow.
+            """
             return pynetsym.rnd.choice_from_iter(
                 self.edges_iter(),
                 self.number_of_edges())
+
 
 
 try:
@@ -91,7 +111,3 @@ else:
         def random_edge(self):
             edge = random.choice(self.graph.es)
             return edge.source, edge.target
-
-        def preferential_attachment(self):
-            return self.random_edge()[0]
-
