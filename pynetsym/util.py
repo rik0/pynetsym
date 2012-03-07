@@ -6,7 +6,7 @@ For example functions to manipulate primitive data types and such.
 
 import itertools as it
 from heapq import heappop, heappush
-from bisect import bisect_left, insort
+from bisect import bisect_left
 
 def subdict(dct, keys, on_error=None):
     """

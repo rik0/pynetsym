@@ -5,8 +5,6 @@ These functions have been written to be easy to use from interactive prompt
 and such more than to be general. Lot of DIP has B{not} been done on purpose.
 """
 
-
-import networkx
 import networkx as nx
 from os import path
 

@@ -6,7 +6,6 @@ import gevent
 import itertools as it
 
 import gevent.queue as queue
-import sys
 
 from pynetsym import rnd
 

@@ -1,7 +1,6 @@
 import random
 from pynetsym import core, node_manager
 from pynetsym import simulation
-from pynetsym import choice_criteria
 
 class Node(core.Node):
     MAX_TRIALS = 10

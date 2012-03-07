@@ -2,7 +2,7 @@ import random
 import itertools as it
 
 from . import transitive_linking
-from pynetsym import simulation, rnd, choice_criteria, node_manager
+from pynetsym import simulation, node_manager
 
 class Node(transitive_linking.Node):
     def find_possible_links(self, graph, neighbors):

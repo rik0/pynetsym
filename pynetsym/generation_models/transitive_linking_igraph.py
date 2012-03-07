@@ -2,7 +2,6 @@ import random
 import igraph
 from pynetsym import core, rnd
 from pynetsym import simulation, node_manager
-from pynetsym import choice_criteria
 
 class Node(core.Node):
     MAX_TRIALS = 10

@@ -1,9 +1,6 @@
 import abc
-import networkx as nx
 import heapq
 import bisect
-
-from pynetsym import metautil
 
 #@metautil.extract_interface(nx.Graph)
 class Graph(object):
