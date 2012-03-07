@@ -1,7 +1,7 @@
 import abc
 import random
 import pynetsym
-import pynetsym.rnd
+import pynetsym.rndutil
 
 class Graph(object):
     __metaclass__ = abc.ABCMeta
@@ -63,7 +63,7 @@ else:
             if self.has_node(chosen_index):
                 return chosen_index
             else:
-                return pynetsym.rnd.choice_from_iter(
+                return pynetsym.rndutil.choice_from_iter(
                     self.nodes_iter(),
                     max_value)
 
@@ -75,7 +75,7 @@ else:
 
             This is relatively safe, although horribly slow.
             """
-            return pynetsym.rnd.choice_from_iter(
+            return pynetsym.rndutil.choice_from_iter(
                 self.edges_iter(),
                 self.number_of_edges())
 

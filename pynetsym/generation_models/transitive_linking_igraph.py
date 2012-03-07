@@ -1,6 +1,6 @@
 import random
 import igraph
-from pynetsym import core, rnd
+from pynetsym import core, rndutil
 from pynetsym import simulation, node_manager
 
 class Node(core.Node):
@@ -37,7 +37,7 @@ class Node(core.Node):
 
     def regenerate(self):
         self.graph.remove_node(self.id)
-        target_node = rnd.random_node(self.graph)
+        target_node = rndutil.random_node(self.graph)
         self.link_to(target_node)
 
 class TL(simulation.Simulation):

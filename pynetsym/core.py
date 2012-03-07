@@ -7,7 +7,7 @@ import itertools as it
 
 import gevent.queue as queue
 
-from pynetsym import rnd
+from pynetsym import rndutil
 
 def answers(method):
     """
@@ -197,7 +197,7 @@ class AddressBook(object):
         elif isinstance(hint, basestring):
             return ''.join(
                 it.chain(hint, '#',
-                         it.islice(rnd.random_printable_chars(),
+                         it.islice(rndutil.random_printable_chars(),
                                    0, self.RAND_CHARS)))
         else:
             raise TypeError(
