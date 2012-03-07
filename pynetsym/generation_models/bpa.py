@@ -2,6 +2,7 @@ import fractions
 import random
 
 from pynetsym import simulation, core
+import pynetsym
 from pynetsym.node_manager import NodeManager
 
 
@@ -68,7 +69,7 @@ class Node(core.Node):
 
 
 class BPA(simulation.Simulation):
-    class configurator(simulation.SingleNodeConfigurator):
+    class configurator(pynetsym.node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {'probability', 'gamma'}
         activator_cls = simulation.Simulation.activator

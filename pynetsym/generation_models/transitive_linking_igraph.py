@@ -47,8 +47,8 @@ class TL(simulation.Simulation):
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',
-            const=choice_criteria.preferential_attachment,
-            default=rnd.random_node)))
+            const=simulation.Simulation.graph_type.preferential_attachment_node,
+            default=simulation.Simulation.graph_type.random_node)))
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node

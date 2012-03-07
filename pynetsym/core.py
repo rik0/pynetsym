@@ -150,8 +150,9 @@ class AddressBook(object):
         """
         try:
             return self.registry[identifier]
-        except KeyError, e:
-            raise AddressingError(e)
+        except KeyError:
+            raise AddressingError(
+                "Could not find node with address %r." % identifier)
 
     def agents(self):
         """
