@@ -2,6 +2,7 @@ import random
 import igraph
 from pynetsym import core, rndutil
 from pynetsym import simulation, node_manager
+import pynetsym
 
 class Node(core.Node):
     MAX_TRIALS = 10
@@ -49,12 +50,14 @@ class TL(simulation.Simulation):
             const=simulation.Simulation.graph_type.preferential_attachment_node,
             default=simulation.Simulation.graph_type.random_node)))
 
+    graph_options = dict(graph=igraph.Graph())
+
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
         activator_options = {}
 
-    graph_type = igraph.Graph
+    graph_type = pynetsym.backend.IGraphWrapper
 
     class Activator(simulation.Activator):
         def choose_node(self):

@@ -93,7 +93,14 @@ class Simulation(object):
         """
 
     def __init__(self):
-        self.graph = self.graph_type()
+        """
+        During the initialization step we create a new graph according to
+        the property graph_type. Additional parameters can be passed to
+        graph_type setting the attribute graph_options to a dictionary.
+        @return:
+        """
+        graph_options = getattr(self, 'graph_options', {})
+        self.graph = self.graph_type(**graph_options)
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
