@@ -1,4 +1,12 @@
 networks
 .idea
+*.swp
 *.pyc
 csvs
+build
+dist
+lib/*
+bin/*
+include/*
+*.egg-info
+.Python
