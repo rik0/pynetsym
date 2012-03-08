@@ -401,7 +401,7 @@ class Node(Agent):
             target_node = criterion_or_node(self.graph)
         else:
             target_node = criterion_or_node
-        self.send(target_node, Node.accept_link, originating_node=self.id)
+        self.send(target_node, 'accept_link', originating_node=self.id)
 
     def accept_link(self, originating_node):
         """
