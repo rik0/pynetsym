@@ -29,7 +29,12 @@ class Graph(object):
         @return: a node
         @rtype: int
         """
-        return self.random_edge()[0]
+        try:
+            return self.random_edge()[0]
+        except ValueError:
+            ## Means that random_edge failed: no edges all nodes
+            ## have 0 degree!
+            return self.random_node()
 
     @abc.abstractmethod
     def random_edge(self):
