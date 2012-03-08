@@ -28,12 +28,13 @@ class Node(core.Node):
         super(Node, self).__init__(identifier, address_book, graph)
 
     def introduction(self):
+        current_id = self.graph.dereference(self.id)
         graph = self.graph.graph
         neighbors = graph.neighbors(self.id)
         if len(neighbors) > 1:
             for _ in xrange(Node.MAX_TRIALS):
                 node_a, node_b = random.sample(neighbors, 2)
-                if not graph.has_edge(node_a, node_b):
+                if not graph.are_connected(node_a, node_b):
                     self.send(node_a, 'introduce_to', target_node=node_b)
                     break
             else:
