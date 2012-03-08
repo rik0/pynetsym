@@ -56,13 +56,15 @@ class Node(core.Node):
         self.link_to(target_node)
 
 class TL(simulation.Simulation):
+    graph_type = pynetsym.backend.IGraphWrapper
+
     simulation_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',
-            const=simulation.Simulation.graph_type.preferential_attachment_node,
-            default=simulation.Simulation.graph_type.random_node)))
+            const=graph_type.preferential_attachment_node,
+            default=graph_type.random_node)))
 
     graph_options = dict(graph=igraph.Graph())
 
@@ -71,11 +73,7 @@ class TL(simulation.Simulation):
         node_options = {"death_probability", "criterion"}
         activator_options = {}
 
-    graph_type = pynetsym.backend.IGraphWrapper
 
-    class Activator(simulation.Activator):
-        def choose_node(self):
-            pass
 
 if __name__ == '__main__':
     sim = TL()

@@ -103,9 +103,18 @@ else:
             largest_index = len(self.graph.vs) - 1
             self.graph.vs[largest_index]["identifier"] = identifier
 
+        def add_edge(self, source, target):
+            source_node = self.dereference(source)
+            target_node = self.dereference(target)
+            self.graph.add_edges((source_node, target_node))
+
         def random_node(self):
             return random.choice(self.graph.vs).index
 
         def random_edge(self):
             edge = random.choice(self.graph.es)
             return edge.source, edge.target
+
+        def dereference(self, node_id):
+            nodes = self.graph.vs.select(identifier_eq=node_id)
+            return nodes[0].index
