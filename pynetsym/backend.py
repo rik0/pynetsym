@@ -1,6 +1,7 @@
 import abc
 import random
 import pynetsym
+import pynetsym.metautil
 import pynetsym.rndutil
 
 class Graph(object):
@@ -43,6 +44,10 @@ class Graph(object):
         @return: an edge
         @rtype: int, int
         """
+        pass
+
+    @abc.abstractmethod
+    def remove_node(self, node):
         pass
 
 try:
@@ -120,6 +125,11 @@ else:
             edge = random.choice(self.graph.es)
             return edge.source, edge.target
 
-        def dereference(self, node_id):
-            nodes = self.graph.vs.select(identifier_eq=node_id)
+        def dereference(self, identifier):
+            nodes = self.graph.vs.select(identifier_eq=identifier)
             return nodes[0].index
+
+        def remove_node(self, identifier):
+            inner_identifier = self.dereference(identifier)
+            self.graph.delete_vertices(inner_identifier)
+

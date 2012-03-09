@@ -52,7 +52,9 @@ class Node(core.Node):
         self.send(target_node, 'accept_link', originating_node=self.id)
 
     def regenerate(self):
+        ## Here it may be more efficient never to remove from the graph
         self.graph.remove_node(self.id)
+        self.graph.add_node(self.id)
         target_node = self.graph.random_node()
         self.link_to(target_node)
 
@@ -67,7 +69,7 @@ class TL(simulation.Simulation):
             const=graph_type.preferential_attachment_node,
             default=graph_type.random_node)))
 
-    graph_options = dict(graph=igraph.Graph())
+    graph_options = dict(graph=igraph.Graph(0))
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
