@@ -1,4 +1,5 @@
 import abc
+import functools
 import inspect
 import decorator
 
@@ -89,4 +90,23 @@ class classproperty(property):
     def __get__(self, obj, type=None):
         return self.fget.__get__(None, type)()
 
+class before(object):
+    def __init__(self, before_action, *args, **kwargs):
+        if callable(before_action):
+            self.before_action = before_action
+            self.before_args = args
+            self.before_kwargs = kwargs
+        else:
+            raise TypeError("%s not callable." % before_action)
 
+    def __call__(self, func):
+        def aux(*args, **kwargs):
+            before_value = self.before_action(
+                *self.before_args, **self.before_kwargs)
+            func_value = func(*args, **kwargs)
+            if before_value is not None:
+                return before_value, func_value
+            else:
+                return func_value
+        functools.update_wrapper(aux, func)
+        return aux
