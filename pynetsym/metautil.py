@@ -40,6 +40,7 @@ def extract_interface(cls, debug=False):
     class _T(object):
         __metaclass__ = abc.ABCMeta
 
+    #noinspection PyUnusedLocal
     @decorator.decorator
     def stub(_f, *_args, **_kw):
         pass
@@ -110,3 +111,4 @@ class before(object):
                 return func_value
         functools.update_wrapper(aux, func)
         return aux
+

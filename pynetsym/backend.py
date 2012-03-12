@@ -1,9 +1,14 @@
+import types
 import abc
 import random
 import pynetsym
 import pynetsym.metautil
 import pynetsym.rndutil
 
+class GraphError(RuntimeError):
+    pass
+
+## TODO: rename as wrapper & add uniform access for the 'handle'
 class Graph(object):
     __metaclass__ = abc.ABCMeta
 
@@ -32,7 +37,7 @@ class Graph(object):
         """
         try:
             return self.random_edge()[0]
-        except ValueError:
+        except GraphError:
             ## Means that random_edge failed: no edges all nodes
             ## have 0 degree!
             return self.random_node()
@@ -52,13 +57,15 @@ class Graph(object):
 
 try:
     import networkx as nx
-except ImportError, e:
-    nx = None
+except ImportError, nx_import_exception:
+    nx = types.ModuleType('networkx', 'Fake module')
+
     class NXGraph(Graph):
         def __init__(self):
-            raise ImportError("Could not find networkx")
+            raise nx_import_exception
 else:
     class NXGraph(nx.Graph, Graph):
+        ## TODO: move this towards a proper wrapper
         def random_node(self):
             """Draw a random node from the graph.
 
@@ -68,14 +75,21 @@ else:
             If it is not the case, the draw may not be uniform, bugs may arise, demons may
             fly out of your node.
             """
-            max_value = self.number_of_nodes()
-            chosen_index = random.randrange(0, max_value)
-            if self.has_node(chosen_index):
-                return chosen_index
+            ## TODO: this is wrong from a probabilistic point of view
+            ## Fix it using additional data structures and for example a layer of indirection
+            ## mapping each index with a single node
+            try:
+                max_value = self.number_of_nodes()
+                chosen_index = random.randrange(0, max_value)
+            except ValueError:
+                raise GraphError("Extracting node from empty graph.")
             else:
-                return pynetsym.rndutil.choice_from_iter(
-                    self.nodes_iter(),
-                    max_value)
+                if self.has_node(chosen_index):
+                    return chosen_index
+                else:
+                    return pynetsym.rndutil.choice_from_iter(
+                        self.nodes_iter(),
+                        max_value)
 
         def random_edge(self):
             """
@@ -85,19 +99,21 @@ else:
 
             This is relatively safe, although horribly slow.
             """
-            return pynetsym.rndutil.choice_from_iter(
-                self.edges_iter(),
-                self.number_of_edges())
-
-
+            try:
+                return pynetsym.rndutil.choice_from_iter(
+                    self.edges_iter(),
+                    self.number_of_edges())
+            except ValueError:
+                raise GraphError("Extracting edge from graph with no edges")
 
 try:
     import igraph
-except ImportError, e:
-    igraph = None
+except ImportError, igraph_import_exception:
+    igraph = types.ModuleType('igraph', 'Fake module')
+
     class IGraphWrapper(Graph):
         def __init__(self):
-            raise ImportError("Could not find igraph")
+            raise igraph_import_exception
 else:
     class IGraphWrapper(Graph):
         def __init__(self, graph):
@@ -119,11 +135,17 @@ else:
             self.graph.add_edges((source_node, target_node))
 
         def random_node(self):
-            return random.choice(self.graph.vs).index
+            try:
+                return random.choice(self.graph.vs).index
+            except IndexError:
+                raise GraphError("Extracting node from empty graph.")
 
         def random_edge(self):
-            edge = random.choice(self.graph.es)
-            return edge.source, edge.target
+            try:
+                edge = random.choice(self.graph.es)
+                return edge.source, edge.target
+            except IndexError:
+                raise GraphError("Extracting edge from graph with no edges")
 
         def dereference(self, identifier):
             nodes = self.graph.vs.select(identifier_eq=identifier)
