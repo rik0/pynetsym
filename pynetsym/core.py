@@ -9,52 +9,13 @@ import gevent.queue as queue
 
 from pynetsym import rndutil
 
-def answers(method):
-    """
-    Marks a message to which we expect response. Accordingly to options
-    a method answering to such message that does not return anything raises
-    exceptions or logs an error or is ignored.
-    @param method: the method to decorate
-    @return: the decorated method
-    """
-    method.answers = True
-    return method
-
-
-def message_processor(method):
-    """
-    Marks a method that actually processes a message
-    @param method: the method to decorate
-    @return: the decorated method
-    """
-    method.message_processor = True
-    return method
-
-
-def is_message_processor(method):
-    """
-    Returns True if method is a message processor
-    @param method: the method to check
-    @return: True if method is a message processor
-    """
-    return (hasattr(method, 'message_processor')
-            and method.message_processor)
-
-
-def does_answer(method):
-    """
-    Returns True if method should answer.
-    @param method: the method to check
-    @return: True if method should answer
-    """
-    return (hasattr(method, 'answers')
-            and method.answers)
-
 _M = collections.namedtuple('Message', 'sender payload')
+
 class Message(_M):
     """
     An immutable object that is used to send a message among agents.
     """
+
 
 class AddressingError(Exception):
     """
@@ -64,6 +25,7 @@ class AddressingError(Exception):
 
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
+
 
 class AddressBook(object):
     """
@@ -79,67 +41,35 @@ class AddressBook(object):
 
     RAND_CHARS = 6 #: ivar: Number of random characters appended to duplicate string id
 
-    def __init__(self):
-        self.registry = {}
-
-    def _check_same_agent_or_fail(self, agent, identifier):
-        old_agent = self.registry[identifier]
-        if old_agent is agent:
-            pass
-        else:
-            message = ("Rebinding agent %s from %s to %s" %
-                       (identifier, old_agent, agent))
-            raise AddressingError(message)
+    def __init__(self, graph):
+        self.name_registry = {}
+        self.graph = graph
 
     def register(self, identifier, agent):
         """
         Binds the identifier with the agent
 
         @param identifier: the identifier to bind the agent to
+        @type identifier: int | str
         @param agent: the agent to bind
+        @type agent: Agent
         @raise AddressingError: if identifier is already bound.
+        @raise TypeError: if the identifier is not a string or a integer
         """
-        if identifier in self.registry:
-            self._check_same_agent_or_fail(agent, identifier)
+        if isinstance(identifier, basestring):
+            if identifier in self.name_registry:
+                raise AddressingError(
+                    "Could not rebing agent %r to identifier %r." % (agent, identifier))
+            else:
+                self.name_registry[identifier] = agent
+        elif isinstance(identifier, numbers.Integral):
+            if identifier in self.graph:
+                raise AddressingError(
+                    "Could not rebing agent %r to identifier %r." % (agent, identifier))
+            else:
+                self.graph.add_node(identifier, agent)
         else:
-            self.registry[identifier] = agent
-
-    def unregister(self, id_or_agent):
-        """
-        Unbinds the specified agent.
-
-        @param id_or_agent: the id or the agent to bind
-        @type id_or_agent: id | Agent
-        @raise AddressingError: if id was not bound.
-
-        """
-        try:
-            self.registry.pop(id_or_agent)
-        except KeyError:
-            try:
-                self.registry.pop(id_or_agent.id)
-            except (AttributeError, KeyError) as e:
-                raise AddressingError(e)
-
-    def rebind(self, id, new_agent):
-        """
-        Removes any existing binding of id and binds id with the new agent.
-
-        @raise AddressingError: if id was not bound.
-
-        """
-        self.unregister(id)
-        self.register(id, new_agent)
-
-    def force_rebind(self, id, new_agent):
-        """
-        Like rebind, but always succeeds.
-
-        """
-        try:
-            self.rebind(id, new_agent)
-        except AddressingError:
-            self.register(id, new_agent)
+            raise TypeError("Identifiers must be strings or integers")
 
     def resolve(self, identifier):
         """
@@ -147,18 +77,14 @@ class AddressBook(object):
 
         @raise AddressingError: if the agent is not registered.
         """
-        try:
-            return self.registry[identifier]
-        except KeyError:
-            raise AddressingError(
-                "Could not find node with address %r." % identifier)
-
-    def agents(self):
-        """
-        Return the sequence of agent addresses.
-
-        """
-        return self.registry.keys()
+        if isinstance(identifier, basestring):
+            try:
+                return self.name_registry[identifier]
+            except KeyError:
+                raise AddressingError(
+                    "Could not find node with address %r." % identifier)
+        elif isinstance(identifier, numbers.Integral):
+            return self.graph[identifier]
 
     def create_id_from_hint(self, hint):
         """
@@ -174,11 +100,11 @@ class AddressBook(object):
         @return: an identifier no agent is registered to.
         @raise TypeError: if hint is not string or int
         """
-        if (hint not in self.registry
+        if (hint not in self.name_registry
             and isinstance(hint, (numbers.Integral, basestring))):
             return hint
         elif isinstance(hint, numbers.Integral):
-            numeric_keys = sorted(k for k in self.registry.iterkeys()
+            numeric_keys = sorted(k for k in self.name_registry.iterkeys()
             if isinstance(k, numbers.Integral))
             min_key = numeric_keys[0]
             max_key = numeric_keys[-1]
@@ -339,10 +265,11 @@ class AbstractAgent(object):
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
 
+
 class Agent(gevent.Greenlet, AbstractAgent):
     def __init__(self, identifier, address_book,
-                 error_level=AbstractAgent.LOG_ERROR,
-                 *args, **kwargs):
+            error_level=AbstractAgent.LOG_ERROR,
+            *args, **kwargs):
         super(Agent, self).__init__(*args, **kwargs)
         self.initialize(identifier, address_book, error_level)
         self._queue = queue.Queue()
@@ -368,6 +295,7 @@ class Agent(gevent.Greenlet, AbstractAgent):
     def _run(self):
         self.run_loop()
 
+
 class Node(Agent):
     """
     A Node in the social network.
@@ -386,7 +314,6 @@ class Node(Agent):
         """
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
-        self.graph.add_node(self.id)
 
     def link_to(self, criterion_or_node):
         """

@@ -9,16 +9,25 @@ class GraphError(RuntimeError):
     pass
 
 ## TODO: rename as wrapper & add uniform access for the 'handle'
-class Graph(object):
+class GraphWrapper(object):
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractproperty
+    def handle(self):
+        pass
+
     @abc.abstractmethod
-    def add_node(self, identifier, attr_dict=None, **attr):
+    def add_node(self, identifier, agent):
         """
         Add specified node to the graph.
         @param identifier: the identifier of the node
         @type identifier: int
+        @param agent: the agent
         """
+
+    @abc.abstractmethod
+    def add_edge(self, source, target):
+        pass
 
     @abc.abstractmethod
     def random_node(self):
@@ -55,16 +64,31 @@ class Graph(object):
     def remove_node(self, node):
         pass
 
+    @abc.abstractmethod
+    def __contains__(self, item):
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, item):
+        pass
+
 try:
     import networkx as nx
 except ImportError, nx_import_exception:
     nx = types.ModuleType('networkx', 'Fake module')
 
-    class NXGraph(Graph):
+    class NXGraphWrapper(GraphWrapper):
         def __init__(self):
             raise nx_import_exception
 else:
-    class NXGraph(nx.Graph, Graph):
+    class NXGraphWrapper(GraphWrapper):
+        def __init__(self):
+            self.graph = nx.Graph()
+
+        @property
+        def handle(self):
+            return self.graph
+
         ## TODO: move this towards a proper wrapper
         def random_node(self):
             """Draw a random node from the graph.
@@ -79,17 +103,20 @@ else:
             ## Fix it using additional data structures and for example a layer of indirection
             ## mapping each index with a single node
             try:
-                max_value = self.number_of_nodes()
+                max_value = self.graph.number_of_nodes()
                 chosen_index = random.randrange(0, max_value)
             except ValueError:
                 raise GraphError("Extracting node from empty graph.")
             else:
-                if self.has_node(chosen_index):
+                if self.graph.has_node(chosen_index):
                     return chosen_index
                 else:
                     return pynetsym.rndutil.choice_from_iter(
-                        self.nodes_iter(),
+                        self.graph.nodes_iter(),
                         max_value)
+
+        def add_edge(self, source, target):
+            self.graph.add_edge(source, target)
 
         def random_edge(self):
             """
@@ -101,21 +128,40 @@ else:
             """
             try:
                 return pynetsym.rndutil.choice_from_iter(
-                    self.edges_iter(),
-                    self.number_of_edges())
+                    self.graph.edges_iter(),
+                    self.graph.number_of_edges())
             except ValueError:
                 raise GraphError("Extracting edge from graph with no edges")
+
+        def add_node(self, identifier, agent):
+            self.graph.add_node(identifier, agent=agent)
+
+        def remove_node(self, identifier):
+            self.graph.remove_node(identifier)
+
+        def __contains__(self, identifier):
+            return identifier in self.graph
+
+        def __getitem__(self, identifier):
+            try:
+                return self.graph.node[identifier]['agent']
+            except KeyError:
+                print '=' * 80
+                print identifier
+                print self.graph.node[identifier]
+                print '=' * 80
+                raise
 
 try:
     import igraph
 except ImportError, igraph_import_exception:
     igraph = types.ModuleType('igraph', 'Fake module')
 
-    class IGraphWrapper(Graph):
+    class IGraphWrapper(GraphWrapper):
         def __init__(self):
             raise igraph_import_exception
 else:
-    class IGraphWrapper(Graph):
+    class IGraphWrapper(GraphWrapper):
         def __init__(self, graph):
             """
             Creates an implementation of Graph backed with igraph.Graph
@@ -124,10 +170,12 @@ else:
             """
             self.graph = graph
 
-        def add_node(self, identifier, attr_dict=None, **attr):
+        def add_node(self, identifier, agent):
             self.graph.add_vertices(1)
             largest_index = len(self.graph.vs) - 1
             self.graph.vs[largest_index]["identifier"] = identifier
+            self.graph.vs[largest_index]["agent"] = agent
+
 
         def add_edge(self, source, target):
             source_node = self.dereference(source)

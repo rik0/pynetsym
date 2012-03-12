@@ -12,7 +12,7 @@ class Node(core.Node):
         super(Node, self).__init__(identifier, address_book, graph)
 
     def introduction(self):
-        graph = self.graph
+        graph = self.graph.handle
         neighbors = graph.neighbors(self.id)
         if len(neighbors) > 1:
             for _ in xrange(Node.MAX_TRIALS):
