@@ -130,6 +130,8 @@ class AddressBook(object):
                 "Could not build identifier from {}".format(hint))
 
 
+
+
 class AbstractAgent(object):
     """
     An Agent is the basic class of the simulation. Agents communicate
@@ -191,7 +193,7 @@ class AbstractAgent(object):
     def id(self):
         """
         The node identifier.
-        @rtype: string | int
+        @rtype: int
         @attention: In fact, the only requirement is that it is hashable
         """
         return self._id
@@ -264,6 +266,29 @@ class AbstractAgent(object):
 
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
+
+class AgentIdUpdatableContext(object):
+    """
+    Agent ids are normally not settable because doing so could prevent
+    the system from functioning correctly. However, in certain circumstances
+    it makes sense to change a node identifier instead of destroying the old
+    node and creating a new one.
+
+    In this context agent ids become settable. Notice that the changes
+    are *not* automatically reflected in the address book.
+    """
+    def __enter__(self):
+        def id_setter(self, new_id):
+            self._id = new_id
+
+        self.old_property = AbstractAgent.id
+        AbstractAgent.id = property(
+            fget=self.old_property,
+            fset=id_setter)
+
+    def __exit__(self, *args):
+        AbstractAgent.id = self.old_property
+
 
 
 class Agent(gevent.Greenlet, AbstractAgent):

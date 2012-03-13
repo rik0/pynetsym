@@ -35,8 +35,7 @@ class Node(core.Node):
         self.send(target_node, 'accept_link', originating_node=self.id)
 
     def regenerate(self):
-        self.graph.remove_node(self.id)
-        self.graph.add_node(self.id, self)
+        self.graph.switch_node(self.id, self)
         target_node = self.graph.random_node()
         self.link_to(target_node)
 

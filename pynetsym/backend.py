@@ -4,6 +4,7 @@ import random
 import pynetsym
 import pynetsym.metautil
 import pynetsym.rndutil
+import pynetsym.core
 
 class GraphError(RuntimeError):
     pass
@@ -14,6 +15,12 @@ class GraphWrapper(object):
 
     @abc.abstractproperty
     def handle(self):
+        """
+        A handle we can use to obtain the underlying graph.
+        @return: the graph.
+        @warning: The actual type of the graph depends from the actual
+            wrapper.
+        """
         pass
 
     @abc.abstractmethod
@@ -27,6 +34,16 @@ class GraphWrapper(object):
 
     @abc.abstractmethod
     def add_edge(self, source, target):
+        """
+        Add edge to the graph
+
+        @param source: the node from where the edge starts
+        @type source: int
+        @param target: the node to which the edge arrives
+        @type target: int
+        @warning: the actual behavior depends on the implementation being
+            directed or undirected
+        """
         pass
 
     @abc.abstractmethod
@@ -61,15 +78,37 @@ class GraphWrapper(object):
         pass
 
     @abc.abstractmethod
-    def remove_node(self, node):
+    def remove_node(self, identifier):
+        """
+        Removes the specified node from the graph.
+        @param identifier: the identifier of the node to remove.
+        """
+        pass
+
+    def switch_node(self, identifier, node, keep_contacts=False):
+        """
+        Rebinds a node in the graph.
+
+        @param identifier: the identifier to rebind the graph to
+        @type identifier: int
+        @param node: the new node
+        @type pynetsym.core.Node
+        @param keep_contacts: whether to remove or to update all the contacts
+            that where associated with the old node.
+        @warning: Currently keep_contacts is not supported
+        """
+        if keep_contacts:
+            raise NotImplemented()
+        else:
+            self.remove_node(identifier)
+            self.add_node(identifier=identifier, agent=node)
+
+    @abc.abstractmethod
+    def __contains__(self, identifier):
         pass
 
     @abc.abstractmethod
-    def __contains__(self, item):
-        pass
-
-    @abc.abstractmethod
-    def __getitem__(self, item):
+    def __getitem__(self, identifier):
         pass
 
 try:
@@ -135,6 +174,8 @@ else:
 
         def add_node(self, identifier, agent):
             self.graph.add_node(identifier, agent=agent)
+            with pynetsym.core.AgentIdUpdatableContext():
+                agent.id = identifier
 
         def remove_node(self, identifier):
             self.graph.remove_node(identifier)
@@ -168,7 +209,6 @@ else:
             largest_index = len(self.graph.vs) - 1
             self.graph.vs[largest_index]["identifier"] = identifier
             self.graph.vs[largest_index]["agent"] = agent
-
 
         def add_edge(self, source, target):
             source_node = self.dereference(source)
