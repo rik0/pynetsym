@@ -143,16 +143,7 @@ else:
             return identifier in self.graph
 
         def __getitem__(self, identifier):
-            try:
-                return self.graph.node[identifier]['agent']
-            except KeyError:
-                print '=' * 80
-                print identifier
-                print self.graph.node[identifier]
-                print '=' * 80
-                for node in self.graph:
-                    print node, self.graph.node[node]
-                raise
+            return self.graph.node[identifier]['agent']
 
 try:
     import igraph

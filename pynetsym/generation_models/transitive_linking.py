@@ -36,6 +36,7 @@ class Node(core.Node):
 
     def regenerate(self):
         self.graph.remove_node(self.id)
+        self.graph.add_node(self.id, self)
         target_node = self.graph.random_node()
         self.link_to(target_node)
 
