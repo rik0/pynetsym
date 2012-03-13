@@ -24,7 +24,7 @@ class Simulation(object):
 
     Of these, L{Simulation.activator}, L{Simulation.graph_type} and
     L{Simulation.clock} have sensible default values (respectively,
-    L{generation.Activator}, L{backend.NXGraph} and L{generation.Clock}.
+    L{generation.Activator}, L{backend.NXGraphWrapper} and L{generation.Clock}.
     The other arguments need to be supplied by the subclass.
 
     The preferred way to deal with these options is like::
