@@ -28,8 +28,7 @@ class Node(core.Node):
         super(Node, self).__init__(identifier, address_book, graph)
 
     def introduction(self):
-        current_id = self.graph.dereference(self.id)
-        graph = self.graph.graph
+        graph = self.graph.handle
         neighbors = graph.neighbors(self.id)
         if len(neighbors) > 1:
             for _ in xrange(Node.MAX_TRIALS):
@@ -53,8 +52,8 @@ class Node(core.Node):
 
     def regenerate(self):
         ## Here it may be more efficient never to remove from the graph
-        self.graph.remove_node(self.id)
-        self.graph.add_node(self.id)
+        graph = self.graph.handle
+        graph.delete_edges((self.id, i) for i in graph.neighbors(self.id))
         target_node = self.graph.random_node()
         self.link_to(target_node)
 

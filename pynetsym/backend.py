@@ -98,7 +98,7 @@ class GraphWrapper(object):
         @warning: Currently keep_contacts is not supported
         """
         if keep_contacts:
-            raise NotImplemented()
+            raise NotImplementedError()
         else:
             self.remove_node(identifier)
             self.add_node(identifier=identifier, agent=node)
@@ -210,14 +210,15 @@ else:
             self.graph.vs[largest_index]["identifier"] = identifier
             self.graph.vs[largest_index]["agent"] = agent
 
+        def __getitem__(self, identifier):
+            return self.graph.vs[identifier]["agent"]
+
         def add_edge(self, source, target):
-            source_node = self.dereference(source)
-            target_node = self.dereference(target)
-            self.graph.add_edges((source_node, target_node))
+            self.graph.add_edges((source, target))
 
         def random_node(self):
             try:
-                return random.choice(self.graph.vs).index
+                return random.randrange(0, len(self.graph.vs))
             except IndexError:
                 raise GraphError("Extracting node from empty graph.")
 
@@ -228,11 +229,15 @@ else:
             except IndexError:
                 raise GraphError("Extracting edge from graph with no edges")
 
-        def dereference(self, identifier):
-            nodes = self.graph.vs.select(identifier_eq=identifier)
-            return nodes[0].index
-
         def remove_node(self, identifier):
-            inner_identifier = self.dereference(identifier)
-            self.graph.delete_vertices(inner_identifier)
+            raise NotImplementedError()
 
+        @property
+        def handle(self):
+            return self.graph
+
+        def __contains__(self, identifier):
+            if 0 < identifier < len(self.graph.vs):
+                return True
+            else:
+                return False
