@@ -30,7 +30,7 @@ class NodeManager(core.Agent):
         @param cls: the factory creating the new node. Usually the node class.
         @type cls: callable
         @param identifier_hint: the identifier to bind the new node to
-        @type identifier_hint: L{identifier<Node.id>}
+        @type identifier_hint: int
         @param parameters: the parameters that are forwarded to the node for
             creation
         @type parameters: dict

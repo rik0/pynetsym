@@ -47,8 +47,51 @@ class Graph(object):
         pass
 
     @abc.abstractmethod
-    def remove_node(self, node):
+    def remove_node(self, identifier):
+        """
+        Removes the specified node from the graph.
+        @param identifier: the identifier of the node to remove.
+        """
         pass
+
+    def switch_node(self, identifier, node, keep_contacts=False):
+        """
+        Rebinds a node in the graph.
+
+        @param identifier: the identifier to rebind the graph to
+        @type identifier: int
+        @param node: the new node
+        @type pynetsym.core.Node
+        @param keep_contacts: whether to remove or to update all the contacts
+            that where associated with the old node.
+        @warning: Currently keep_contacts is not supported
+        """
+        if keep_contacts:
+            raise NotImplementedError()
+        else:
+            self.remove_node(identifier)
+            self.add_node(identifier=identifier, agent=node)
+
+    @abc.abstractmethod
+    def __contains__(self, identifier):
+        """
+        True if the graph contains the specified identifier.
+        @param identifier: the identifier to seek
+        @type identifier: int
+        @return: True if identifier is in graph
+        @rtype: bool
+        """
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, identifier):
+        """
+        Get the actual agent object with specified identifier.
+        @param identifier: the identifier
+        @type identifier: int
+        @return: the agent
+        @rtype: pynetsym.core.AbstractAgent
+        """
 
 try:
     import networkx as nx
