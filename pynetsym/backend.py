@@ -150,6 +150,8 @@ else:
                 print identifier
                 print self.graph.node[identifier]
                 print '=' * 80
+                for node in self.graph:
+                    print node, self.graph.node[node]
                 raise
 
 try:

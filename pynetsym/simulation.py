@@ -61,7 +61,7 @@ class Simulation(object):
         Returns the factory used to build the graph.
         @rtype: callable
         """
-        return backend.NXGraph
+        return backend.NXGraphWrapper
 
     @metautil.classproperty
     def clock(self):
@@ -185,7 +185,7 @@ class Simulation(object):
         self.format = arguments_dictionary.pop('format')
         steps = arguments_dictionary.pop('steps')
 
-        address_book = core.AddressBook()
+        address_book = core.AddressBook(self.graph)
         node_manager = NodeManager(
             self.graph, address_book,
             self.configurator(**arguments_dictionary))
