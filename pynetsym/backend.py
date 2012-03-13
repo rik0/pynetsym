@@ -17,7 +17,6 @@ class GraphWrapper(object):
     def handle(self):
         """
         A handle we can use to obtain the underlying graph.
-        @return: the graph.
         @warning: The actual type of the graph depends from the actual
             wrapper.
         """
