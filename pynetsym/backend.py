@@ -105,10 +105,24 @@ class GraphWrapper(object):
 
     @abc.abstractmethod
     def __contains__(self, identifier):
+        """
+        True if the graph contains the specified identifier.
+        @param identifier: the identifier to seek
+        @type identifier: int
+        @return: True if identifier is in graph
+        @rtype: bool
+        """
         pass
 
     @abc.abstractmethod
     def __getitem__(self, identifier):
+        """
+        Get the actual agent object with specified identifier.
+        @param identifier: the identifier
+        @type identifier: int
+        @return: the agent
+        @rtype: pynetsym.core.AbstractAgent
+        """
         pass
 
 try:
