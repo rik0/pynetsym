@@ -1,7 +1,7 @@
 import random
 import itertools as it
 
-from . import transitive_linking
+from pynetsym.generation_models import transitive_linking
 from pynetsym import simulation, node_manager
 
 class Node(transitive_linking.Node):
@@ -11,7 +11,7 @@ class Node(transitive_linking.Node):
         return possible_links
 
     def introduce(self):
-        graph = self.graph
+        graph = self.graph.handle
         neighbors = graph.neighbors(self.id)
 
         possible_links = self.find_possible_links(graph, neighbors)
@@ -38,3 +38,6 @@ class TL(simulation.Simulation):
 
 
 
+if __name__ == '__main__':
+    sim = TL()
+    sim.run()
