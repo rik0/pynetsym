@@ -90,6 +90,7 @@ class classproperty(property):
         fget = fget if fget is None else classmethod(fget)
         fset = fset if fset is None else classmethod(fset)
         fdel = fdel if fdel is None else classmethod(fdel)
+        doc = fget.__doc__ if doc is None else doc
         super(classproperty, self).__init__(fget, fset, fdel, doc)
 
     def __get__(self, obj, type=None):
