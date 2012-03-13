@@ -81,6 +81,11 @@ def extract_interface(cls, debug=False):
     return processor
 
 class classproperty(property):
+    """
+    Introduces a class property. Works like property, but on the class.
+
+    @warning: the setter and deleter do not work as expected.
+    """
     def __init__(self, fget=None, fset=None, fdel=None, doc=None):
         fget = fget if fget is None else classmethod(fget)
         fset = fset if fset is None else classmethod(fset)
