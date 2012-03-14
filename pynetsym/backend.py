@@ -147,7 +147,7 @@ else:
 
             @return: a node index
             @rtype: int
-            @raise IndexError if the graph is empty.
+            @raise GraphError if the graph is empty.
 
             @warning: notice that it assumes that the graph nodes have indices
             going from 0 to some n. If it is not the case, the draw may not be
@@ -178,7 +178,7 @@ else:
 
             @return: a pair of nodes representing an edge
             @rtype: (int, int)
-            @raise IndexError: if the graph has no edges.
+            @raise GraphError: if the graph has no edges.
 
             @warning: this is relatively safe, although horribly slow.
             """
