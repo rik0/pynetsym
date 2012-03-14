@@ -122,7 +122,6 @@ class GraphWrapper(object):
         @return: the agent
         @rtype: pynetsym.core.AbstractAgent
         """
-        pass
 
 try:
     import networkx as nx
@@ -143,13 +142,16 @@ else:
 
         ## TODO: move this towards a proper wrapper
         def random_node(self):
-            """Draw a random node from the graph.
+            """
+            Draw a random node from the graph.
 
-            Returns a node index or None if the graph has no nodes.
+            @return: a node index
+            @rtype: int
+            @raise IndexError if the graph is empty.
 
-            Notice that it assumes that the graph nodes have indices going from 0 to some n.
-            If it is not the case, the draw may not be uniform, bugs may arise, demons may
-            fly out of your node.
+            @warning: notice that it assumes that the graph nodes have indices
+            going from 0 to some n. If it is not the case, the draw may not be
+            uniform, bugs may arise, demons may fly out of your node.
             """
             ## TODO: this is wrong from a probabilistic point of view
             ## Fix it using additional data structures and for example a layer of indirection
@@ -174,9 +176,11 @@ else:
             """
             Draw a random edge from the graph.
 
-            Returns (node_id, node_id) pair or None if the graph has no edges.
+            @return: a pair of nodes representing an edge
+            @rtype: (int, int)
+            @raise IndexError: if the graph has no edges.
 
-            This is relatively safe, although horribly slow.
+            @warning: this is relatively safe, although horribly slow.
             """
             try:
                 return pynetsym.rndutil.choice_from_iter(
