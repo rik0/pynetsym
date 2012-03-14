@@ -127,9 +127,9 @@ else:
             """
             Draw a random edge from the graph.
 
-            i@return: a pair of nodes representing an edge
-             @rtype: (int, int)
-             @raise IndexError: if the graph has no edges.
+            @return: a pair of nodes representing an edge
+            @rtype: (int, int)
+            @raise IndexError: if the graph has no edges.
 
             @warning: this is relatively safe, although horribly slow.
             """
