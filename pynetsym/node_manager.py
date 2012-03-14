@@ -4,6 +4,22 @@ import sys
 
 from pynetsym import core, util, metautil
 
+class IdManager(object):
+    """
+    The IdManager is responsible to provide valid identifiers for Nodes.
+    """
+    def __init__(self, graph_wrapper):
+        self.graph_wrapper = graph_wrapper
+
+    def get_identifier(self):
+        """
+        Get a new valid identifier.
+
+        @return: the identifier
+        @rtype: int
+        """
+        pass
+
 class NodeManager(core.Agent):
     """
     The class responsible to create nodes.
