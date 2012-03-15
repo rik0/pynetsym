@@ -119,10 +119,21 @@ class before(object):
         return aux
 
 class delegate(object):
-    def __init__(self, func):
-        self.func = func
+    def __new__(cls, delegate_or_function):
+        obj = super(delegate, cls).__new__(cls)
+        if callable(delegate_or_function):
+            func = delegate_or_function
+            delegator = delegate('delegate')
+            return delegator(func)
+        else:
+            obj.delegate_name = delegate_or_function
+            return obj
 
-    def __get__(self, obj, objtype=None):
-        if obj is not None:
-            return getattr(getattr(obj, 'delegate'), self.func.func_name)
+    def __call__(self, func):
+        def aux(bself, *args, **kwargs):
+            delegate = getattr(bself, self.delegate_name)
+            return getattr(delegate, func.func_name)(
+                    *args, **kwargs)
+        functools.update_wrapper(aux, func)
+        return aux
 
