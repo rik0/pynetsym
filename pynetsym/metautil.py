@@ -118,3 +118,11 @@ class before(object):
         functools.update_wrapper(aux, func)
         return aux
 
+class delegate(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, obj, objtype=None):
+        if obj is not None:
+            return getattr(getattr(obj, 'delegate'), self.func.func_name)
+
