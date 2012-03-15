@@ -27,16 +27,21 @@ class A(object):
         self.bar += 1
 
     @notifies(DEC, BAR)
-    def inc_foo(self):
+    def dec_bar(self):
         self.bar -= 1
 
 class TestNotifier(TestCase):
     def setUp(self):
         self.a = A(0, 0)
         self.make_checker(A.INC, A.BAR)
+        self.make_checker(A.DEC, A.BAR)
+        self.make_checker(A.INC, A.FOO)
 
     def testBase(self):
         self.a.inc_bar()
+        self.a.dec_bar()
+        self.a.inc_foo()
+        self.a.dec_foo() ## I did not call any observer!
 
     def make_checker(self, event, kind):
         def checker(cevent, ckind, observed):
