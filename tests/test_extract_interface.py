@@ -21,7 +21,7 @@ class D(A, C):
 
 class TestExtract_interface(TestCase):
     def test_extract_all_methods(self):
-        @metautil.extract_interface(D)
+        @metautil.abstract_interface_from(D)
         class E(object):
             __metaclass__ = abc.ABCMeta
             pass
@@ -30,11 +30,11 @@ class TestExtract_interface(TestCase):
     def test_no_metaclass(self):
             class E(object):
                 pass
-            self.assertRaises(TypeError, metautil.extract_interface(D), E)
+            self.assertRaises(TypeError, metautil.abstract_interface_from(D), E)
 
 
     def test_methods(self):
-        @metautil.extract_interface(D)
+        @metautil.abstract_interface_from(D)
         class E(object):
             __metaclass__ = abc.ABCMeta
             pass

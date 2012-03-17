@@ -1,7 +1,9 @@
 import abc
 import functools
 import inspect
+import types
 import decorator
+import operator
 
 def copy_doc(cls):
     """
@@ -22,8 +24,7 @@ def copy_doc(cls):
     return copy_doc_aux
 
 
-
-def extract_interface(cls, debug=False):
+def abstract_interface_from(cls, debug=False):
     """
     Extracts the public methods from cls and adds them as abstract methods to new_cls.
     new_cls is required to have a subclass of abc.ABCMeta as metaclass.
@@ -146,7 +147,6 @@ class delegate(object):
         functools.update_wrapper(aux, func)
         return aux
 
-
 def delegate_methods(methods, before=None, after=None):
     def add_delegates(cls):
         for name in methods:
@@ -160,5 +160,60 @@ def delegate_methods(methods, before=None, after=None):
             setattr(cls, name, method)
         return cls
     return add_delegates
+
+class delegate_all(object):
+    def __init__(self, cls, delegate_name, exclude=[], include_specials=False,
+                 include_properties=True, force=[],
+                 override=False):
+        self.cls = cls
+        self.delegate_name = delegate_name
+        self.exclude = set(exclude)
+        self.include_specials = include_specials
+        self.include_properties = include_properties
+        self.force = set(force)
+        self.override = override
+
+    def is_property(self, attribute):
+        return isinstance(attribute, property)
+
+    def is_method(self, attribute):
+        ## This is false for many special stuff coming from object
+        ## e.g., __reduce__, __hash__, etc.
+        return isinstance(attribute, types.MethodType)
+
+    def is_method_or_property(self, attribute):
+        return self.is_method(attribute) or self.is_property(attribute)
+
+    def __call__(self, new_cls):
+        predicate = (self.is_method_or_property
+                     if self.include_properties else self.is_method)
+        methods = inspect.getmembers(self.cls, predicate)
+        # remove special stuff if not included
+        if not self.include_specials:
+            methods = filter(
+                lambda name, method: not name.startswith('__'),
+                methods)
+        method_names = set(method_pair[0] for method_pair in methods)
+        method_names -= self.exclude
+        method_names |= self.force
+        new_cls_methods = inspect.getmembers(
+            new_cls,
+            self.is_method_or_property)
+        if not self.override:
+            method_names -= new_cls_methods
+
+        for method_name in method_names:
+            def method(self, *args, **kwargs):
+                try:
+                    delegate = getattr(self, self.delegate_name)
+                    method = getattr(delegate, method_name)
+                except AttributeError:
+                    raise DelegationError()
+                else:
+                    return method(self, *args, **kwargs)
+            functools.update_wrapper(method,
+                getattr(self.cls, method_name))
+            setattr(new_cls, method_name, method)
+        return new_cls
 
 
