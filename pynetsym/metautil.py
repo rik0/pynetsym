@@ -118,9 +118,14 @@ class before(object):
         functools.update_wrapper(aux, func)
         return aux
 
+
+class DelegationError(StandardError):
+    pass
+
 class delegate(object):
     def __new__(cls, delegate_or_function):
         obj = super(delegate, cls).__new__(cls)
+        obj.delegate_name = None
         if callable(delegate_or_function):
             func = delegate_or_function
             delegator = delegate('delegate')
@@ -131,9 +136,29 @@ class delegate(object):
 
     def __call__(self, func):
         def aux(bself, *args, **kwargs):
-            delegate = getattr(bself, self.delegate_name)
-            return getattr(delegate, func.func_name)(
-                    *args, **kwargs)
+            try:
+                delegate = getattr(bself, self.delegate_name)
+                method = getattr(delegate, func.func_name)
+            except AttributeError:
+                raise DelegationError()
+            else:
+                method(*args, **kwargs)
         functools.update_wrapper(aux, func)
         return aux
+
+
+def delegate_methods(methods, before=None, after=None):
+    def add_delegates(cls):
+        for name in methods:
+            def method(self, *args, **kwargs):
+                try:
+                    m = getattr(self.delegate, name)
+                except AttributeError, e:
+                    raise DelegationError(e)
+                else:
+                    return m(*args, **kwargs)
+            setattr(cls, name, method)
+        return cls
+    return add_delegates
+
 
