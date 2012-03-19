@@ -226,11 +226,14 @@ else:
             except ValueError:
                 raise GraphError("Extracting edge from graph with no edges")
 
-        ## TODO: make it as atomic as possible
         def add_node(self, identifier, agent):
             self.graph.add_node(identifier, agent=agent)
-            with pynetsym.core.AgentIdUpdatableContext():
-                agent.id = identifier
+            try:
+                with pynetsym.core.AgentIdUpdatableContext():
+                    agent.id = identifier
+            except Exception:
+                self.graph.remove_node(identifier)
+
 
         def remove_node(self, identifier):
             self.graph.remove_node(identifier)
@@ -259,6 +262,7 @@ else:
             """
             self.graph = graph
 
+        ## TODO: make this atomic as well
         def add_node(self, identifier, agent):
             self.graph.add_vertices(1)
             largest_index = len(self.graph.vs) - 1
