@@ -100,7 +100,8 @@ class Simulation(object):
         @return:
         """
         graph_options = getattr(self, 'graph_options', {})
-        self.graph = self.graph_type(**graph_options)
+        self.graph = backend.NotifyingGraphWrapper(
+            self.graph_type(**graph_options))
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(

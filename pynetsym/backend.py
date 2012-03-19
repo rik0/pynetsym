@@ -126,8 +126,8 @@ class GraphWrapper(object):
         """
 
 
-@delegate_all(GraphWrapper, 'delegate')
 @notifier
+@delegate_all(GraphWrapper, 'delegate')
 class NotifyingGraphWrapper(GraphWrapper):
     ADD = 'add'
     REMOVE = 'remove'
@@ -178,7 +178,7 @@ else:
         def handle(self):
             return self.graph
 
-        ## TODO: move this towards a proper wrapper
+        ## TODO: make it as atomic as possible
         def random_node(self):
             """
             Draw a random node from the graph.
