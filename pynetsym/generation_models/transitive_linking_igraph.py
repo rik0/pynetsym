@@ -65,8 +65,8 @@ class TL(simulation.Simulation):
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',
-            const=graph_type.preferential_attachment_node,
-            default=graph_type.random_node)))
+            const=lambda graph: graph.preferential_attachment(),
+            default=lambda graph: graph.random_node())))
 
     graph_options = dict(graph=igraph.Graph(0))
 

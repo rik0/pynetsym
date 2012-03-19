@@ -127,7 +127,7 @@ class GraphWrapper(object):
 
 
 @notifier
-@delegate_all(GraphWrapper, 'delegate')
+@delegate_all(GraphWrapper, 'delegate', include_specials=True)
 class NotifyingGraphWrapper(GraphWrapper):
     ADD = 'add'
     REMOVE = 'remove'
