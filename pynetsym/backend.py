@@ -178,7 +178,6 @@ else:
         def handle(self):
             return self.graph
 
-        ## TODO: make it as atomic as possible
         def random_node(self):
             """
             Draw a random node from the graph.
@@ -227,6 +226,7 @@ else:
             except ValueError:
                 raise GraphError("Extracting edge from graph with no edges")
 
+        ## TODO: make it as atomic as possible
         def add_node(self, identifier, agent):
             self.graph.add_node(identifier, agent=agent)
             with pynetsym.core.AgentIdUpdatableContext():
