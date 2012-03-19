@@ -1,4 +1,5 @@
 import abc
+import copy
 import functools
 import inspect
 import types
@@ -229,6 +230,13 @@ class delegate_all(object):
             method_names -= set(new_cls_methods)
         return method_names
 
+    def remove_abstract_methods(self, method_names, new_cls):
+        metaclass = getattr(new_cls, '__metaclass__', type)
+        if issubclass(metaclass, abc.ABCMeta):
+            abstract_methods = set(new_cls.__abstractmethods__)
+            abstract_methods -= method_names
+            new_cls.__abstractmethods__ = frozenset(abstract_methods)
+
     def __call__(self, new_cls):
         method_names = self.build_methods_list(new_cls)
 
@@ -242,6 +250,7 @@ class delegate_all(object):
                 setattr(new_cls, name,
                         self.build_property(self.delegate_name, name))
 
+        self.remove_abstract_methods(method_names, new_cls)
         return new_cls
 
 
