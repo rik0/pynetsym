@@ -223,11 +223,9 @@ class delegate_all(object):
         method_names = set(method_pair[0] for method_pair in methods)
         method_names -= self.exclude
         method_names |= self.force
-        new_cls_methods = inspect.getmembers(
-            new_cls,
-            self.is_method_or_property)
+        new_cls_methods = set(new_cls.__dict__.keys())
         if not self.override:
-            method_names -= set(new_cls_methods)
+            method_names -= new_cls_methods
         return method_names
 
     def remove_abstract_methods(self, method_names, new_cls):

@@ -8,8 +8,8 @@ class IdManager(object):
     """
     The IdManager is responsible to provide valid identifiers for Nodes.
     """
-    def __init__(self, graph_wrapper):
-        self.graph_wrapper = graph_wrapper
+    def __init__(self):
+        self.store = util.IntIdentifierStore()
 
     def get_identifier(self):
         """
@@ -18,7 +18,14 @@ class IdManager(object):
         @return: the identifier
         @rtype: int
         """
-        pass
+        self.store.pop()
+
+    def node_added(self, event, kind, source, identifier, _node):
+        self.store.mark(identifier)
+
+    def node_removed(self, event, kind, source, identifier):
+        self.store.unmark(identifier)
+
 
 class NodeManager(core.Agent):
     """

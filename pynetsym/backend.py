@@ -139,23 +139,23 @@ class NotifyingGraphWrapper(GraphWrapper):
     def __init__(self, delegate):
         self.delegate = delegate
 
-    @delegate
     @notifies(ADD, NODE)
+    @delegate
     def add_node(self, identifier, agent):
         pass
 
-    @delegate
     @notifies(ADD, EDGE)
+    @delegate
     def add_edge(self, source, target):
         pass
 
-    @delegate
     @notifies(REMOVE, NODE)
+    @delegate
     def remove_node(self, identifier):
         pass
 
-    @delegate
     @notifies(MODIFY, NODE)
+    @delegate
     def switch_node(self, identifier, node, keep_contacts=False):
         pass
 

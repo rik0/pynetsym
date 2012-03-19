@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from pynetsym import ioutil, core, timing, backend, metautil
-from pynetsym.node_manager import NodeManager
+from pynetsym.node_manager import NodeManager, IdManager
 
 class Simulation(object):
     """
@@ -102,6 +102,11 @@ class Simulation(object):
         graph_options = getattr(self, 'graph_options', {})
         self.graph = backend.NotifyingGraphWrapper(
             self.graph_type(**graph_options))
+        self.id_manager = IdManager()
+        self.graph.register_observer(
+            self.id_manager.node_added,
+            backend.NotifyingGraphWrapper.ADD,
+            backend.NotifyingGraphWrapper.NODE)
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
