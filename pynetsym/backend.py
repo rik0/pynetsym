@@ -6,10 +6,12 @@ import pynetsym.metautil
 import pynetsym.rndutil
 import pynetsym.core
 
+from pynetsym.metautil import delegate, delegate_all
+from pynetsym.notifyutil import notifier, notifies
+
 class GraphError(RuntimeError):
     pass
 
-## TODO: rename as wrapper & add uniform access for the 'handle'
 class GraphWrapper(object):
     __metaclass__ = abc.ABCMeta
 
@@ -122,6 +124,42 @@ class GraphWrapper(object):
         @return: the agent
         @rtype: pynetsym.core.AbstractAgent
         """
+
+
+@delegate_all(GraphWrapper, 'delegate')
+@notifier
+class NotifyingGraphWrapper(GraphWrapper):
+    ADD = 'add'
+    REMOVE = 'remove'
+    MODIFY = 'modify'
+
+    NODE = 'node'
+    EDGE = 'edge'
+
+    def __init__(self, delegate):
+        self.delegate = delegate
+
+    @delegate
+    @notifies(ADD, NODE)
+    def add_node(self, identifier, agent):
+        pass
+
+    @delegate
+    @notifies(ADD, EDGE)
+    def add_edge(self, source, target):
+        pass
+
+    @delegate
+    @notifies(REMOVE, NODE)
+    def remove_node(self, identifier):
+        pass
+
+    @delegate
+    @notifies(MODIFY, NODE)
+    def switch_node(self, identifier, node, keep_contacts=False):
+        pass
+
+
 
 try:
     import networkx as nx
