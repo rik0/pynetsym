@@ -186,7 +186,18 @@ class delegate_all(object):
     def is_method_or_property(self, attribute):
         return self.is_method(attribute) or self.is_property(attribute)
 
-    def __call__(self, new_cls):
+    def build_method(self, delegate_name, method_name):
+        def method(self, *args, **kwargs):
+                try:
+                    delegate = getattr(self, delegate_name)
+                    method = getattr(delegate, method_name)
+                except AttributeError, e:
+                    raise DelegationError(e.message)
+                else:
+                    return method(*args, **kwargs)
+        return method
+
+    def build_methods_list(self, new_cls):
         predicate = (self.is_method_or_property
                      if self.include_properties else self.is_method)
         methods = inspect.getmembers(self.cls, predicate)
@@ -203,17 +214,13 @@ class delegate_all(object):
             self.is_method_or_property)
         if not self.override:
             method_names -= set(new_cls_methods)
+        return method_names
 
-        outer = self
+    def __call__(self, new_cls):
+        method_names = self.build_methods_list(new_cls)
+
         for method_name in method_names:
-            def method(self, *args, **kwargs):
-                try:
-                    delegate = getattr(self, outer.delegate_name)
-                    method = getattr(delegate, method_name)
-                except AttributeError, e:
-                    raise DelegationError(e.message)
-                else:
-                    return method(*args, **kwargs)
+            method = self.build_method(self.delegate_name, method_name)
             original = getattr(self.cls, method_name)
             if self.is_method(original):
                 functools.update_wrapper(method, original)

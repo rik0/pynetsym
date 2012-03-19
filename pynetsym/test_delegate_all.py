@@ -18,6 +18,9 @@ class BaseClass(object):
     def a_setter(self, val):
         self.val = val
 
+    def a_getter(self):
+        return self.val
+
     @property
     def a_read_only_property(self):
         return self.ANSWER
@@ -36,3 +39,15 @@ class TestDelegate_all(TestCase):
     def testAMethod(self):
         self.assertEqual(self.base.a_method(),
             self.standard_delegator.a_method())
+
+    def testAMethodWithParameter(self):
+        value = 42
+        self.assertEquals(
+            self.base.a_method_with_parameter(value),
+            self.standard_delegator.a_method_with_parameter(value))
+
+    def testASetter(self):
+        value = 42
+        self.standard_delegator.a_setter(42)
+        self.assertEqual(
+            value, self.standard_delegator.a_getter())
