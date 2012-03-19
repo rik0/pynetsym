@@ -23,6 +23,14 @@ class BaseClass(object):
     def a_read_only_property(self):
         return self.ANSWER
 
+    @property
+    def a_rw_property(self):
+        return self.val
+
+    @a_rw_property.setter
+    def a_rw_property(self, value):
+        self.val = value
+
 @pynetsym.metautil.delegate_all(BaseClass)
 class StandardDelegator(object):
     def __init__(self, delegate):
@@ -60,6 +68,25 @@ class TestDelegate_all(TestCase):
         self.assertRaises(
             AttributeError,
             setattr, self.delegator, 'a_read_only_property', 10)
+
+    def testPropertyRW(self):
+        self.assertTrue(
+            hasattr(self.delegator, 'a_rw_property'))
+        self.assertEqual(
+            self.base.a_rw_property,
+            self.delegator.a_rw_property)
+        new_value = 77
+        self.delegator.a_rw_property = new_value
+        self.assertEqual(
+            new_value,
+            self.delegator.a_rw_property)
+        self.assertEqual(
+            self.base.a_rw_property,
+            self.delegator.a_rw_property)
+        self.assertRaises(
+            AttributeError,
+            delattr, self.delegator, 'a_rw_property')
+
 
 class TestDelegate_all_To_Delegate_Subclass(TestDelegate_all):
     def setUp(self):
