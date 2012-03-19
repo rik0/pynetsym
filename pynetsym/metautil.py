@@ -191,7 +191,7 @@ class delegate_all(object):
         # remove special stuff if not included
         if not self.include_specials:
             methods = filter(
-                lambda name, method: not name.startswith('__'),
+                lambda (name, method): not name.startswith('__'),
                 methods)
         method_names = set(method_pair[0] for method_pair in methods)
         method_names -= self.exclude
@@ -200,7 +200,7 @@ class delegate_all(object):
             new_cls,
             self.is_method_or_property)
         if not self.override:
-            method_names -= new_cls_methods
+            method_names -= set(new_cls_methods)
 
         for method_name in method_names:
             def method(self, *args, **kwargs):
@@ -211,9 +211,10 @@ class delegate_all(object):
                     raise DelegationError()
                 else:
                     return method(self, *args, **kwargs)
-            functools.update_wrapper(method,
-                getattr(self.cls, method_name))
-            setattr(new_cls, method_name, method)
+            original = getattr(self.cls, method_name)
+            if self.is_method(original):
+                functools.update_wrapper(method, original)
+                setattr(new_cls, method_name, method)
         return new_cls
 
 
