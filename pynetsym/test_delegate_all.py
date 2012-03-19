@@ -1,8 +1,6 @@
 from unittest import TestCase
 import pynetsym.metautil
 
-__author__ = 'enrico'
-
 class BaseClass(object):
     ANSWER = 42
 
@@ -57,6 +55,8 @@ class TestDelegate_all(TestCase):
             BaseClass.ANSWER, self.delegator.a_read_only_property)
 
     def testPropertyReadOnly(self):
+        self.assertTrue(
+            hasattr(self.delegator, 'a_read_only_property'))
         self.assertRaises(
             AttributeError,
             setattr, self.delegator, 'a_read_only_property', 10)
