@@ -197,6 +197,19 @@ class delegate_all(object):
                     return method(*args, **kwargs)
         return method
 
+
+    def build_property(self, delegate_name, property_name):
+        def fget(self):
+            delegate = getattr(self, delegate_name)
+            return getattr(delegate, property_name)
+        def fset(self, value):
+            delegate = getattr(self, delegate_name)
+            setattr(delegate, property_name, value)
+        def fdel(self):
+            delegate = getattr(self, delegate_name)
+            delattr(delegate, property_name)
+        return property(fget, fset, fdel)
+
     def build_methods_list(self, new_cls):
         predicate = (self.is_method_or_property
                      if self.include_properties else self.is_method)
@@ -219,12 +232,16 @@ class delegate_all(object):
     def __call__(self, new_cls):
         method_names = self.build_methods_list(new_cls)
 
-        for method_name in method_names:
-            method = self.build_method(self.delegate_name, method_name)
-            original = getattr(self.cls, method_name)
+        for name in method_names:
+            original = getattr(self.cls, name)
             if self.is_method(original):
+                method = self.build_method(self.delegate_name, name)
                 functools.update_wrapper(method, original)
-                setattr(new_cls, method_name, method)
+                setattr(new_cls, name, method)
+            elif self.is_property(original):
+                setattr(new_cls, name,
+                        self.build_property(self.delegate_name, name))
+
         return new_cls
 
 
