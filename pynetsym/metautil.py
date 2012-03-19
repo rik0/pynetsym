@@ -162,8 +162,10 @@ def delegate_methods(methods, before=None, after=None):
     return add_delegates
 
 class delegate_all(object):
-    def __init__(self, cls, delegate_name, exclude=[], include_specials=False,
-                 include_properties=True, force=[],
+    DEFAULT_EXCLUDED = ('__init__', )
+
+    def __init__(self, cls, delegate_name='delegate', exclude=DEFAULT_EXCLUDED,
+                 include_specials=False, include_properties=True, force=[],
                  override=False):
         self.cls = cls
         self.delegate_name = delegate_name
@@ -202,15 +204,16 @@ class delegate_all(object):
         if not self.override:
             method_names -= set(new_cls_methods)
 
+        outer = self
         for method_name in method_names:
             def method(self, *args, **kwargs):
                 try:
-                    delegate = getattr(self, self.delegate_name)
+                    delegate = getattr(self, outer.delegate_name)
                     method = getattr(delegate, method_name)
-                except AttributeError:
-                    raise DelegationError()
+                except AttributeError, e:
+                    raise DelegationError(e.message)
                 else:
-                    return method(self, *args, **kwargs)
+                    return method(*args, **kwargs)
             original = getattr(self.cls, method_name)
             if self.is_method(original):
                 functools.update_wrapper(method, original)

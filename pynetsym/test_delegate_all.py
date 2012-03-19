@@ -22,10 +22,11 @@ class BaseClass(object):
     def a_read_only_property(self):
         return self.ANSWER
 
-@pynetsym.metautil.delegate_all
+@pynetsym.metautil.delegate_all(BaseClass)
 class StandardDelegator(object):
     def __init__(self, delegate):
         self.delegate = delegate
+
 
 class TestDelegate_all(TestCase):
     def setUp(self):
