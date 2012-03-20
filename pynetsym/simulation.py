@@ -104,10 +104,6 @@ class Simulation(object):
             self.graph_type(**graph_options))
         self.id_manager = IdManager()
         self.graph.register_observer(
-            self.id_manager.node_added,
-            backend.NotifyingGraphWrapper.ADD,
-            backend.NotifyingGraphWrapper.NODE)
-        self.graph.register_observer(
             self.id_manager.node_removed,
             backend.NotifyingGraphWrapper.REMOVE,
             backend.NotifyingGraphWrapper.NODE)
