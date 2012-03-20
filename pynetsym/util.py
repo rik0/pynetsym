@@ -88,6 +88,8 @@ class IntIdentifierStore(object):
         return identifier
 
     def _is_in_holes(self, identifier):
+        if not self._holes:
+            return False
         possible_index = bisect_left(self._holes, identifier)
         if self._holes[possible_index] == identifier:
             return True
