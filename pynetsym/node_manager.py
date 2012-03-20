@@ -24,8 +24,10 @@ class IdManager(object):
         self.store.mark(identifier)
 
     def node_removed(self, event, kind, source, identifier):
-        self.store.unmark(identifier)
+        self.free_identifier(identifier)
 
+    def free_identifier(self, identifier):
+        self.store.unmark(identifier)
 
 
 class NodeManager(core.Agent):
@@ -74,12 +76,15 @@ class NodeManager(core.Agent):
         """
 
         identifier = self.id_manager.get_identifier()
-        node = cls(identifier, self._address_book,
-                   self.graph, **parameters)
-        node.link_value(self.node_terminated_hook)
-        node.link_exception(self.node_failed_hook)
-        node.start()
-        return 'created_node', dict(identifier=identifier)
+        try:
+            node = cls(identifier, self._address_book,
+                       self.graph, **parameters)
+            node.link_value(self.node_terminated_hook)
+            node.link_exception(self.node_failed_hook)
+            node.start()
+            return 'created_node', dict(identifier=identifier)
+        except Exception:
+            self.id_manager.free_identifier(identifier)
 
     def node_failed_hook(self, node):
         """
