@@ -60,7 +60,7 @@ class NodeManager(core.Agent):
             self.configurator.setup(self)
         self.run_loop()
 
-    def create_node(self, cls, identifier_hint, parameters):
+    def create_node(self, cls, parameters):
         """
         Creates a new node.
 
@@ -129,10 +129,6 @@ class SingleNodeConfigurator(Configurator):
             additional_arguments, self.node_options )
         super(SingleNodeConfigurator, self).__init__(**additional_arguments)
 
-    @property
-    def identifiers_seed(self):
-        return it.count()
-
     @metautil.classproperty
     def node_cls(self):
         pass
@@ -142,7 +138,6 @@ class SingleNodeConfigurator(Configurator):
         pass
 
     def setup(self, node_manager):
-        for identifier in it.islice(
-            self.identifiers_seed, 0, self.network_size):
+        for _ in xrange(self.network_size):
             node_manager.create_node(
-                self.node_cls, identifier, self.node_arguments)
+                self.node_cls, self.node_arguments)

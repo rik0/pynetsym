@@ -41,10 +41,8 @@ class Node(core.Node):
         pass
 
     def inviter_strategy(self):
-        identifier = BPA.configurator.identifiers_seed.next()
         self.send(
             NodeManager.name, 'create_node', cls=Node,
-            identifier_hint=identifier,
             parameters=dict(
                 gamma=self.gamma, probability=self.p,
                 strategy=Node.passive_strategy))
