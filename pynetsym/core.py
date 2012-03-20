@@ -300,7 +300,7 @@ class Node(Agent):
         @param criterion_or_node: The node to link may be an identifier
             or a callable extracting the node from the graph
         @type criterion_or_node: id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
-        @return:
+        @return: None
         """
         if callable(criterion_or_node):
             target_node = criterion_or_node(self.graph)
