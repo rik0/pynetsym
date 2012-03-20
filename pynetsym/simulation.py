@@ -107,6 +107,10 @@ class Simulation(object):
             self.id_manager.node_added,
             backend.NotifyingGraphWrapper.ADD,
             backend.NotifyingGraphWrapper.NODE)
+        self.graph.register_observer(
+            self.id_manager.node_removed,
+            backend.NotifyingGraphWrapper.REMOVE,
+            backend.NotifyingGraphWrapper.NODE)
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
@@ -194,6 +198,7 @@ class Simulation(object):
         address_book = core.AddressBook(self.graph)
         node_manager = NodeManager(
             self.graph, address_book,
+            self.id_manager,
             self.configurator(**arguments_dictionary))
         node_manager.start()
 

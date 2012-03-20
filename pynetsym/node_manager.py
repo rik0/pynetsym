@@ -18,13 +18,14 @@ class IdManager(object):
         @return: the identifier
         @rtype: int
         """
-        self.store.pop()
+        return self.store.pop()
 
     def node_added(self, event, kind, source, identifier, _node):
         self.store.mark(identifier)
 
     def node_removed(self, event, kind, source, identifier):
         self.store.unmark(identifier)
+
 
 
 class NodeManager(core.Agent):
@@ -34,9 +35,20 @@ class NodeManager(core.Agent):
     """
     name = 'manager' #: @ivar: the registered name in the L{address book<AddressBook>}
 
-    def __init__(self, graph, address_book, configurator):
+    def __init__(self, graph, address_book, id_manager, configurator):
+        """
+        Creates a new node_manager
+        @param graph: the graph to pass to the agents
+        @type graph: backend.GraphWrapper
+        @param address_book: the address book to pass to the agents
+        @type address_book: core.AddressBook
+        @param id_manager: the source for nodes id
+        @type id_manager: IdManager
+        @param configurator: the configurator
+        """
         super(NodeManager, self).__init__(NodeManager.name, address_book)
         self.graph = graph
+        self.id_manager = id_manager
         self.configurator = configurator
 
     def _run(self):
@@ -61,7 +73,7 @@ class NodeManager(core.Agent):
         @rtype: int | str
         """
 
-        identifier = self._address_book.create_id_from_hint(identifier_hint)
+        identifier = self.id_manager.get_identifier()
         node = cls(identifier, self._address_book,
                    self.graph, **parameters)
         node.link_value(self.node_terminated_hook)
