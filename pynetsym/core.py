@@ -3,11 +3,8 @@ import collections
 import functools
 import numbers
 import gevent
-import itertools as it
 
 import gevent.queue as queue
-
-from pynetsym import rndutil
 
 _M = collections.namedtuple('Message', 'sender payload')
 
