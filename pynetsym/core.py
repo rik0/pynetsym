@@ -86,50 +86,6 @@ class AddressBook(object):
         elif isinstance(identifier, numbers.Integral):
             return self.graph[identifier]
 
-    def create_id_from_hint(self, hint):
-        """
-        Creates a valid identifier starting from hint.
-        If hint was not bound to an agent, it is hint. Otherwise, if
-        hint is a string, builds a string appending random characters to
-        hint. If hint was an integer, it returns a random number among
-        the free identifiers between the minimum and the maximum registered
-        numbers. If such set is empty, return the lowest free integer number.
-
-        @param hint: the starting identifier
-        @type hint: int|str
-        @return: an identifier no agent is registered to.
-        @raise TypeError: if hint is not string or int
-        """
-        if (hint not in self.name_registry
-            and isinstance(hint, (numbers.Integral, basestring))):
-            return hint
-        elif isinstance(hint, numbers.Integral):
-            numeric_keys = sorted(k for k in self.name_registry.iterkeys()
-            if isinstance(k, numbers.Integral))
-            min_key = numeric_keys[0]
-            max_key = numeric_keys[-1]
-            free_keys = (set(xrange(min_key, max_key + 1))
-                         - set(numeric_keys))
-            if free_keys:
-                return free_keys.pop()
-            else:
-                ## keys from min_key to max_key are taken
-                ## try a smaller key, otherwise, try greater
-                ## we want to keep the keys as bounded as possible
-                if min_key - 1 >= 0:
-                    return min_key - 1
-                else:
-                    return max_key + 1
-        elif isinstance(hint, basestring):
-            return ''.join(
-                it.chain(hint, '#',
-                         it.islice(rndutil.random_printable_chars(),
-                                   0, self.RAND_CHARS)))
-        else:
-            raise TypeError(
-                "Could not build identifier from {}".format(hint))
-
-
 
 
 class AbstractAgent(object):
