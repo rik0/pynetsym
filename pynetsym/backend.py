@@ -1,6 +1,9 @@
 import types
 import abc
 import random
+
+import itertools as it
+
 import pynetsym
 import pynetsym.metautil
 import pynetsym.rndutil
@@ -56,18 +59,14 @@ class GraphWrapper(object):
         """
         pass
 
+    @abc.abstractmethod
     def preferential_attachment_node(self):
         """
-        Return a random node chosen according to preferential attachment
-        @return: a node
+        Return a random node chosen according to preferential attachment.
+        @return a node
         @rtype: int
         """
-        try:
-            return self.random_edge()[0]
-        except GraphError:
-            ## Means that random_edge failed: no edges all nodes
-            ## have 0 degree!
-            return self.random_node()
+        pass
 
     @abc.abstractmethod
     def random_edge(self):
@@ -205,6 +204,22 @@ else:
                     return pynetsym.rndutil.choice_from_iter(
                         self.graph.nodes_iter(),
                         max_value)
+
+        def preferential_attachment_node(self):
+            """
+            Return a random node chosen according to preferential attachment
+
+            @return: a node
+            @rtype: int
+            """
+            iterator = it.chain(
+                    (edge[0] for edge in self.graph.edges_iter()),
+                    self.graph.nodes_iter())
+            try:
+                return pynetsym.rndutil.choice_from_iter(
+                        iterator)
+            except IndexError:
+                raise GraphError("Extracting node from empty graph.")
 
         def add_edge(self, source, target):
             self.graph.add_edge(source, target)
