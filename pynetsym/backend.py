@@ -54,7 +54,7 @@ class GraphWrapper(object):
     def random_node(self):
         """
         Return a random node chosen uniformly.
-        @return: a node
+        @return: a node index
         @rtype: int
         """
         pass
@@ -63,7 +63,7 @@ class GraphWrapper(object):
     def preferential_attachment_node(self):
         """
         Return a random node chosen according to preferential attachment.
-        @return a node
+        @return a node index
         @rtype: int
         """
         pass
@@ -214,10 +214,12 @@ else:
             """
             iterator = it.chain(
                     (edge[0] for edge in self.graph.edges_iter()),
-                    self.graph.nodes_iter())
+                    xrange(self.graph.number_of_nodes()))
             try:
                 return pynetsym.rndutil.choice_from_iter(
-                        iterator)
+                        iterator, 
+                        (self.graph.number_of_edges()
+                            + self.graph.number_of_nodes()))
             except IndexError:
                 raise GraphError("Extracting node from empty graph.")
 
@@ -302,6 +304,19 @@ else:
                 return edge.source, edge.target
             except IndexError:
                 raise GraphError("Extracting edge from graph with no edges")
+
+        def preferential_attachment_node(self):
+            no_vertices = len(self.graph.vs)
+            no_edges = len(self.graph.es)
+            try:
+                random_index = random.randrange(no_vertices + no_edges)
+            except IndexError:
+                raise GraphError("Extracting node from empty graph.")
+            finally:
+                if random_index < no_vertices:
+                    return random_index
+                else:
+                    return self.graph.es[random_index - no_vertices].source
 
         def remove_node(self, identifier):
             raise NotImplementedError()
