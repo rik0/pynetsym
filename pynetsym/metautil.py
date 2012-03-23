@@ -1,10 +1,8 @@
 import abc
-import copy
 import functools
 import inspect
 import types
 import decorator
-import operator
 
 def copy_doc(cls):
     """
@@ -251,4 +249,14 @@ class delegate_all(object):
         self.remove_abstract_methods(method_names, new_cls)
         return new_cls
 
+def accumulate_older_variants(child_obj, attr_name):
+    import sys
+    child_type = child_obj if isinstance(child_obj, type) else type(child_obj)
 
+    reverted_mro = reversed(child_type.__mro__)
+
+    values = set()
+    for parent in reverted_mro:
+        values.update(parent.__dict__.get(attr_name, set()))
+
+    return values
