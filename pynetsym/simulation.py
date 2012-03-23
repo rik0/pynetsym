@@ -118,7 +118,7 @@ class Simulation(object):
         parser = argparse.ArgumentParser(
             add_help=True,
             description='Synthetic Network Generation Utility')
-        options = metautil.accumulate_older_variants(
+        options = metautil.gather_from_ancestors(
                 self, 'command_line_options', list)
         self._check_duplicated_options(options)
         self._load_arguments(parser, options)
@@ -126,9 +126,6 @@ class Simulation(object):
 
     def _check_duplicated_options(self, options):
         #TODO: try to fix so that more informative stuff happens
-        # print >> sys.stderr, options
-        # for option_line in options:
-        #     print >>sys.stderr, option_line
         names = [option_line[0] for option_line in options]
         names.extend(option_line[1] for option_line in options
                      if isinstance(option_line[1], basestring))

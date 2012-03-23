@@ -249,7 +249,7 @@ class delegate_all(object):
         self.remove_abstract_methods(method_names, new_cls)
         return new_cls
 
-def accumulate_older_variants(child_obj, attr_name, acc_type=set):
+def gather_from_ancestors(child_obj, attr_name, acc_type=set):
     child_type = child_obj if isinstance(child_obj, type) else type(child_obj)
 
     reverted_mro = reversed(child_type.__mro__)
