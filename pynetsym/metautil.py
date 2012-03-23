@@ -260,6 +260,6 @@ def accumulate_older_variants(child_obj, attr_name, acc_type=set):
     except AttributeError:
         acc_method = values.extend
     for parent in reverted_mro:
-        acc_method(parent.__dict__.get(attr_name, set()))
-
+        new_value = parent.__dict__.get(attr_name, acc_type())
+        acc_method(new_value)
     return values
