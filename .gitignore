@@ -1,6 +1,8 @@
 networks
 .idea
 *.swp
+*.swn
+*.swo
 *.pyc
 csvs
 build
