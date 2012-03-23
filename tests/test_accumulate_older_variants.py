@@ -12,16 +12,16 @@ class A(B):
 class TestAccumulateOlderVariants(unittest.TestCase):
     def testA(self):
         self.assertSetEqual({'x', 'y'},
-            metautil.accumulate_older_variants(A, 'foo'))
+            metautil.gather_from_ancestors(A, 'foo'))
 
     def testB(self):
         self.assertSetEqual({'x'},
-            metautil.accumulate_older_variants(B, 'foo'))
+            metautil.gather_from_ancestors(B, 'foo'))
 
-    def testAiList(self):
+    def testAList(self):
         self.assertSetEqual({'x', 'y'},
-            metautil.accumulate_older_variants(A, 'foo'), list)
+            metautil.gather_from_ancestors(A, 'foo'), list)
 
     def testBList(self):
         self.assertSetEqual({'x'},
-            metautil.accumulate_older_variants(B, 'foo'), list)
+            metautil.gather_from_ancestors(B, 'foo'), list)
