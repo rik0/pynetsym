@@ -1,7 +1,6 @@
 import abc
 from unittest import TestCase
 from pynetsym import metautil
-import networkx as nx
 
 __author__ = 'enrico'
 
@@ -13,8 +12,12 @@ class A(object):
     def bar(self):
         pass
 
-class C(nx.Graph):
-    pass
+class C(object):
+    def a(self):
+        pass
+
+    def b(self):
+        pass
 
 class D(A, C):
     pass
@@ -30,7 +33,8 @@ class TestExtract_interface(TestCase):
     def test_no_metaclass(self):
             class E(object):
                 pass
-            self.assertRaises(TypeError, metautil.abstract_interface_from(D), E)
+            self.assertRaises(TypeError, 
+                    metautil.abstract_interface_from(D), E)
 
 
     def test_methods(self):

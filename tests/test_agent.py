@@ -1,12 +1,10 @@
 from unittest import TestCase
-import gevent
-from pynetsym import core
-
-__author__ = 'enrico'
+from pynetsym import core, backend
 
 class TestAgent(TestCase):
     def setUp(self):
-        address_book = core.AddressBook()
+        graph_wrapper = backend.NXGraphWrapper()
+        address_book = core.AddressBook(graph_wrapper)
         self.agent_a_id = 'a'
         self.agent_a = core.Agent(self.agent_a_id, address_book)
         self.agent_b_id = 'b'
