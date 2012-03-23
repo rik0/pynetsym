@@ -204,7 +204,7 @@ class AbstractAgent(object):
             if answer is not None:
                 try:
                     answer, answer_parameters = answer
-                except ValueError:
+                except TypeError:
                     answer_parameters = {}
                 self.send(message.sender, answer, **answer_parameters)
             self.cooperate()
