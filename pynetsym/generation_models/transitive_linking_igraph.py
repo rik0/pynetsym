@@ -60,7 +60,7 @@ class Node(core.Node):
 class TL(simulation.Simulation):
     graph_type = pynetsym.backend.IGraphWrapper
 
-    simulation_options = (
+    command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(

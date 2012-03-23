@@ -19,13 +19,22 @@ class Simulation(object):
             which holds the network.
         3. L{Simulation.clock}: the callable that creates the clock in the
             simulation
-        4. L{Simulation.simulation_options}
+        4. L{Simulation.command_line_options}
         5. L{Simulation.configurator}
 
-    Of these, L{Simulation.activator}, L{Simulation.graph_type} and
+    Of these, L{Simulation.activator}, L{Simulation.graph_type},
+    L{Simulation.command_line_options} and
     L{Simulation.clock} have sensible default values (respectively,
-    L{generation.Activator}, L{backend.NXGraphWrapper} and L{generation.Clock}.
+    L{generation.Activator}, L{backend.NXGraphWrapper},
+    a list of default options and L{generation.Clock}.
     The other arguments need to be supplied by the subclass.
+
+    Notice that command_line_options are scanned along the inheritance
+    tree and put all together in a single list before being processed.
+    As a consequence it is an error to choose options with names already
+    used in superclasses. As the Simulation class hierarchies are meant
+    to be small, this should not be a problem and greatly simplify the
+    design.
 
     The preferred way to deal with these options is like::
         class SimulationSubclass(Simulation):
@@ -37,15 +46,20 @@ class Simulation(object):
                 node_options = {...}
                 activator_options = {...}
 
-            simulation_options = (
+            command_line_options = (
                 ('-b', '--bar', dict(default=..., type=...))
-
     """
-    basic_options = (
+
+    command_line_options = (
         ("-s", "--steps", dict(default=100, type=int)),
         ("-o", "--output", dict(default=None)),
         ("-f", "--format", dict(choices=ioutil.FORMATS, default=None)))
-    """the basic options all generation_models share. Do not override."""
+    """
+    Each option line is in the form:
+        1. (short_option_name, long_option_name, parameters)
+        2. (long_option_name, parameters)
+    """
+
 
     @metautil.classproperty
     def activator(self):
@@ -71,19 +85,6 @@ class Simulation(object):
         """
         return Clock
 
-    @metautil.classproperty
-    def simulation_options(self):
-        """
-        Returns a sequence of tuples:
-
-        Each option line is in the form:
-            1. (short_option_name, long_option_name, parameters)
-            2. (long_option_name, parameters)
-
-        @rtype: [(str, str, dict)]
-        """
-        return []
-
     #TODO: fixme
     @metautil.classproperty
     def configurator(self):
@@ -107,13 +108,16 @@ class Simulation(object):
             self.id_manager.node_removed,
             backend.NotifyingGraphWrapper.REMOVE,
             backend.NotifyingGraphWrapper.NODE)
+        # do not register the node_add because that is done when
+        # the id is extracted from id_manager
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
             add_help=True,
             description='Synthetic Network Generation Utility')
-        self._load_arguments(parser, self.basic_options)
-        self._load_arguments(parser, self.simulation_options)
+        options = metautil.accumulate_older_variants(
+                self, 'command_line_options', list)
+        self._load_arguments(parser, options)
         return parser
 
     def parse_arguments(self, args):

@@ -40,7 +40,7 @@ class Node(core.Node):
         self.link_to(target_node)
 
 class TL(simulation.Simulation):
-    simulation_options = (
+    command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
