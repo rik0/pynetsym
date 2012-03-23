@@ -50,11 +50,12 @@ class AddressBook(object):
         @type identifier: int | str
         @param agent: the agent to bind
         @type agent: Agent
-        @raise AddressingError: if identifier is already bound.
+        @raise AddressingError: if identifier is already bound and is numeric.
         @raise TypeError: if the identifier is not a string or a integer
         """
         if isinstance(identifier, basestring):
-            if identifier in self.name_registry:
+            if (identifier in self.name_registry
+                    and self.name_registry[identifier] is not agent):
                 raise AddressingError(
                     "Could not rebing agent %r to identifier %r." % (agent, identifier))
             else:
