@@ -17,3 +17,11 @@ class TestAccumulateOlderVariants(unittest.TestCase):
     def testB(self):
         self.assertSetEqual({'x'},
             metautil.accumulate_older_variants(B, 'foo'))
+
+    def testAiList(self):
+        self.assertSetEqual({'x', 'y'},
+            metautil.accumulate_older_variants(A, 'foo'), list)
+
+    def testBList(self):
+        self.assertSetEqual({'x'},
+            metautil.accumulate_older_variants(B, 'foo'), list)
