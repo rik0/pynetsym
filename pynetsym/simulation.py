@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from pynetsym import ioutil, core, timing, backend, metautil
+from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
 
 class ConfigurationError(RuntimeError):
@@ -63,6 +64,7 @@ class Simulation(object):
         2. (long_option_name, parameters)
     """
 
+    simulation_options = {"steps", "output", "format"}
 
     @metautil.classproperty
     def activator(self):
@@ -204,9 +206,10 @@ class Simulation(object):
             args = [] if kwargs else sys.argv[1:]
         arguments_dictionary = self.parse_arguments(args)
         arguments_dictionary.update(kwargs)
-        self.output_path = arguments_dictionary.pop('output')
-        self.format = arguments_dictionary.pop('format')
-        steps = arguments_dictionary.pop('steps')
+
+        simulation_options = argutils.extract_options(
+                arguments_dictionary, self.simulation_options)
+        vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
         node_manager = NodeManager(
@@ -219,7 +222,7 @@ class Simulation(object):
         activator.start()
 
         with timing.Timer(callback):
-            clock = self.clock(steps, address_book)
+            clock = self.clock(self.steps, address_book)
             clock.start()
 
             activator.join()
