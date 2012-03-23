@@ -1,5 +1,4 @@
 import abc
-import itertools as it
 import sys
 
 from pynetsym import core, util, metautil
