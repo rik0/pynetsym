@@ -51,7 +51,6 @@ class TL(simulation.Simulation):
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
-        activator_options = {}
 
 if __name__ == '__main__':
     sim = TL()

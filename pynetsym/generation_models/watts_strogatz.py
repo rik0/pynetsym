@@ -15,12 +15,28 @@ class Node(core.Node):
                 random_node = self.graph.random_node()
                 self.graph.add_edge(self.id, random_node)
 
+    def initialize(self):
+        print self.id
+
+class Activator(simulation.Activator):
+    def __init__(self, *arguments, **kw):
+        super(Activator, self).__init__(*arguments, **kw)
+        self.to_chose = 0
+
+    def choose_node(self):
+        node = self.to_chose
+        self.to_chose += 1
+        return node
+
 
 class WS(simulation.Simulation):
     command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
         ('-k', '--lattice-connections', dict(default=2, type=int)),
         ('-p', '--rewiring-probability', dict(default=0.3, type=float)))
+    initialize = True
+
+    activator = Activator
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node

@@ -1,7 +1,7 @@
 import abc
 import sys
 
-from pynetsym import core, util, metautil
+from pynetsym import core, util, metautil, argutils
 
 class IdManager(object):
     """
@@ -108,25 +108,45 @@ class NodeManager(core.Agent):
 class Configurator(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **additional_arguments):
-        self.activator_arguments = util.subdict(
-            additional_arguments, self.activator_options)
+    configurator_options = {}
+    """
+    Here we specify the names of the options for the configurator.
+    Options are accumulated along the inheritance path
+    """
 
-    @metautil.classproperty
-    def activator_options(self):
-        pass
+    def __init__(self, **additional_arguments):
+        full_options = metautil.gather_from_ancestors(
+                self, 'configurator_options')
+        configurator_arguments = argutils.extract_options(
+                additional_arguments, full_options)
+        vars(self).update(configurator_arguments)
+        self.additional_arguments = additional_arguments
 
     @abc.abstractmethod
     def setup(self, node_manager):
         pass
 
-
+# TODO move in configurator the initialization stuff.
 class SingleNodeConfigurator(Configurator):
-    def __init__(self, network_size, **additional_arguments):
-        self.network_size = network_size
-        self.node_arguments, additional_arguments = util.splitdict(
-            additional_arguments, self.node_options )
-        super(SingleNodeConfigurator, self).__init__(**additional_arguments)
+    """
+    A SingleNodeConfigurator needs a network_size parameter
+    that specifies the size of the initial network.
+
+    network_size nodes of type node_cls (specified in the body
+    of the configurator) are created and are passed the arguments
+    from additional_arguments specified in node_options.
+
+    When all the nodes are created, if the initialize attribute
+    is set to true, all the nodes are sent an initialize message.
+    Such attribute can be both set as a configurator_option
+    or directly in the class like::
+
+        class SomeSimulation(simulation.Simulation):
+            class configurator(node_manager.SingleNodeConfigurator):
+                initialize = True
+    """
+    configurator_options = {"network_size"}
+    initialize = False
 
     @metautil.classproperty
     def node_cls(self):
@@ -137,6 +157,15 @@ class SingleNodeConfigurator(Configurator):
         pass
 
     def setup(self, node_manager):
+        self.nodes = []
+        self.node_arguments = argutils.extract_options(
+                self.additional_arguments, self.node_options)
         for _ in xrange(self.network_size):
             node_manager.create_node(
                 self.node_cls, self.node_arguments)
+        if self.initialize:
+            for identifier in self.nodes:
+                node_manager.send(identifier, 'initialize')
+
+    def node_created(self, identifier):
+        self.nodes.append(identifier)

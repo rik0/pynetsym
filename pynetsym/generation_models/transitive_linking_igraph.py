@@ -59,6 +59,7 @@ class Node(core.Node):
 
 class TL(simulation.Simulation):
     graph_type = pynetsym.backend.IGraphWrapper
+    graph_options = dict(graph=igraph.Graph(0))
 
     command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
@@ -68,12 +69,9 @@ class TL(simulation.Simulation):
             const=lambda graph: graph.preferential_attachment_node(),
             default=lambda graph: graph.random_node())))
 
-    graph_options = dict(graph=igraph.Graph(0))
-
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
-        activator_options = {}
 
 
 
