@@ -82,8 +82,9 @@ class NodeManager(core.Agent):
             node.link_exception(self.node_failed_hook)
             node.start()
             return 'created_node', dict(identifier=identifier)
-        except Exception:
+        except Exception as e:
             self.id_manager.free_identifier(identifier)
+            return 'creation_failed', {'exception':e}
 
     def node_failed_hook(self, node):
         """
