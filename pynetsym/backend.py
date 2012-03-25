@@ -259,7 +259,10 @@ else:
             return identifier in self.graph
 
         def __getitem__(self, identifier):
-            return self.graph.node[identifier]['agent']
+            try:
+                return self.graph.node[identifier]['agent']
+            except (IndexError, KeyError):
+                raise GraphError("Cannot find node %s." % identifier)
 
 try:
     import igraph

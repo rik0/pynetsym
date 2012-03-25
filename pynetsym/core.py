@@ -82,7 +82,10 @@ class AddressBook(object):
                 raise AddressingError(
                     "Could not find node with address %r." % identifier)
         elif isinstance(identifier, numbers.Integral):
-            return self.graph[identifier]
+            try:
+                return self.graph[identifier]
+            except RuntimeError as e:
+                raise AddressingError(e.message)
 
 
 
