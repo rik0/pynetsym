@@ -36,7 +36,7 @@ class Node(core.Node):
                 self.starting_edges -= 1
 
 class BA(simulation.Simulation):
-    simulation_options = (
+    command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
         ('-m', '--starting-edges', dict(default=5, type=int)))
 

@@ -1,10 +1,8 @@
 import abc
-import copy
 import functools
 import inspect
 import types
 import decorator
-import operator
 
 def copy_doc(cls):
     """
@@ -251,4 +249,17 @@ class delegate_all(object):
         self.remove_abstract_methods(method_names, new_cls)
         return new_cls
 
+def gather_from_ancestors(child_obj, attr_name, acc_type=set):
+    child_type = child_obj if isinstance(child_obj, type) else type(child_obj)
 
+    reverted_mro = reversed(child_type.__mro__)
+
+    values = acc_type()
+    try:
+        acc_method = values.update
+    except AttributeError:
+        acc_method = values.extend
+    for parent in reverted_mro:
+        new_value = parent.__dict__.get(attr_name, acc_type())
+        acc_method(new_value)
+    return values
