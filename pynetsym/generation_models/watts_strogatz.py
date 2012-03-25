@@ -1,9 +1,11 @@
+import os
 import random
 from pynetsym import simulation, node_manager, core
 
 class Node(core.Node):
     def __init__(self, identifier, address_book,
-                 graph, rewiring_probability):
+                 graph, rewiring_probability,
+                 lattice_connections):
         self.rewiring_probability = rewiring_probability
         super(Node, self).__init__(identifier, address_book, graph)
 
