@@ -99,6 +99,17 @@ class Configurator(core.Agent):
     __metaclass__ = abc.ABCMeta
     name = 'configurator'
 
+    initialize = False
+    """
+    When all the nodes are created, if the initialize attribute
+    is set to true, all the nodes are sent an initialize message.
+    Such attribute can be both set as a configurator_option
+    or directly in the class like::
+
+        class SomeSimulation(simulation.Simulation):
+            class configurator(node_manager.SingleNodeConfigurator):
+                initialize = True
+    """
     configurator_options = {}
     """
     Here we specify the names of the options for the configurator.
@@ -116,22 +127,18 @@ class Configurator(core.Agent):
                 additional_arguments, full_options)
         vars(self).update(configurator_arguments)
         self.additional_arguments = additional_arguments
-
-    @abc.abstractproperty
-    def identifiers_to_initialize(self):
-        """
-        Return a collection of the node ids to initialize.
-        """
-        pass
+        self.nodes = []
 
     @abc.abstractmethod
     def setup(self):
         pass
 
     def initialize_nodes(self):
-        for identifier in self.identifiers_to_initialize:
-            self.send(identifier, 'initialize')
+        if self.initialize:
+            for identifier in self.nodes:
+                self.send(identifier, 'initialize')
         self.kill()
+
 
     def _run(self):
         self.setup()
@@ -147,18 +154,8 @@ class SingleNodeConfigurator(Configurator):
     network_size nodes of type node_cls (specified in the body
     of the configurator) are created and are passed the arguments
     from additional_arguments specified in node_options.
-
-    When all the nodes are created, if the initialize attribute
-    is set to true, all the nodes are sent an initialize message.
-    Such attribute can be both set as a configurator_option
-    or directly in the class like::
-
-        class SomeSimulation(simulation.Simulation):
-            class configurator(node_manager.SingleNodeConfigurator):
-                initialize = True
     """
     configurator_options = {"network_size"}
-    initialize = False
 
     @metautil.classproperty
     def node_cls(self):
@@ -168,12 +165,7 @@ class SingleNodeConfigurator(Configurator):
     def node_options(self):
         pass
 
-    @property
-    def identifiers_to_initialize(self):
-        return self.nodes
-
     def setup(self):
-        self.nodes = []
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
         for _ in xrange(self.network_size):
