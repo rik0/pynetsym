@@ -1,29 +1,11 @@
 from pynetsym import core, node_manager
 from pynetsym import simulation
 
-
-class Activator(simulation.Activator):
-    def __init__(self, graph, address_book, starting_edges):
-        super(Activator, self).__init__(
-                graph, address_book,
-                starting_edges=starting_edges)
-
-    def tick(self):
-        self.send(
-            node_manager.NodeManager.name,
-            'create_node', cls=Node,
-            parameters=dict(
-                starting_edges=self.starting_edges))
-
-    def created_node(self, identifier):
-        self.send(identifier, 'activate')
-
 class Node(core.Node):
     def __init__(self, identifier, address_book,
                  graph, starting_edges):
         super(Node, self).__init__(identifier, address_book, graph)
         self.starting_edges = starting_edges
-
 
     def activate(self):
         neighbors = self.graph.neighbors(self.id)
@@ -35,6 +17,19 @@ class Node(core.Node):
                 neighbors.append(random_node)
                 self.starting_edges -= 1
 
+class Activator(simulation.Activator):
+    activator_options = {'starting_edges'}
+
+    def tick(self):
+        self.send(
+            node_manager.NodeManager.name,
+            'create_node', cls=Node,
+            parameters=dict(
+                starting_edges=self.starting_edges))
+
+    def created_node(self, identifier):
+        self.send(identifier, 'activate')
+
 class BA(simulation.Simulation):
     command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
@@ -45,7 +40,6 @@ class BA(simulation.Simulation):
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {}
-        activator_options = {'starting_edges'}
 
 if __name__ == '__main__':
     sim = BA()

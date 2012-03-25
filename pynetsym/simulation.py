@@ -212,13 +212,17 @@ class Simulation(object):
         vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
+        configurator = self.configurator(
+                address_book, **arguments_dictionary)
         node_manager = NodeManager(
             self.graph, address_book,
-            self.id_manager,
-            self.configurator(**arguments_dictionary))
+            self.id_manager)
         node_manager.start()
+        configurator.start()
+        configurator.join()
 
-        activator = self.activator(self.graph, address_book)
+        activator = self.activator(self.graph, address_book,
+                **arguments_dictionary)
         activator.start()
 
         with timing.Timer(callback):
@@ -246,11 +250,16 @@ class Activator(core.Agent):
     implementations.
     """
     name = 'activator'
-
-    def __init__(self, graph, address_book, **additional_parameters):
+    activator_options = {}
+    def __init__(self, graph, address_book, **additional_arguments):
+        full_options = metautil.gather_from_ancestors(
+                self, 'activator_options')
+        activator_arguments = argutils.extract_options(
+                additional_arguments,
+                full_options)
         super(Activator, self).__init__(self.name, address_book)
         self.graph = graph
-        locals().update(additional_parameters)
+        vars(self).update(activator_arguments)
 
     def tick(self):
         node_id = self.choose_node()

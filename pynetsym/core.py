@@ -101,7 +101,7 @@ class AbstractAgent(object):
     LOG_ERROR = 1
     EXCEPTION = 2
 
-    def initialize(self, identifier, address_book, error_level=LOG_ERROR):
+    def __init__(self, identifier, address_book, error_level=LOG_ERROR):
         """
         Initializes the Agent object setting variables and registering
         the agent in the address book.
@@ -253,7 +253,7 @@ class Agent(gevent.Greenlet, AbstractAgent):
             error_level=AbstractAgent.LOG_ERROR,
             *args, **kwargs):
         super(Agent, self).__init__(*args, **kwargs)
-        self.initialize(identifier, address_book, error_level)
+        AbstractAgent.__init__(self, identifier, address_book, error_level)
         self._queue = queue.Queue()
 
     def deliver(self, message):

@@ -7,6 +7,7 @@ class Node(core.Node):
                  graph, rewiring_probability,
                  lattice_connections):
         self.rewiring_probability = rewiring_probability
+        self.lattice_connections = lattice_connections
         super(Node, self).__init__(identifier, address_book, graph)
 
     def activate(self):
@@ -18,7 +19,7 @@ class Node(core.Node):
                 self.graph.add_edge(self.id, random_node)
 
     def initialize(self):
-        print self.id
+        pass
 
 class Activator(simulation.Activator):
     def __init__(self, *arguments, **kw):
@@ -42,7 +43,7 @@ class WS(simulation.Simulation):
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
-        node_options = {"rewiring_probability"}
+        node_options = {"rewiring_probability", "lattice_connections"}
         activator_options = {"lattice_connections"}
 
 if __name__ == '__main__':

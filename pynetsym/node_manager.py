@@ -36,7 +36,7 @@ class NodeManager(core.Agent):
     """
     name = 'manager' #: @ivar: the registered name in the L{address book<AddressBook>}
 
-    def __init__(self, graph, address_book, id_manager, configurator):
+    def __init__(self, graph, address_book, id_manager):
         """
         Creates a new node_manager
         @param graph: the graph to pass to the agents
@@ -50,14 +50,6 @@ class NodeManager(core.Agent):
         super(NodeManager, self).__init__(NodeManager.name, address_book)
         self.graph = graph
         self.id_manager = id_manager
-        self.configurator = configurator
-
-    def _run(self):
-        if callable(self.configurator):
-            self.configurator(self)
-        else:
-            self.configurator.setup(self)
-        self.run_loop()
 
     def create_node(self, cls, parameters):
         """
@@ -73,7 +65,6 @@ class NodeManager(core.Agent):
         @return: the actual identifier
         @rtype: int | str
         """
-
         identifier = self.id_manager.get_identifier()
         try:
             node = cls(identifier, self._address_book,
@@ -104,9 +95,9 @@ class NodeManager(core.Agent):
         """
         pass
 
-
-class Configurator(object):
+class Configurator(core.Agent):
     __metaclass__ = abc.ABCMeta
+    name = 'configurator'
 
     configurator_options = {}
     """
@@ -114,7 +105,11 @@ class Configurator(object):
     Options are accumulated along the inheritance path
     """
 
-    def __init__(self, **additional_arguments):
+    def __init__(self, address_book, **additional_arguments):
+        error_level = additional_arguments.pop(
+            'error_level', self.LOG_ERROR)
+        super(Configurator, self).__init__(
+                self.name, address_book, error_level)
         full_options = metautil.gather_from_ancestors(
                 self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
@@ -122,9 +117,26 @@ class Configurator(object):
         vars(self).update(configurator_arguments)
         self.additional_arguments = additional_arguments
 
-    @abc.abstractmethod
-    def setup(self, node_manager):
+    @abc.abstractproperty
+    def identifiers_to_initialize(self):
+        """
+        Return a collection of the node ids to initialize.
+        """
         pass
+
+    @abc.abstractmethod
+    def setup(self):
+        pass
+
+    def initialize_nodes(self):
+        for identifier in self.identifiers_to_initialize:
+            self.send(identifier, 'initialize')
+        self.kill()
+
+    def _run(self):
+        self.setup()
+        self.run_loop()
+
 
 # TODO move in configurator the initialization stuff.
 class SingleNodeConfigurator(Configurator):
@@ -156,16 +168,21 @@ class SingleNodeConfigurator(Configurator):
     def node_options(self):
         pass
 
-    def setup(self, node_manager):
+    @property
+    def identifiers_to_initialize(self):
+        return self.nodes
+
+    def setup(self):
         self.nodes = []
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
         for _ in xrange(self.network_size):
-            node_manager.create_node(
-                self.node_cls, self.node_arguments)
-        if self.initialize:
-            for identifier in self.nodes:
-                node_manager.send(identifier, 'initialize')
+            self.send(
+                NodeManager.name, 'create_node',
+                cls=self.node_cls,
+                parameters=self.node_arguments)
 
-    def node_created(self, identifier):
+    def created_node(self, identifier):
         self.nodes.append(identifier)
+        if len(self.nodes) == self.network_size:
+            self.initialize_nodes()
