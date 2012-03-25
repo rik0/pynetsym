@@ -24,7 +24,7 @@ class WS(simulation.Simulation):
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
-        node_options = {"rewiring_probability"}
+        node_options = {"rewiring_probability", "lattice_connections"}
         activator_options = {"lattice_connections"}
 
 if __name__ == '__main__':
