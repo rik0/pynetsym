@@ -1,6 +1,9 @@
 import types
 import abc
 import random
+
+import itertools as it
+
 import pynetsym
 import pynetsym.metautil
 import pynetsym.rndutil
@@ -51,23 +54,19 @@ class GraphWrapper(object):
     def random_node(self):
         """
         Return a random node chosen uniformly.
-        @return: a node
+        @return: a node index
         @rtype: int
         """
         pass
 
+    @abc.abstractmethod
     def preferential_attachment_node(self):
         """
-        Return a random node chosen according to preferential attachment
-        @return: a node
+        Return a random node chosen according to preferential attachment.
+        @return a node index
         @rtype: int
         """
-        try:
-            return self.random_edge()[0]
-        except GraphError:
-            ## Means that random_edge failed: no edges all nodes
-            ## have 0 degree!
-            return self.random_node()
+        pass
 
     @abc.abstractmethod
     def random_edge(self):
@@ -206,6 +205,24 @@ else:
                         self.graph.nodes_iter(),
                         max_value)
 
+        def preferential_attachment_node(self):
+            """
+            Return a random node chosen according to preferential attachment
+
+            @return: a node
+            @rtype: int
+            """
+            iterator = it.chain(
+                    (edge[0] for edge in self.graph.edges_iter()),
+                    xrange(self.graph.number_of_nodes()))
+            try:
+                return pynetsym.rndutil.choice_from_iter(
+                        iterator, 
+                        (self.graph.number_of_edges()
+                            + self.graph.number_of_nodes()))
+            except IndexError:
+                raise GraphError("Extracting node from empty graph.")
+
         def add_edge(self, source, target):
             self.graph.add_edge(source, target)
 
@@ -242,7 +259,10 @@ else:
             return identifier in self.graph
 
         def __getitem__(self, identifier):
-            return self.graph.node[identifier]['agent']
+            try:
+                return self.graph.node[identifier]['agent']
+            except (IndexError, KeyError):
+                raise GraphError("Cannot find node %s." % identifier)
 
 try:
     import igraph
@@ -287,6 +307,19 @@ else:
                 return edge.source, edge.target
             except IndexError:
                 raise GraphError("Extracting edge from graph with no edges")
+
+        def preferential_attachment_node(self):
+            no_vertices = len(self.graph.vs)
+            no_edges = len(self.graph.es)
+            try:
+                random_index = random.randrange(no_vertices + no_edges)
+            except IndexError:
+                raise GraphError("Extracting node from empty graph.")
+            finally:
+                if random_index < no_vertices:
+                    return random_index
+                else:
+                    return self.graph.es[random_index - no_vertices].source
 
         def remove_node(self, identifier):
             raise NotImplementedError()

@@ -50,11 +50,12 @@ class AddressBook(object):
         @type identifier: int | str
         @param agent: the agent to bind
         @type agent: Agent
-        @raise AddressingError: if identifier is already bound.
+        @raise AddressingError: if identifier is already bound and is numeric.
         @raise TypeError: if the identifier is not a string or a integer
         """
         if isinstance(identifier, basestring):
-            if identifier in self.name_registry:
+            if (identifier in self.name_registry
+                    and self.name_registry[identifier] is not agent):
                 raise AddressingError(
                     "Could not rebing agent %r to identifier %r." % (agent, identifier))
             else:
@@ -81,7 +82,10 @@ class AddressBook(object):
                 raise AddressingError(
                     "Could not find node with address %r." % identifier)
         elif isinstance(identifier, numbers.Integral):
-            return self.graph[identifier]
+            try:
+                return self.graph[identifier]
+            except RuntimeError as e:
+                raise AddressingError(e.message)
 
 
 
@@ -97,7 +101,7 @@ class AbstractAgent(object):
     LOG_ERROR = 1
     EXCEPTION = 2
 
-    def initialize(self, identifier, address_book, error_level=LOG_ERROR):
+    def __init__(self, identifier, address_book, error_level=LOG_ERROR):
         """
         Initializes the Agent object setting variables and registering
         the agent in the address book.
@@ -204,7 +208,7 @@ class AbstractAgent(object):
             if answer is not None:
                 try:
                     answer, answer_parameters = answer
-                except ValueError:
+                except TypeError:
                     answer_parameters = {}
                 self.send(message.sender, answer, **answer_parameters)
             self.cooperate()
@@ -249,7 +253,7 @@ class Agent(gevent.Greenlet, AbstractAgent):
             error_level=AbstractAgent.LOG_ERROR,
             *args, **kwargs):
         super(Agent, self).__init__(*args, **kwargs)
-        self.initialize(identifier, address_book, error_level)
+        AbstractAgent.__init__(self, identifier, address_book, error_level)
         self._queue = queue.Queue()
 
     def deliver(self, message):

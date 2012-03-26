@@ -1,6 +1,8 @@
 networks
 .idea
 *.swp
+*.swn
+*.swo
 *.pyc
 csvs
 build
@@ -10,3 +12,6 @@ bin/*
 include/*
 *.egg-info
 .Python
+.DS_Store
+.ropeproject
+share/*
