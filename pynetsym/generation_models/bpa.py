@@ -30,7 +30,8 @@ class Node(core.Node):
         @param graph: the graph
         @type graph: backend.GraphWrapper
         @param gamma: the bias to select linkers
-        @param probability: the probability distribution of the nodes behavior
+        @param probability: the probability distribution of the nodes 
+            behavior
         @param strategy: the "forced" starting strategy
         """
         super(Node, self).__init__(identifier, address_book, graph)
@@ -53,9 +54,11 @@ class Node(core.Node):
         self.strategy(self)
 
     def passive_strategy(self):
-        pass
+        pass ## exactly what we want
 
     def inviter_strategy(self):
+        ## Create a new node: as the node manager answers with a
+        ## created node message, then we can link there.
         self.send(
             NodeManager.name, 'create_node', cls=Node,
             parameters=dict(
