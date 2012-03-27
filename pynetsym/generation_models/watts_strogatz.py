@@ -1,13 +1,13 @@
-import os
 import random
 from pynetsym import simulation, node_manager, core
 
 class Node(core.Node):
     def __init__(self, identifier, address_book,
                  graph, rewiring_probability,
-                 lattice_connections):
+                 lattice_connections, network_size):
         self.rewiring_probability = rewiring_probability
         self.lattice_connections = lattice_connections
+        self.network_size = network_size
         super(Node, self).__init__(identifier, address_book, graph)
 
     def activate(self):
@@ -19,7 +19,9 @@ class Node(core.Node):
                 self.graph.add_edge(self.id, random_node)
 
     def initialize(self):
-        pass
+        for index in range(self.id+1, 
+                           self.id+self.lattice_connections+1):
+            self.link_to(index % self.network_size)
 
 class Activator(simulation.Activator):
     def __init__(self, *arguments, **kw):
@@ -37,13 +39,16 @@ class WS(simulation.Simulation):
         ('-n', '--network-size', dict(default=100, type=int)),
         ('-k', '--lattice-connections', dict(default=2, type=int)),
         ('-p', '--rewiring-probability', dict(default=0.3, type=float)))
-    initialize = True
 
     activator = Activator
 
     class configurator(node_manager.SingleNodeConfigurator):
+        initialize = True
         node_cls = Node
-        node_options = {"rewiring_probability", "lattice_connections"}
+        node_options = {
+                "rewiring_probability",
+                "lattice_connections",
+                "network_size"}
         activator_options = {"lattice_connections"}
 
 if __name__ == '__main__':
