@@ -51,6 +51,21 @@ class GraphWrapper(object):
         pass
 
     @abc.abstractmethod
+    def remove_edge(self, source, target):
+        """
+        Removes edge from the graph
+
+        @param source: the node from where the edge starts
+        @type source: int
+        @param target: the node to which the edge arrives
+        @type target: int
+        @warning: the actual behavior depends on the implementation being
+            directed or undirected
+        """
+        pass
+
+
+    @abc.abstractmethod
     def random_node(self):
         """
         Return a random node chosen uniformly.
@@ -93,8 +108,8 @@ class GraphWrapper(object):
         @type identifier: int
         @param node: the new node
         @type pynetsym.core.Node
-        @param keep_contacts: whether to remove or to update all the contacts
-            that where associated with the old node.
+        @param keep_contacts: whether to remove or to update all the
+            contacts that where associated with the old node.
         @warning: Currently keep_contacts is not supported
         """
         if keep_contacts:
@@ -148,6 +163,11 @@ class NotifyingGraphWrapper(GraphWrapper):
     def add_edge(self, source, target):
         pass
 
+    @notifies(REMOVE, EDGE)
+    @delegate
+    def remove_egde(self, source, target):
+        pass
+
     @notifies(REMOVE, NODE)
     @delegate
     def remove_node(self, identifier):
@@ -185,12 +205,14 @@ else:
             @rtype: int
             @raise GraphError if the graph is empty.
 
-            @warning: notice that it assumes that the graph nodes have indices
-            going from 0 to some n. If it is not the case, the draw may not be
-            uniform, bugs may arise, demons may fly out of your node.
+            @warning: notice that it assumes that the graph nodes have
+                indices going from 0 to some n. If it is not the case,
+                the draw may not be uniform, bugs may arise, demons may
+                fly out of your node.
             """
             ## TODO: this is wrong from a probabilistic point of view
-            ## Fix it using additional data structures and for example a layer of indirection
+            ## Fix it using additional data structures and for example 
+            ## a layer of indirection
             ## mapping each index with a single node
             try:
                 max_value = self.graph.number_of_nodes()
@@ -207,7 +229,7 @@ else:
 
         def preferential_attachment_node(self):
             """
-            Return a random node chosen according to preferential attachment
+            Return a random node chosen according to pref. attachment
 
             @return: a node
             @rtype: int
@@ -226,6 +248,9 @@ else:
         def add_edge(self, source, target):
             self.graph.add_edge(source, target)
 
+        def remove_edge(self, source, target):
+            self.graph.remove_edge(source, target)
+
         def random_edge(self):
             """
             Draw a random edge from the graph.
@@ -241,7 +266,8 @@ else:
                     self.graph.edges_iter(),
                     self.graph.number_of_edges())
             except ValueError:
-                raise GraphError("Extracting edge from graph with no edges")
+                raise GraphError(
+                        "Extracting edge from graph with no edges")
 
         def add_node(self, identifier, agent):
             self.graph.add_node(identifier, agent=agent)
@@ -293,7 +319,10 @@ else:
             return self.graph.vs[identifier]["agent"]
 
         def add_edge(self, source, target):
-            self.graph.add_edges((source, target))
+            self.graph.add_edges(((source, target), ))
+
+        def remove_edge(self, source, target):
+            self.graph.delete_edges(((source, target), ))
 
         def random_node(self):
             try:
@@ -306,7 +335,8 @@ else:
                 edge = random.choice(self.graph.es)
                 return edge.source, edge.target
             except IndexError:
-                raise GraphError("Extracting edge from graph with no edges")
+                raise GraphError(
+                        "Extracting edge from graph with no edges")
 
         def preferential_attachment_node(self):
             no_vertices = len(self.graph.vs)

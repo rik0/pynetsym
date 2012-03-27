@@ -16,7 +16,8 @@ class Message(_M):
 
 class AddressingError(Exception):
     """
-    Error signaling that something with the addressing of a message went wrong.
+    Error signaling that something with the addressing of 
+    a message went wrong.
 
     """
 
@@ -32,7 +33,8 @@ class AddressBook(object):
 
     @todo: Change the API so that the identifier is not chosen from outside.
         The API change should take into account:
-            1. how it works with different Graph implementations (e.g., igraph)
+            1. how it works with different Graph implementations 
+                (e.g., igraph)
             2. how it works with different back-ends (e.g., asside)
     """
 
@@ -50,20 +52,22 @@ class AddressBook(object):
         @type identifier: int | str
         @param agent: the agent to bind
         @type agent: Agent
-        @raise AddressingError: if identifier is already bound and is numeric.
+        @raise AddressingError: if identifier is numeric and bound
         @raise TypeError: if the identifier is not a string or a integer
         """
         if isinstance(identifier, basestring):
             if (identifier in self.name_registry
                     and self.name_registry[identifier] is not agent):
                 raise AddressingError(
-                    "Could not rebing agent %r to identifier %r." % (agent, identifier))
+                    "Could not rebing agent %r to identifier %r." % (
+                        agent, identifier))
             else:
                 self.name_registry[identifier] = agent
         elif isinstance(identifier, numbers.Integral):
             if identifier in self.graph:
                 raise AddressingError(
-                    "Could not rebing agent %r to identifier %r." % (agent, identifier))
+                    ("Could not rebing agent "
+                        "%r to identifier %r.") % (agent, identifier))
             else:
                 self.graph.add_node(identifier, agent)
         else:
@@ -160,11 +164,11 @@ class AbstractAgent(object):
         Send a message to the specified agent.
 
         @param receiver_id: the id of the receiving agent
-        @param payload: the name of the receiving agent method or a function
-            taking the agent as its first argument (unbound methods are just
-            perfect).
-        @param additional_parameters: additional parameters to be passed to
-            the function
+        @param payload: the name of the receiving agent method or 
+            a function taking the agent as its first argument (unbound
+            methods are just perfect).
+        @param additional_parameters: additional parameters to be passed
+            to the function
         """
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
@@ -200,7 +204,8 @@ class AbstractAgent(object):
             3. if the answer is not None, send it to the original message
             4. release control
 
-        @attention: checks regarding message_processor and similar are not made
+        @attention: checks regarding message_processor and similar 
+            are not made
         """
         while 1:
             message = self.read()
@@ -218,7 +223,8 @@ class AbstractAgent(object):
         Prints out something if we received a message we could not process.
         """
         print (
-            '%s received "%s" message with parameters %s: could not process.' %
+            ('%s received "%s" message with parameters %s: '
+                'could not process.') %
             (self, name, additional_parameters))
 
     def __str__(self):
@@ -227,9 +233,9 @@ class AbstractAgent(object):
 class AgentIdUpdatableContext(object):
     """
     Agent ids are normally not settable because doing so could prevent
-    the system from functioning correctly. However, in certain circumstances
-    it makes sense to change a node identifier instead of destroying the old
-    node and creating a new one.
+    the system from functioning correctly. However, in certain
+    circumstances it makes sense to change a node identifier instead of
+    destroying the old node and creating a new one.
 
     In this context agent ids become settable. Notice that the changes
     are *not* automatically reflected in the address book.
@@ -303,20 +309,46 @@ class Node(Agent):
 
         @param criterion_or_node: The node to link may be an identifier
             or a callable extracting the node from the graph
-        @type criterion_or_node: id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
+        @type criterion_or_node: 
+            id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
         @return: None
         """
         if callable(criterion_or_node):
-            target_node = criterion_or_node(self.graph)
+            target_node = criterion_or_node(self.graph.handle)
         else:
             target_node = criterion_or_node
         self.send(target_node, 'accept_link', originating_node=self.id)
+
+    def unlink_from(self, criterion_or_node):
+        """
+        Sends a 'drop_link' message to the specified node.
+
+        @param criterion_or_node: The node to link may be an identifier
+            or a callable extracting the node from the graph
+        @type criterion_or_node: 
+            id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
+        @return: None
+        """
+        if callable(criterion_or_node):
+            target_node = criterion_or_node(self.graph.handle)
+        else:
+            target_node = criterion_or_node
+        self.send(target_node, 'drop_link', originating_node=self.id)
 
     def accept_link(self, originating_node):
         """
         Accepts an 'accept_link' message (modifying the network).
 
         @param originating_node: the node that required the connection
-        @type originating_node: id
+        @type originating_node: int
         """
         self.graph.add_edge(originating_node, self.id)
+
+    def drop_link(self, originating_node):
+        """
+        Accepts a 'drop_link' message (modifying the network).
+
+        @param originating_node: the node that required the drop
+        @type originating_node: int
+        """
+        self.graph.remove_edge(originating_node, self.id)
