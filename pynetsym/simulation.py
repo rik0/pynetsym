@@ -182,25 +182,26 @@ class Simulation(object):
         @param args: an array of command line options which is parsed with
             L{parse_arguments}. Default value=None. If it is None and no
             options have been passed with kwargs, sys.argv[1:] is processed
-        @param kwargs: option relevant for the model can be passed as keyword
-            options and they override values in args.
+        @param kwargs: option relevant for the model can be passed as 
+            keyword options and they override values in args.
         @keyword steps: the number of generation_models steps to perform
         @keyword output: the output file to save the network in
         @keyword format: the format to save the network in
-        @attention: output and format are presently not working and are vestiges
-            of an older version. However, we plan to add support for "easy"
-            saving of networks which may make use of them and thus have not
-            removed the options right now.
+        @attention: output and format are presently not working and are 
+            vestiges of an older version. However, we plan to add support
+            for "easy" saving of networks which may make use of them and
+            thus have not removed the options right now.
         @return: The current simulation so that it is easier to create
             one-liners
         @rtype: Simulation
 
-        @warning: The idea here is either to call this method with all keyword
-            arguments or with no arguments at all (in the case the program
-            is run as a standalone script). However, it also makes sense to
-            override (in the standalone script case) individual options.
-            Deliberately mixing arguments passed with an array in args and
-            keywords arguments (although working) is strongly discouraged.
+        @warning: The idea here is either to call this method with all 
+            keyword arguments or with no arguments at all (in the case the
+            program is run as a standalone script). However, it also makes
+            sense to override (in the standalone script case) individual
+            options.  Deliberately mixing arguments passed with an array in
+            args and keywords arguments (although working) is strongly
+            discouraged.
         """
         if not args:
             args = [] if kwargs else sys.argv[1:]
