@@ -69,13 +69,17 @@ class NodeManager(core.Agent):
         try:
             node = cls(identifier, self._address_book,
                        self.graph, **parameters)
+        except Exception as e:
+            self.id_manager.free_identifier(identifier)
+            ## FIXME: huge kludge
+            try: self.graph.remove_node(identifier)
+            except Exception: pass
+            return 'creation_failed', {'exception':e}
+        else:
             node.link_value(self.node_terminated_hook)
             node.link_exception(self.node_failed_hook)
             node.start()
             return 'created_node', dict(identifier=identifier)
-        except Exception as e:
-            self.id_manager.free_identifier(identifier)
-            return 'creation_failed', {'exception':e}
 
     def node_failed_hook(self, node):
         """

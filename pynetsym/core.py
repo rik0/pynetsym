@@ -59,14 +59,14 @@ class AddressBook(object):
             if (identifier in self.name_registry
                     and self.name_registry[identifier] is not agent):
                 raise AddressingError(
-                    "Could not rebing agent %r to identifier %r." % (
+                    "Could not rebind agent %r to identifier %r." % (
                         agent, identifier))
             else:
                 self.name_registry[identifier] = agent
         elif isinstance(identifier, numbers.Integral):
             if identifier in self.graph:
                 raise AddressingError(
-                    ("Could not rebing agent "
+                    ("Could not rebind agent "
                         "%r to identifier %r.") % (agent, identifier))
             else:
                 self.graph.add_node(identifier, agent)
@@ -92,7 +92,9 @@ class AddressBook(object):
                 raise AddressingError(e.message)
 
 
-
+## TODO: add different kind of Agents. Named agents actually register
+## themselves when created. Nodes wait for other nodes to register
+## them
 class AbstractAgent(object):
     """
     An Agent is the basic class of the simulation. Agents communicate
@@ -121,8 +123,8 @@ class AbstractAgent(object):
         """
         self._id = identifier
         self._address_book = address_book
-        self._address_book.register(identifier, self)
         self._err_level = error_level
+        self._address_book.register(identifier, self)
 
     @abc.abstractmethod
     def deliver(self, message):
@@ -251,8 +253,6 @@ class AgentIdUpdatableContext(object):
 
     def __exit__(self, *args):
         AbstractAgent.id = self.old_property
-
-
 
 class Agent(gevent.Greenlet, AbstractAgent):
     def __init__(self, identifier, address_book,
