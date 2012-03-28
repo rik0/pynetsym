@@ -2,6 +2,9 @@ import abc
 import collections
 import functools
 import numbers
+import warnings
+
+
 import gevent
 
 import gevent.queue as queue
@@ -174,6 +177,7 @@ class AbstractAgent(object):
         """
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
+            warnings.warn("Send callable", DeprecationWarning)
             func = functools.partial(payload, **additional_parameters)
         else:
             receiver_class = type(receiver)

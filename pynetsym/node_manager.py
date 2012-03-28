@@ -34,7 +34,10 @@ class NodeManager(core.Agent):
     The class responsible to create nodes.
 
     """
-    name = 'manager' #: @ivar: the registered name in the L{address book<AddressBook>}
+    name = 'manager' 
+    """
+    the registered name in the L{address book<AddressBook>}
+    """
 
     def __init__(self, graph, address_book, id_manager):
         """
@@ -55,7 +58,8 @@ class NodeManager(core.Agent):
         """
         Creates a new node.
 
-        @param cls: the factory creating the new node. Usually the node class.
+        @param cls: the factory creating the new node. 
+            Usually the node class.
         @type cls: callable
         @param identifier_hint: the identifier to bind the new node to
         @type identifier_hint: int
