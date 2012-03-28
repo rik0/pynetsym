@@ -39,7 +39,7 @@ class BA(simulation.Simulation):
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
-        node_options = {}
+        node_options = {'starting_edges'}
 
 if __name__ == '__main__':
     sim = BA()
