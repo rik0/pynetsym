@@ -1,5 +1,7 @@
-import argparse
 import sys
+import argparse
+import logging
+import warnings
 
 from pynetsym import ioutil, core, timing, backend, metautil
 from pynetsym import argutils
@@ -225,7 +227,6 @@ class Simulation(object):
         activator = self.activator(self.graph, address_book,
                 **arguments_dictionary)
         activator.start()
-
         with timing.Timer(callback):
             clock = self.clock(self.steps, address_book)
             clock.start()
