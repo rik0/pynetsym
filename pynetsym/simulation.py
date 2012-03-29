@@ -231,7 +231,13 @@ class Simulation(object):
             clock.start()
 
             activator.join()
+            if node_manager.failures:
+                sys.exit(1)
             return self
+
+    def exception_hook(self, node):
+        raise node.exception
+
 
     @classmethod
     def main(cls):

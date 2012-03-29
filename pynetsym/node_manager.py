@@ -53,6 +53,7 @@ class NodeManager(core.Agent):
         super(NodeManager, self).__init__(NodeManager.name, address_book)
         self.graph = graph
         self.id_manager = id_manager
+        self.failures = []
 
     def create_node(self, cls, parameters):
         """
@@ -93,6 +94,7 @@ class NodeManager(core.Agent):
         @type node: Node
         """
         print >> sys.stderr, "Node failed: {}\n{}".format(node, node.exception)
+        self.failures.append(node)
 
     def node_terminated_hook(self, node):
         """
