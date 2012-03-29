@@ -270,16 +270,28 @@ class Activator(core.Agent):
         super(Activator, self).__init__(self.name, address_book)
         self.graph = graph
         vars(self).update(activator_arguments)
+        self.activations_pending = 0
 
     def tick(self):
         node_id = self.choose_node()
+        self.activations_pending += 1
         self.send(node_id, 'activate')
-
-    def simulation_ended(self):
-        self.kill()
 
     def choose_node(self):
         return self.graph.random_node()
+
+    def activation_received(self, node_id):
+        assert self.activations_pending >= 0
+        self.activations_pending -= 1
+
+    @core.message(priority=core.Priority.LAST_BUT_NOT_LEAST)
+    def simulation_ended(self):
+        if self.activations_pending:
+            self.sleep(0.5)
+            self.send(self.id, 'simulation_ended')
+        else:
+            self.kill()
+
 
 
 class Clock(core.Agent):

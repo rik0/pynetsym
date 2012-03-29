@@ -7,6 +7,7 @@ class Node(core.Node):
         super(Node, self).__init__(identifier, address_book, graph)
         self.starting_edges = starting_edges
 
+    @core.answers('activation_received', node_id='id')
     def activate(self):
         neighbors = self.graph.neighbors(self.id)
         while self.starting_edges:
@@ -21,6 +22,7 @@ class Activator(simulation.Activator):
     activator_options = {'starting_edges'}
 
     def tick(self):
+        self.activations_pending += 1
         self.send(
             node_manager.NodeManager.name,
             'create_node', cls=Node,

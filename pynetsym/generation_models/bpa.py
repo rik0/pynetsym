@@ -50,6 +50,7 @@ keyword
         else:
             return Node.passive_strategy
 
+    @core.answers('activation_received', node_id='id')
     def activate(self):
         self.strategy(self)
 

@@ -10,6 +10,7 @@ class Node(core.Node):
         self.network_size = network_size
         super(Node, self).__init__(identifier, address_book, graph)
 
+    @core.answers('activation_received', node_id='id')
     def activate(self):
         graph = self.graph.handle
         for node in graph.neighbors(self.id):
@@ -17,6 +18,7 @@ class Node(core.Node):
                 self.graph.remove_edge(self.id, node)
                 random_node = self.graph.random_node()
                 self.graph.add_edge(self.id, random_node)
+
 
     def initialize(self):
         for index in range(self.id+1, 

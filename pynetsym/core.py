@@ -4,6 +4,7 @@ import collections
 import functools
 import numbers
 import warnings
+import decorator
 
 import gevent
 
@@ -14,7 +15,7 @@ from pynetsym import util
 _M = collections.namedtuple('Message', 'sender payload')
 
 Priority = util.enum(
-        URGENT=2**2, NORMAL=2**16, ANSWER=2*15,
+        URGENT=2**2, HIGH=2**8, NORMAL=2**16, ANSWER=2*15,
         LOW=2**24, LAST_BUT_NOT_LEAST=sys.maxint)
 
 class Message(_M):
@@ -100,6 +101,41 @@ class AddressBook(object):
             except RuntimeError as e:
                 raise AddressingError(e.message)
 
+def message(priority):
+    def add_priority(func):
+        func.priority = priority
+        return func
+    return add_priority
+
+
+def answers(message, priority=Priority.ANSWER, **kw):
+    """
+    Use this decorator to specify the message that shall be answered.
+
+    @parameter message: the name of the message
+    
+    Additionally we can specify paramters that map attributes of the 
+    current node to additional parameters that must be passed to the
+    message::
+    
+        @answers('foo', node_id='id')
+        def bar(self, ...)
+            pass
+
+    means that after bar is called, it shall answer a message back
+    with a parameter node_id that is the id attribute of the current
+    agent.
+
+    """
+    def answers(f, self, *args, **kwargs):
+        answer = f(self, *args, **kwargs)
+        if answer is None:
+            additional_parameters = {k: getattr(self, v, v) for k, v in kw.iteritems()}
+            additional_parameters.setdefault('priority', priority)
+            return message, additional_parameters
+        else:
+            return answer
+    return decorator.decorator(answers)
 
 ## TODO: add different kind of Agents. Named agents actually register
 ## themselves when created. Nodes wait for other nodes to register
@@ -311,6 +347,9 @@ class Agent(gevent.Greenlet, AbstractAgent):
 
         """
         gevent.sleep()
+
+    def sleep(self, seconds):
+        gevent.sleep(seconds)
 
     def _run(self):
         self.run_loop()

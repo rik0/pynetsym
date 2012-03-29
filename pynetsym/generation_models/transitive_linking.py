@@ -25,6 +25,7 @@ class Node(core.Node):
         else:
             self.link_to(self.criterion)
 
+    @core.answers('activation_received', node_id='id')
     def activate(self):
         if random.random() < self.death_probability:
             self.regenerate()
