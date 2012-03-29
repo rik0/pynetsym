@@ -1,7 +1,5 @@
 import sys
 import argparse
-import logging
-import warnings
 
 from pynetsym import ioutil, core, timing, backend, metautil
 from pynetsym import argutils
