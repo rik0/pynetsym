@@ -139,6 +139,10 @@ class GraphWrapper(object):
         @rtype: pynetsym.core.AbstractAgent
         """
 
+    @abc.abstractmethod
+    def neighbors(self, node_identifier):
+        pass
+
 
 @notifier
 @delegate_all(GraphWrapper, 'delegate', include_specials=True)
@@ -290,6 +294,9 @@ else:
             except (IndexError, KeyError):
                 raise GraphError("Cannot find node %s." % identifier)
 
+        def neighbors(self, node_identifier):
+            return self.graph.neighbors(node_identifier)
+
 try:
     import igraph
 except ImportError, igraph_import_exception:
@@ -363,3 +370,6 @@ else:
                 return True
             else:
                 return False
+
+        def neighbors(self, node_identifier):
+            return self.graph.neighbors(node_identifier)
