@@ -318,7 +318,7 @@ class Node(Agent):
         @return: None
         """
         if callable(criterion_or_node):
-            target_node = criterion_or_node(self.graph.handle)
+            target_node = criterion_or_node(self.graph)
         else:
             target_node = criterion_or_node
         self.send(target_node, 'accept_link', originating_node=self.id)

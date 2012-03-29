@@ -1,3 +1,5 @@
+#!/bin/bash 
+set -e
 SIZE=1000
 ITERATIONS=10000
 
@@ -9,14 +11,22 @@ BASE_DIR="../pynetsym_stats"
 echo "REGULAR RUN"
 echo "NX RND \c" 
 python pynetsym/generation_models/transitive_linking.py -n ${SIZE} -s ${ITERATIONS} 
-if [[ "$?x" != 0x ]]; then
-    echo Execution failed
+if [[ $? -ne 0 ]]; then
     exit 1
 fi
+
 echo "NX PA  \c" 
 python pynetsym/generation_models/transitive_linking.py -n ${SIZE} -s ${ITERATIONS} --preferential-attachment 
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
 echo "IG RND \c" 
 python pynetsym/generation_models/transitive_linking_igraph.py -n ${SIZE} -s ${ITERATIONS} 
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
 echo "IG PA  \c" 
 python pynetsym/generation_models/transitive_linking_igraph.py -n ${SIZE} -s ${ITERATIONS} --preferential-attachment 
-
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
