@@ -1,6 +1,6 @@
 import random
 import igraph
-from pynetsym import core, rndutil
+from pynetsym import core
 from pynetsym import simulation, node_manager
 import pynetsym
 

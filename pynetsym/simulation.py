@@ -1,5 +1,6 @@
 import sys
 import argparse
+import copy
 
 from pynetsym import ioutil, core, timing, backend, metautil
 from pynetsym import argutils
@@ -106,6 +107,9 @@ class Simulation(object):
         @return:
         """
         graph_options = getattr(self, 'graph_options', {})
+        ## deepcopy: no object sharing between different simulation
+        ## executions! 
+        graph_options = copy.deepcopy(graph_options)
         self.graph = backend.NotifyingGraphWrapper(
             self.graph_type(**graph_options))
         self.id_manager = IdManager()
