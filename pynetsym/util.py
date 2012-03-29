@@ -137,3 +137,7 @@ class IntIdentifierStore(object):
                 self._upper_identifier -= 1
             else:
                 break
+
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)

@@ -1,15 +1,21 @@
 import abc
+import sys
 import collections
 import functools
 import numbers
 import warnings
 
-
 import gevent
 
 import gevent.queue as queue
 
+from pynetsym import util
+
 _M = collections.namedtuple('Message', 'sender payload')
+
+Priority = util.enum(
+        URGENT=2**2, NORMAL=2**16, ANSWER=2*15,
+        LOW=2**24, LAST_BUT_NOT_LEAST=sys.maxint)
 
 class Message(_M):
     """
@@ -130,7 +136,7 @@ class AbstractAgent(object):
         self._address_book.register(identifier, self)
 
     @abc.abstractmethod
-    def deliver(self, message):
+    def deliver(self, message, priority):
         """
         Delivers message to this agent.
         @param message: the message
@@ -143,7 +149,7 @@ class AbstractAgent(object):
         """
         Reads the next message that was sent to this agent.
         @attention: It is not really meant to be called directly.
-        @return: Message
+        @return: priority, Message
         """
         pass
 
@@ -164,7 +170,8 @@ class AbstractAgent(object):
         """
         return self._id
 
-    def send(self, receiver_id, payload, **additional_parameters):
+    def send(self, receiver_id, payload, 
+            priority=None, suggested_priority=None, **additional_parameters):
         """
         Send a message to the specified agent.
 
@@ -174,10 +181,18 @@ class AbstractAgent(object):
             methods are just perfect).
         @param additional_parameters: additional parameters to be passed
             to the function
+        @param priority: can be used to specify a priority
+        @param suggested_priority: can be used to suggest a priority
+
+        If priority is not None, then it is overrides any other priority
+        specification. suggested_priority is used only if priority is not
+        specified (defaults to None) and the method has not a fixed property.
         """
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
             warnings.warn("Send callable", DeprecationWarning)
+            fixed_priority = getattr(
+                payload, 'priority', Priority.NORMAL)
             func = functools.partial(payload, **additional_parameters)
         else:
             receiver_class = type(receiver)
@@ -190,8 +205,12 @@ class AbstractAgent(object):
                 unbound_method = getattr(
                     receiver_class,
                     'unsupported_message')
+            fixed_priority = getattr(
+                unbound_method, 'priority', Priority.NORMAL)
             func = functools.partial(unbound_method, **additional_parameters)
-        receiver.deliver(Message(self.id, func))
+        priority = suggested_priority if priority is None else priority
+        priority = fixed_priority if priority is None else priority
+        receiver.deliver(Message(self.id, func), priority)
 
     def process(self, message):
         """
@@ -210,17 +229,26 @@ class AbstractAgent(object):
             3. if the answer is not None, send it to the original message
             4. release control
 
+        The format of answer shall be either:
+            1. a string indicating the message name to be send
+            2. a tuple where the first element is the name of the
+                message to be sent and the second element is a 
+                dictionary of additional parameters that will be
+                passed along.
+
+
         @attention: checks regarding message_processor and similar 
             are not made
         """
         while 1:
-            message = self.read()
+            message_priority, message = self.read()
             answer = self.process(message)
             if answer is not None:
                 try:
                     answer, answer_parameters = answer
                 except TypeError:
                     answer_parameters = {}
+                answer_parameters['suggested_priority'] = message_priority/2
                 self.send(message.sender, answer, **answer_parameters)
             self.cooperate()
 
@@ -264,16 +292,16 @@ class Agent(gevent.Greenlet, AbstractAgent):
             *args, **kwargs):
         super(Agent, self).__init__(*args, **kwargs)
         AbstractAgent.__init__(self, identifier, address_book, error_level)
-        self._queue = queue.Queue()
+        self._queue = queue.PriorityQueue()
 
-    def deliver(self, message):
-        self._queue.put(message)
+    def deliver(self, message, priority):
+        self._queue.put((priority, message))
 
     def read(self):
         """
         Reads the next message that was sent to this agent.
         @attention: It is not really meant to be called directly.
-        @return: Message
+        @return: priority, Message
         """
         return self._queue.get()
 
