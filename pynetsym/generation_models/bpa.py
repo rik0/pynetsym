@@ -20,7 +20,7 @@ class Node(core.Node):
                  gamma, probability, strategy=None):
         """
         Create a BPA node.
-
+keyword
         If a strategy is specified, probability is ignored and strategy
         is simply selected.
 
@@ -69,17 +69,18 @@ class Node(core.Node):
         self.send(identifier, 'accept_link', originating_node=self.id)
 
     def linker_strategy(self):
-        while 1:
-            node = self.graph.preferential_attachment()
-            if node in self.graph.handle:
-                pass
+        pass
+        # while 1:
+        #     node = self.graph.preferential_attachment_node()
+        #     if node in self.graph.handle:
+        #         pass
 
 class BPA(simulation.Simulation):
     class configurator(pynetsym.node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {'probability', 'gamma'}
-        activator_cls = simulation.Simulation.activator
-        activator_options = {'edges'}
+
+    activator_options = {'edges'}
 
     command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),
