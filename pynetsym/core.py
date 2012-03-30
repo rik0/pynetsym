@@ -360,7 +360,7 @@ class Node(Agent):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
 
-    def link_to(self, criterion_or_node):
+    def link_to(self, criterion_or_node, priority=Priority.NORMAL):
         """
         Sends an 'accept_link' message to the specified node.
 
@@ -374,9 +374,11 @@ class Node(Agent):
             target_node = criterion_or_node(self.graph)
         else:
             target_node = criterion_or_node
-        self.send(target_node, 'accept_link', originating_node=self.id)
+        self.send(target_node, 'accept_link',
+                priority=priority,
+                originating_node=self.id)
 
-    def unlink_from(self, criterion_or_node):
+    def unlink_from(self, criterion_or_node, priority=Priority.NORMAL):
         """
         Sends a 'drop_link' message to the specified node.
 
@@ -390,7 +392,9 @@ class Node(Agent):
             target_node = criterion_or_node(self.graph.handle)
         else:
             target_node = criterion_or_node
-        self.send(target_node, 'drop_link', originating_node=self.id)
+        self.send(target_node, 'drop_link',
+                priority=priority,
+                originating_node=self.id)
 
     def accept_link(self, originating_node):
         """
