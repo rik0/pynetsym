@@ -205,14 +205,14 @@ class AbstractAgent(object):
         """
         return self._id
 
-    def send(self, receiver_id, payload, 
+    def send(self, receiver_id, message_name, 
             priority=None, suggested_priority=None, 
             **additional_parameters):
         """
         Send a message to the specified agent.
 
         @param receiver_id: the id of the receiving agent
-        @param payload: the name of the receiving agent method or 
+        @param message_name: the name of the receiving agent method or 
             a function taking the agent as its first argument (unbound
             methods are just perfect).
         @param additional_parameters: additional parameters to be passed
@@ -228,10 +228,10 @@ class AbstractAgent(object):
         receiver = self._address_book.resolve(receiver_id)
         receiver_class = type(receiver)
         try:
-            unbound_method = getattr(receiver_class, payload)
+            unbound_method = getattr(receiver_class, message_name)
         except AttributeError:
             unbound_method = self.build_unsupported_method_message(
-                    receiver_class, payload, additional_parameters)
+                    receiver_class, message_name, additional_parameters)
         fixed_priority = getattr(unbound_method, 'priority', None)
         func = functools.partial(
                 unbound_method, **additional_parameters)
@@ -239,7 +239,7 @@ class AbstractAgent(object):
             priority = fixed_priority
             priority = suggested_priority if priority is None else priority
             priority = Priority.NORMAL if priority is None else priority
-        # self.log_message(payload, receiver, priority)
+        # self.log_message(message_name, receiver, priority)
         receiver.deliver(Message(self.id, func), priority)
 
     def build_unsupported_method_message(
