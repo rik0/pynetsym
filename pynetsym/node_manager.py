@@ -34,7 +34,7 @@ class NodeManager(core.Agent):
     The class responsible to create nodes.
 
     """
-    name = 'manager' 
+    name = 'manager'
     """
     the registered name in the L{address book<AddressBook>}
     """
@@ -59,7 +59,7 @@ class NodeManager(core.Agent):
         """
         Creates a new node.
 
-        @param cls: the factory creating the new node. 
+        @param cls: the factory creating the new node.
             Usually the node class.
         @type cls: callable
         @param identifier_hint: the identifier to bind the new node to
@@ -134,8 +134,7 @@ class Configurator(core.Agent):
             'error_level', self.LOG_ERROR)
         super(Configurator, self).__init__(
                 self.name, address_book, error_level)
-        full_options = metautil.gather_from_ancestors(
-                self, 'configurator_options')
+        full_options = metautil.gather_from_ancestors( self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
                 additional_arguments, full_options)
         vars(self).update(configurator_arguments)
@@ -149,9 +148,7 @@ class Configurator(core.Agent):
     def initialize_nodes(self):
         if self.initialize:
             for identifier in self.nodes:
-                self.send(
-                    identifier, 'initialize',
-                    suggested_priority=core.Priority.HIGH)
+                self.send(identifier, 'initialize', priority=core.Priority.HIGH)
         self.kill()
 
     def _run(self):
