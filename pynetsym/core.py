@@ -3,7 +3,6 @@ import sys
 import collections
 import functools
 import numbers
-import warnings
 import decorator
 
 import gevent
@@ -227,31 +226,27 @@ class AbstractAgent(object):
         property.
         """
         receiver = self._address_book.resolve(receiver_id)
-        if callable(payload):
-            warnings.warn("Send callable", DeprecationWarning)
-            fixed_priority = getattr(
-                payload, 'priority', Priority.NORMAL)
-            func = functools.partial(payload, **additional_parameters)
-        else:
-            receiver_class = type(receiver)
-            try:
-                unbound_method = getattr(receiver_class, payload)
-            except AttributeError:
-                additional_parameters = dict(
-                    name=payload,
-                    additional_parameters=additional_parameters)
-                unbound_method = getattr(
-                    receiver_class,
-                    'unsupported_message')
-            fixed_priority = getattr(unbound_method, 'priority', None)
-            func = functools.partial(
-                    unbound_method, **additional_parameters)
+        receiver_class = type(receiver)
+        try:
+            unbound_method = getattr(receiver_class, payload)
+        except AttributeError:
+            unbound_method = self.build_unsupported_method_message(
+                    receiver_class, payload, additional_parameters)
+        fixed_priority = getattr(unbound_method, 'priority', None)
+        func = functools.partial(
+                unbound_method, **additional_parameters)
         if priority is None:
             priority = fixed_priority
             priority = suggested_priority if priority is None else priority
             priority = Priority.NORMAL if priority is None else priority
         # self.log_message(payload, receiver, priority)
         receiver.deliver(Message(self.id, func), priority)
+
+    def build_unsupported_method_message(
+            self, receiver_class, payload, additional_parameters):
+        additional_parameters = dict( name=payload,
+            additional_parameters=additional_parameters)
+        return getattr(receiver_class, 'unsupported_message')
 
     def answer(self, receiver_id, answer, message_priority):
         answer, additional_parameters = answer
