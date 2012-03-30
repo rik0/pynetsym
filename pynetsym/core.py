@@ -15,7 +15,7 @@ from pynetsym import util
 _M = collections.namedtuple('Message', 'sender payload')
 
 Priority = util.enum(
-        URGENT=2**2, HIGH=2**8, NORMAL=2**16, ANSWER=2*15,
+        URGENT=2**2, HIGH=2**8, NORMAL=2**16, ANSWER=2**15,
         LOW=2**24, LAST_BUT_NOT_LEAST=sys.maxint)
 
 class Message(_M):
@@ -207,7 +207,8 @@ class AbstractAgent(object):
         return self._id
 
     def send(self, receiver_id, payload, 
-            priority=None, suggested_priority=None, **additional_parameters):
+            priority=None, suggested_priority=None, 
+            **additional_parameters):
         """
         Send a message to the specified agent.
 
@@ -222,7 +223,8 @@ class AbstractAgent(object):
 
         If priority is not None, then it is overrides any other priority
         specification. suggested_priority is used only if priority is not
-        specified (defaults to None) and the method has not a fixed property.
+        specified (defaults to None) and the method has not a fixed 
+        property.
         """
         receiver = self._address_book.resolve(receiver_id)
         if callable(payload):
@@ -243,10 +245,16 @@ class AbstractAgent(object):
                     'unsupported_message')
             fixed_priority = getattr(
                 unbound_method, 'priority', Priority.NORMAL)
-            func = functools.partial(unbound_method, **additional_parameters)
+            func = functools.partial(
+                    unbound_method, **additional_parameters)
         priority = suggested_priority if priority is None else priority
         priority = fixed_priority if priority is None else priority
+        # self.log_message(payload, receiver, priority)
         receiver.deliver(Message(self.id, func), priority)
+
+    def log_message(self, payload, receiver, priority):
+        print 'Sending', payload, 'from', self.id, 'to', receiver.id,
+        print 'with priority', priority
 
     def process(self, message):
         """
