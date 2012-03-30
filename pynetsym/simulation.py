@@ -284,7 +284,6 @@ class Activator(core.Agent):
         assert self.activations_pending >= 0
         self.activations_pending -= 1
 
-    @core.message(priority=core.Priority.LAST_BUT_NOT_LEAST)
     def simulation_ended(self):
         if self.activations_pending:
             self.sleep(0.5)
@@ -304,9 +303,8 @@ class Clock(core.Agent):
 
     def _run(self):
         for step in xrange(self.max_steps):
-            self.send(Activator.name, 'tick',
-                      suggested_priority=core.Priority.LOW)
-        self.send(Activator.name, 'simulation_ended')
-
+            self.send(Activator.name, 'tick', priority=core.Priority.LOW)
+        self.send(Activator.name, 'simulation_ended',
+                priority=core.Priority.LAST_BUT_NOT_LEAST)
 
 
