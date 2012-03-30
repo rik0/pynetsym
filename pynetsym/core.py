@@ -25,7 +25,7 @@ class Message(_M):
 
 class AddressingError(Exception):
     """
-    Error signaling that something with the addressing of 
+    Error signaling that something with the addressing of
     a message went wrong.
 
     """
@@ -42,12 +42,10 @@ class AddressBook(object):
 
     @todo: Change the API so that the identifier is not chosen from outside.
         The API change should take into account:
-            1. how it works with different Graph implementations 
+            1. how it works with different Graph implementations
                 (e.g., igraph)
             2. how it works with different back-ends (e.g., asside)
     """
-
-    RAND_CHARS = 6 #: ivar: Number of random characters appended to duplicate string id
 
     def __init__(self, graph):
         self.name_registry = {}
