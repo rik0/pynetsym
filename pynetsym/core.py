@@ -249,7 +249,7 @@ class AbstractAgent(object):
                     unbound_method, **additional_parameters)
         priority = suggested_priority if priority is None else priority
         priority = fixed_priority if priority is None else priority
-        # self.log_message(payload, receiver, priority)
+        self.log_message(payload, receiver, priority)
         receiver.deliver(Message(self.id, func), priority)
 
     def log_message(self, payload, receiver, priority):

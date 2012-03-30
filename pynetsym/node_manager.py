@@ -88,12 +88,14 @@ class NodeManager(core.Agent):
 
     def node_failed_hook(self, node):
         """
-        Hooks an exception in the node. This implementation only prints stuff.
+        Hooks an exception in the node. This implementation only 
+        prints stuff.
 
         @param node: the node that failed.
         @type node: Node
         """
-        print >> sys.stderr, "Node failed: {}\n{}".format(node, node.exception)
+        print >> sys.stderr, "Node failed: {}\n{}".format(
+                node, node.exception)
         self.failures.append(node)
 
     def node_terminated_hook(self, node):
@@ -147,9 +149,10 @@ class Configurator(core.Agent):
     def initialize_nodes(self):
         if self.initialize:
             for identifier in self.nodes:
-                self.send(identifier, 'initialize')
+                self.send(
+                    identifier, 'initialize',
+                    suggested_priority=core.Priority.HIGH)
         self.kill()
-
 
     def _run(self):
         self.setup()
