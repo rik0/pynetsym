@@ -253,10 +253,10 @@ class AbstractAgent(object):
         # self.log_message(payload, receiver, priority)
         receiver.deliver(Message(self.id, func), priority)
 
-    def answer(self, receiver_id, payload, message_priority,
-            **additional_parameters):
+    def answer(self, receiver_id, answer, message_priority):
+        answer, additional_parameters = answer
         suggested_priority = message_priority >> 1
-        self.send(receiver_id, payload, 
+        self.send(receiver_id, answer,
                 suggested_priority=suggested_priority,
                 **additional_parameters)
 
@@ -296,14 +296,8 @@ class AbstractAgent(object):
             message_priority, message = self.read()
             answer = self.process(message)
             if answer is not None:
-                try:
-                    # FIXME: if answer is a single string, we have a prob.
-                    answer, answer_parameters = answer
-                except TypeError:
-                    answer_parameters = {}
-                self.answer(message.sender, answer, 
-                        message_priority=message_priority,
-                        **answer_parameters)
+                self.answer(message.sender, answer,
+                        message_priority=message_priority)
             self.cooperate()
 
     def unsupported_message(self, name, additional_parameters):
