@@ -79,12 +79,12 @@ class NodeManager(core.Agent):
             ## FIXME: huge kludge
             try: self.graph.remove_node(identifier)
             except Exception: pass
-            return 'creation_failed', {'exception':e}
+            return 'creation_failed', {'exception': e}
         else:
             node.link_value(self.node_terminated_hook)
             node.link_exception(self.node_failed_hook)
             node.start()
-            return 'created_node', dict(identifier=identifier)
+            return 'created_node', {'identifier': identifier}
 
     def node_failed_hook(self, node):
         """

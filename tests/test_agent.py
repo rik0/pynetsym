@@ -29,7 +29,7 @@ class TestAgent(TestCase):
         self.assertEqual(self.agent_b_id, self.agent_b.id)
 
     def test_deliver(self):
-        message = core.Message(None, Agent.answer)
+        message = core.Message(None, 'answer', parameters={})
         self.agent_a.deliver(message, 
                 core.Priority.NORMAL)
         self.agent_a.join()

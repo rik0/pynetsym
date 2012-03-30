@@ -1,7 +1,6 @@
 import abc
 import sys
 import collections
-import functools
 import numbers
 import decorator
 
@@ -11,7 +10,7 @@ import gevent.queue as queue
 
 from pynetsym import util
 
-_M = collections.namedtuple('Message', 'sender payload')
+_M = collections.namedtuple('Message', 'sender payload parameters')
 
 Priority = util.enum(
         URGENT=2**2, HIGH=2**8, NORMAL=2**16, ANSWER=2**15,
@@ -211,16 +210,9 @@ class AbstractAgent(object):
         @param priority: can be used to specify a priority
         """
         receiver = self._address_book.resolve(receiver_id)
-        receiver_class = type(receiver)
-        try:
-            unbound_method = getattr(receiver_class, message_name)
-        except AttributeError:
-            unbound_method = self.build_unsupported_method_message(
-                    receiver_class, message_name, additional_parameters)
-        func = functools.partial(
-                unbound_method, **additional_parameters)
+        message = Message(self.id, message_name, additional_parameters)
         # self.log_message(message_name, receiver, priority)
-        receiver.deliver(Message(self.id, func), priority)
+        receiver.deliver(message, priority)
 
     def build_unsupported_method_message(
             self, receiver_class, payload, additional_parameters):
@@ -244,7 +236,13 @@ class AbstractAgent(object):
         self as argument.
 
         """
-        return message.payload(self)
+        action_name = message.payload
+        try:
+            bound_method = getattr(self, action_name)
+        except AttributeError:
+            return self.unsupported_message(action_name, **message.parameters)
+        else:
+            return bound_method(**message.parameters)
 
     def run_loop(self):
         """
