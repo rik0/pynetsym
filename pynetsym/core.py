@@ -243,14 +243,22 @@ class AbstractAgent(object):
                 unbound_method = getattr(
                     receiver_class,
                     'unsupported_message')
-            fixed_priority = getattr(
-                unbound_method, 'priority', Priority.NORMAL)
+            fixed_priority = getattr(unbound_method, 'priority', None)
             func = functools.partial(
                     unbound_method, **additional_parameters)
-        priority = suggested_priority if priority is None else priority
-        priority = fixed_priority if priority is None else priority
-        self.log_message(payload, receiver, priority)
+        if priority is None:
+            priority = fixed_priority
+            priority = suggested_priority if priority is None else priority
+            priority = Priority.NORMAL if priority is None else priority
+        # self.log_message(payload, receiver, priority)
         receiver.deliver(Message(self.id, func), priority)
+
+    def answer(self, receiver_id, payload, message_priority,
+            **additional_parameters):
+        suggested_priority = message_priority >> 1
+        self.send(receiver_id, payload, 
+                suggested_priority=suggested_priority,
+                **additional_parameters)
 
     def log_message(self, payload, receiver, priority):
         print 'Sending', payload, 'from', self.id, 'to', receiver.id,
@@ -289,11 +297,13 @@ class AbstractAgent(object):
             answer = self.process(message)
             if answer is not None:
                 try:
+                    # FIXME: if answer is a single string, we have a prob.
                     answer, answer_parameters = answer
                 except TypeError:
                     answer_parameters = {}
-                answer_parameters['suggested_priority'] = message_priority/2
-                self.send(message.sender, answer, **answer_parameters)
+                self.answer(message.sender, answer, 
+                        message_priority=message_priority,
+                        **answer_parameters)
             self.cooperate()
 
     def unsupported_message(self, name, additional_parameters):
