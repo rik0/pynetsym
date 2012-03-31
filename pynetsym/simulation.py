@@ -119,6 +119,7 @@ class Simulation(object):
             backend.NotifyingGraphWrapper.NODE)
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
+        self.callback = timing.TimeLogger(sys.stdout)
 
     def _build_parser(self):
         parser = argparse.ArgumentParser(
@@ -179,18 +180,14 @@ class Simulation(object):
             self._load_line(option_element, parser)
 
 
-    def run(self, callback=timing.TimeLogger(sys.stdout),
-            *args, **kwargs):
+    def run(self, args=None, **kwargs):
         """
         Runs the simulation.
-        @param args: an array of command line options which is parsed with
+        @param args: a string of command line options parsed with
             L{parse_arguments}. Default value=None. If it is None and no
             options have been passed with kwargs, sys.argv[1:] is processed
         @param kwargs: option relevant for the model can be passed as 
             keyword options and they override values in args.
-        @keyword steps: the number of generation_models steps to perform
-        @keyword output: the output file to save the network in
-        @keyword format: the format to save the network in
         @attention: output and format are presently not working and are 
             vestiges of an older version. However, we plan to add support
             for "easy" saving of networks which may make use of them and
@@ -209,6 +206,8 @@ class Simulation(object):
         """
         if not args:
             args = [] if kwargs else sys.argv[1:]
+        else:
+            args = args.split()
         arguments_dictionary = self.parse_arguments(args)
         arguments_dictionary.update(kwargs)
 
@@ -229,7 +228,7 @@ class Simulation(object):
         activator = self.activator(self.graph, address_book,
                 **arguments_dictionary)
         activator.start()
-        with timing.Timer(callback):
+        with timing.Timer(self.callback):
             clock = self.clock(self.steps, address_book)
             clock.start()
 
