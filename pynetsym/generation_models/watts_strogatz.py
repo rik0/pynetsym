@@ -34,11 +34,11 @@ class Node(core.Node):
 class Activator(simulation.Activator):
     def __init__(self, *arguments, **kw):
         super(Activator, self).__init__(*arguments, **kw)
-        self.to_chose = 0
+        self.to_choose = 0
 
     def choose_node(self):
-        node = self.to_chose
-        self.to_chose += 1
+        node = self.to_choose
+        self.to_choose += 1
         return node
 
 
@@ -62,6 +62,7 @@ class WS(simulation.Simulation):
 if __name__ == '__main__':
     sim = WS()
     sim.run()
+
 
 
 
