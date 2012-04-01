@@ -208,16 +208,16 @@ class Simulation(object):
             args = [] if kwargs else sys.argv[1:]
         else:
             args = args.split()
-        arguments_dictionary = self.parse_arguments(args)
-        arguments_dictionary.update(kwargs)
+        cli_args_dict = self.parse_arguments(args)
+        cli_args_dict.update(kwargs)
 
         simulation_options = argutils.extract_options(
-                arguments_dictionary, self.simulation_options)
+                cli_args_dict, self.simulation_options)
         vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
         configurator = self.configurator(
-                address_book, **arguments_dictionary)
+                address_book, **cli_args_dict)
         node_manager = NodeManager(
             self.graph, address_book,
             self.id_manager)
@@ -226,7 +226,7 @@ class Simulation(object):
         configurator.join()
 
         activator = self.activator(self.graph, address_book,
-                **arguments_dictionary)
+                **cli_args_dict)
         activator.start()
         with timing.Timer(self.callback):
             clock = self.clock(self.steps, address_book)
@@ -239,13 +239,6 @@ class Simulation(object):
 
     def exception_hook(self, node):
         raise node.exception
-
-
-    @classmethod
-    def main(cls):
-        sim = cls()
-        return sim.run()
-
 
 class Activator(core.Agent):
     """
@@ -261,12 +254,12 @@ class Activator(core.Agent):
     name = 'activator'
     activator_options = {}
     def __init__(self, graph, address_book, **additional_arguments):
-        full_options = metautil.gather_from_ancestors(
+        super(Activator, self).__init__(self.name, address_book)
+        activator_options = metautil.gather_from_ancestors(
                 self, 'activator_options')
         activator_arguments = argutils.extract_options(
                 additional_arguments,
-                full_options)
-        super(Activator, self).__init__(self.name, address_book)
+                activator_options)
         self.graph = graph
         vars(self).update(activator_arguments)
         self.activations_pending = 0
@@ -290,8 +283,6 @@ class Activator(core.Agent):
         else:
             self.kill()
 
-
-
 class Clock(core.Agent):
     name = 'clock'
 
@@ -302,8 +293,9 @@ class Clock(core.Agent):
 
     def _run(self):
         for step in xrange(self.max_steps):
-            self.send(Activator.name, 'tick', priority=core.Priority.LOW)
+            self.send(Activator.name, 'tick', 
+                      priority=core.Priority.LOW)
         self.send(Activator.name, 'simulation_ended',
-                priority=core.Priority.LAST_BUT_NOT_LEAST)
+                  priority=core.Priority.LAST_BUT_NOT_LEAST)
 
 

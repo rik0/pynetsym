@@ -63,7 +63,3 @@ if __name__ == '__main__':
     sim = WS()
     sim.run()
 
-
-
-
-

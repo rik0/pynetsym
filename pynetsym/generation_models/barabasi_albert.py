@@ -9,13 +9,13 @@ class Node(core.Node):
 
     @core.answers('activation_received', node_id='id')
     def activate(self):
-        neighbors = self.graph.neighbors(self.id)
+        forbidden = set(self.graph.neighbors(self.id))
+        forbidden.add(self.id)
         while self.starting_edges:
             random_node = self.graph.preferential_attachment_node()
-            if (random_node not in neighbors
-                and random_node != self.id):
+            if (random_node not in forbidden):
                 self.link_to(random_node)
-                neighbors.append(random_node)
+                forbidden.add(random_node)
                 self.starting_edges -= 1
 
 class Activator(simulation.Activator):
