@@ -1,9 +1,5 @@
-from pynetsym import core
-from pynetsym import node_manager
+from pynetsym import core, node_manager
 from pynetsym import simulation
-from pynetsym import backend
-
-import igraph
 
 class Node(core.Node):
     def __init__(self, identifier, address_book,
@@ -42,9 +38,6 @@ class BA(simulation.Simulation):
         ('-m', '--starting-edges', dict(default=5, type=int)))
 
     activator = Activator
-
-    graph_type = backend.IGraphWrapper
-    graph_options = dict(graph=igraph.Graph(0))
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
