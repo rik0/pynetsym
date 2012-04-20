@@ -127,9 +127,6 @@ def answers(message, priority=Priority.ANSWER, **kw):
             return answer
     return decorator.decorator(answers)
 
-## TODO: add different kind of Agents. Named agents actually register
-## themselves when created. Nodes wait for other nodes to register
-## them
 class AbstractAgent(object):
     """
     An Agent is the basic class of the simulation. Agents communicate
@@ -161,31 +158,33 @@ class AbstractAgent(object):
         self._err_level = error_level
         self._address_book.register(identifier, self)
 
-    @abc.abstractmethod
     def deliver(self, message, priority):
         """
         Delivers message to this agent.
         @param message: the message
         @type message: Message
         """
-        pass
+        self._queue.put((priority, message))
 
-    @abc.abstractmethod
+    def cooperate(self):
+        """
+        Release control
+        """
+        gevent.sleep()
+
+    def sleep(self, seconds):
+        gevent.sleep(seconds)
+
+    def _run(self):
+        self.run_loop()
+
     def read(self):
         """
         Reads the next message that was sent to this agent.
         @attention: It is not really meant to be called directly.
         @return: priority, Message
         """
-        pass
-
-    @abc.abstractmethod
-    def cooperate(self):
-        """
-        Release control
-
-        """
-        pass
+        return self._queue.get()
 
     @property
     def id(self):
@@ -314,29 +313,7 @@ class Agent(gevent.Greenlet, AbstractAgent):
         AbstractAgent.__init__(self, identifier, address_book, error_level)
         self._queue = queue.PriorityQueue()
 
-    def deliver(self, message, priority):
-        self._queue.put((priority, message))
 
-    def read(self):
-        """
-        Reads the next message that was sent to this agent.
-        @attention: It is not really meant to be called directly.
-        @return: priority, Message
-        """
-        return self._queue.get()
-
-    def cooperate(self):
-        """
-        Release control
-
-        """
-        gevent.sleep()
-
-    def sleep(self, seconds):
-        gevent.sleep(seconds)
-
-    def _run(self):
-        self.run_loop()
 
 
 class Node(Agent):
@@ -364,7 +341,7 @@ class Node(Agent):
 
         @param criterion_or_node: The node to link may be an identifier
             or a callable extracting the node from the graph
-        @type criterion_or_node: 
+        @type criterion_or_node:
             id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
         @return: None
         """
@@ -382,7 +359,7 @@ class Node(Agent):
 
         @param criterion_or_node: The node to link may be an identifier
             or a callable extracting the node from the graph
-        @type criterion_or_node: 
+        @type criterion_or_node:
             id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
         @return: None
         """
