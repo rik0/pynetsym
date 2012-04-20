@@ -16,5 +16,5 @@ class TestBA(unittest.TestCase):
 
         self.assertEquals(
                network_size+steps,
-               graph.number_of_nodes())
+               len(graph.vs))
 
