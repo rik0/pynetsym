@@ -127,7 +127,7 @@ def answers(message, priority=Priority.ANSWER, **kw):
             return answer
     return decorator.decorator(answers)
 
-class AbstractAgent(object):
+class Agent(gevent.Greenlet):
     """
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
@@ -153,10 +153,12 @@ class AbstractAgent(object):
         @type error_level: int (IGNORE|LOG_ERROR|EXCEPTION)
         @return: the Agent
         """
+        super(Agent, self).__init__()
         self._id = identifier
         self._address_book = address_book
         self._err_level = error_level
         self._address_book.register(identifier, self)
+        self._queue = queue.PriorityQueue()
 
     def deliver(self, message, priority):
         """
@@ -297,24 +299,13 @@ class AgentIdUpdatableContext(object):
         def id_setter(self, new_id):
             self._id = new_id
 
-        self.old_property = AbstractAgent.id
-        AbstractAgent.id = property(
+        self.old_property = Agent.id
+        Agent.id = property(
             fget=self.old_property,
             fset=id_setter)
 
     def __exit__(self, *args):
-        AbstractAgent.id = self.old_property
-
-class Agent(gevent.Greenlet, AbstractAgent):
-    def __init__(self, identifier, address_book,
-            error_level=AbstractAgent.LOG_ERROR,
-            *args, **kwargs):
-        super(Agent, self).__init__(*args, **kwargs)
-        AbstractAgent.__init__(self, identifier, address_book, error_level)
-        self._queue = queue.PriorityQueue()
-
-
-
+        Agent.id = self.old_property
 
 class Node(Agent):
     """

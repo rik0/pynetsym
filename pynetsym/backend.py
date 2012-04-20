@@ -136,7 +136,7 @@ class GraphWrapper(object):
         @param identifier: the identifier
         @type identifier: int
         @return: the agent
-        @rtype: pynetsym.core.AbstractAgent
+        @rtype: pynetsym.core.Agent
         """
 
     @abc.abstractmethod
