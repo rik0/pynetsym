@@ -86,35 +86,6 @@ class AddressBook(object):
             except RuntimeError as e:
                 raise AddressingError(e.message)
 
-def answers(message, **kw):
-    """
-    Use this decorator to specify the message that shall be answered.
-
-    @parameter message: the name of the message
-
-    Additionally we can specify paramters that map attributes of the
-    current node to additional parameters that must be passed to the
-    message::
-
-        @answers('foo', node_id='id')
-        def bar(self, ...)
-            pass
-
-    means that after bar is called, it shall answer a message back
-    with a parameter node_id that is the id attribute of the current
-    agent.
-
-    """
-    def answers(f, self, *args, **kwargs):
-        answer = f(self, *args, **kwargs)
-        if answer is None:
-            additional_parameters = {k: getattr(self, v, v)
-                    for k, v in kw.iteritems()}
-            return message, additional_parameters
-        else:
-            return answer
-    return decorator.decorator(answers)
-
 class Agent(gevent.Greenlet):
     """
     An Agent is the basic class of the simulation. Agents communicate
@@ -158,9 +129,6 @@ class Agent(gevent.Greenlet):
         @type result: event.AsyncResult
         """
         self._default_queue.put((message, result))
-
-    def _sync_deliver(self, message):
-        pass
 
     def cooperate(self):
         """

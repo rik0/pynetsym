@@ -50,9 +50,9 @@ keyword
         else:
             return Node.passive_strategy
 
-    @core.answers('activation_received', node_id='id')
     def activate(self):
         self.strategy(self)
+        return self.id
 
     def passive_strategy(self):
         pass ## exactly what we want
