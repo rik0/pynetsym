@@ -241,28 +241,6 @@ class Agent(gevent.Greenlet):
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
 
-class AgentIdUpdatableContext(object):
-    """
-    Agent ids are normally not settable because doing so could prevent
-    the system from functioning correctly. However, in certain
-    circumstances it makes sense to change a node identifier instead of
-    destroying the old node and creating a new one.
-
-    In this context agent ids become settable. Notice that the changes
-    are *not* automatically reflected in the address book.
-    """
-    def __enter__(self):
-        def id_setter(self, new_id):
-            self._id = new_id
-
-        self.old_property = Agent.id
-        Agent.id = property(
-            fget=self.old_property,
-            fset=id_setter)
-
-    def __exit__(self, *args):
-        Agent.id = self.old_property
-
 class Node(Agent):
     """
     A Node in the social network.

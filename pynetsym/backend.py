@@ -275,12 +275,7 @@ else:
 
         def add_node(self, identifier, agent):
             self.graph.add_node(identifier, agent=agent)
-            try:
-                with pynetsym.core.AgentIdUpdatableContext():
-                    agent.id = identifier
-            except Exception:
-                self.graph.remove_node(identifier)
-
+            assert identifier == agent.id
 
         def remove_node(self, identifier):
             self.graph.remove_node(identifier)
