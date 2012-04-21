@@ -177,12 +177,6 @@ class Agent(gevent.Greenlet):
         receiver.deliver(message, result)
         return result
 
-    def build_unsupported_method_message(
-            self, receiver_class, payload, additional_parameters):
-        additional_parameters = dict(name=payload,
-            additional_parameters=additional_parameters)
-        return getattr(receiver_class, 'unsupported_message')
-
     def log_message(self, payload, receiver):
         print 'Sending', payload, 'from', self.id, 'to', receiver.id
 
