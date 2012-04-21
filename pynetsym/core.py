@@ -39,12 +39,6 @@ class AddressBook(object):
     The Address book holds information on every agent in the system.
 
     An agent that is not in the AddressBook is virtually unreachable.
-
-    @todo: Change the API so that the identifier is not chosen from outside.
-        The API change should take into account:
-            1. how it works with different Graph implementations
-                (e.g., igraph)
-            2. how it works with different back-ends (e.g., asside)
     """
 
     def __init__(self, graph):
@@ -248,7 +242,6 @@ class Agent(gevent.Greenlet):
                     action_name, **message.parameters)
         else:
             value = bound_method(**message.parameters)
-        # TODO: decide how to deal with exceptions
         if isinstance(value, Exception):
             result.set_exception(value)
         else:
