@@ -9,13 +9,7 @@ import gevent
 import gevent.queue as queue
 import gevent.event as event
 
-from pynetsym import util
-
 _M = collections.namedtuple('Message', 'sender payload parameters')
-
-Priority = util.enum(
-        URGENT=2**2, HIGH=2**8, NORMAL=2**16, ANSWER=2**15,
-        LOW=2**24, LAST_BUT_NOT_LEAST=sys.maxint)
 
 class Message(_M):
     """
@@ -92,7 +86,7 @@ class AddressBook(object):
             except RuntimeError as e:
                 raise AddressingError(e.message)
 
-def answers(message, priority=Priority.ANSWER, **kw):
+def answers(message, **kw):
     """
     Use this decorator to specify the message that shall be answered.
 
@@ -116,7 +110,6 @@ def answers(message, priority=Priority.ANSWER, **kw):
         if answer is None:
             additional_parameters = {k: getattr(self, v, v)
                     for k, v in kw.iteritems()}
-            additional_parameters.setdefault('priority', priority)
             return message, additional_parameters
         else:
             return answer
@@ -153,10 +146,10 @@ class Agent(gevent.Greenlet):
         self._address_book = address_book
         self._err_level = error_level
         self._address_book.register(identifier, self)
-        self._default_queue = queue.PriorityQueue()
+        self._default_queue = queue.Queue()
         self._queue = self._default_queue
 
-    def deliver(self, message, priority, result):
+    def deliver(self, message, result):
         """
         Delivers message to this agent.
         @param message: the message
@@ -164,7 +157,7 @@ class Agent(gevent.Greenlet):
         @param result: dataflow-like object we use to feed-back answers
         @type result: event.AsyncResult
         """
-        self._default_queue.put((priority, message, result))
+        self._default_queue.put((message, result))
 
     def _sync_deliver(self, message):
         pass
@@ -185,7 +178,7 @@ class Agent(gevent.Greenlet):
         """
         Reads the next message that was sent to this agent.
         @attention: It is not really meant to be called directly.
-        @return: priority, Message
+        @return: (Message, event.Async)
         """
         return self._default_queue.get()
 
@@ -198,8 +191,7 @@ class Agent(gevent.Greenlet):
         """
         return self._id
 
-    def send(self, receiver_id, message_name, priority=Priority.NORMAL,
-            **additional_parameters):
+    def send(self, receiver_id, message_name, **additional_parameters):
         """
         Send a message to the specified agent.
 
@@ -209,13 +201,12 @@ class Agent(gevent.Greenlet):
             methods are just perfect).
         @param additional_parameters: additional parameters to be passed
             to the function
-        @param priority: can be used to specify a priority
         """
         receiver = self._address_book.resolve(receiver_id)
         message = Message(self.id, message_name, additional_parameters)
-        # self.log_message(message_name, receiver, priority)
+        # self.log_message(message_name, receiver)
         result = event.AsyncResult()
-        receiver.deliver(message, priority, result)
+        receiver.deliver(message, result)
         return result
 
     def build_unsupported_method_message(
@@ -224,9 +215,8 @@ class Agent(gevent.Greenlet):
             additional_parameters=additional_parameters)
         return getattr(receiver_class, 'unsupported_message')
 
-    def log_message(self, payload, receiver, priority):
-        print 'Sending', payload, 'from', self.id, 'to', receiver.id,
-        print 'with priority', priority
+    def log_message(self, payload, receiver):
+        print 'Sending', payload, 'from', self.id, 'to', receiver.id
 
     def process(self, message, result):
         """
@@ -267,7 +257,7 @@ class Agent(gevent.Greenlet):
             are not made
         """
         while 1:
-            message_priority, message, result = self.read()
+            message, result = self.read()
             self.process(message, result)
             self.cooperate()
 
@@ -324,7 +314,7 @@ class Node(Agent):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
 
-    def link_to(self, criterion_or_node, priority=Priority.NORMAL):
+    def link_to(self, criterion_or_node):
         """
         Sends an 'accept_link' message to the specified node.
 
@@ -340,10 +330,9 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         return self.send(target_node, 'accept_link',
-                priority=priority,
                 originating_node=self.id)
 
-    def unlink_from(self, criterion_or_node, priority=Priority.NORMAL):
+    def unlink_from(self, criterion_or_node):
         """
         Sends a 'drop_link' message to the specified node.
 
@@ -358,7 +347,6 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         self.send(target_node, 'drop_link',
-                priority=priority,
                 originating_node=self.id)
 
     def accept_link(self, originating_node):

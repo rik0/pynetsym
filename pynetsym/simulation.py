@@ -286,10 +286,8 @@ class Clock(core.Agent):
 
     def _run(self):
         for step in xrange(self.max_steps):
-            done = self.send(Activator.name, 'tick',
-                      priority=core.Priority.LOW)
+            done = self.send(Activator.name, 'tick')
             done.get()
-        self.send(Activator.name, 'simulation_ended',
-                  priority=core.Priority.LAST_BUT_NOT_LEAST)
+        self.send(Activator.name, 'simulation_ended')
 
 

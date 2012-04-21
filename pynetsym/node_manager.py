@@ -149,8 +149,7 @@ class Configurator(core.Agent):
     def initialize_nodes(self):
         if self.initialize:
             for identifier in self.nodes:
-                self.send(identifier, 'initialize',
-                        priority=core.Priority.HIGH)
+                self.send(identifier, 'initialize')
         self.kill()
 
     def _run(self):
