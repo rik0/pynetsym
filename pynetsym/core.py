@@ -91,14 +91,7 @@ class Agent(gevent.Greenlet):
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
-
-    __metaclass__ = abc.ABCMeta
-
-    IGNORE = 0
-    LOG_ERROR = 1
-    EXCEPTION = 2
-
-    def __init__(self, identifier, address_book, error_level=LOG_ERROR):
+    def __init__(self, identifier, address_book):
         """
         Initializes the Agent object setting variables and registering
         the agent in the address book.
@@ -115,7 +108,6 @@ class Agent(gevent.Greenlet):
         super(Agent, self).__init__()
         self._id = identifier
         self._address_book = address_book
-        self._err_level = error_level
         self._address_book.register(identifier, self)
         self._default_queue = queue.Queue()
         self._queue = self._default_queue
@@ -146,7 +138,7 @@ class Agent(gevent.Greenlet):
         """
         Reads the next message that was sent to this agent.
         @attention: It is not really meant to be called directly.
-        @return: (Message, event.Async)
+        @return: (Message, event.AsyncResult)
         """
         return self._default_queue.get()
 

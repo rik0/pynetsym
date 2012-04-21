@@ -130,10 +130,8 @@ class Configurator(core.Agent):
     """
 
     def __init__(self, address_book, **additional_arguments):
-        error_level = additional_arguments.pop(
-            'error_level', self.LOG_ERROR)
         super(Configurator, self).__init__(
-                self.name, address_book, error_level)
+                self.name, address_book)
         full_options = metautil.gather_from_ancestors(
                 self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
