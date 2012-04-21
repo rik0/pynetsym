@@ -35,7 +35,7 @@ class Activator(simulation.Activator):
         super(Activator, self).__init__(*arguments, **kw)
         self.to_choose = 0
 
-    def choose_nodes(self):
+    def nodes_to_activate(self):
         node = self.to_choose
         self.to_choose += 1
         return [node]

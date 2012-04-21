@@ -263,12 +263,18 @@ class Activator(core.Agent):
         vars(self).update(activator_arguments)
 
     def tick(self):
-        node_ids = self.choose_nodes()
+        node_ids = self.nodes_to_activate()
         for node_id in node_ids:
             self.send(node_id, 'activate')
 
-    def choose_nodes(self):
+    def nodes_to_activate(self):
         return [self.graph.random_node()]
+
+    def nodes_to_destroy(self):
+        return {}
+
+    def nodes_to_create(self):
+        return {}
 
     def simulation_ended(self):
         # FIXME: introduce multiple channels so that it works
