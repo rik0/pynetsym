@@ -7,6 +7,7 @@ import decorator
 import gevent
 
 import gevent.queue as queue
+import gevent.event as event
 
 from pynetsym import util
 
@@ -158,15 +159,21 @@ class Agent(gevent.Greenlet):
         self._address_book = address_book
         self._err_level = error_level
         self._address_book.register(identifier, self)
-        self._queue = queue.PriorityQueue()
+        self._default_queue = queue.PriorityQueue()
+        self._queue = self._default_queue
 
-    def deliver(self, message, priority):
+    def deliver(self, message, priority, result):
         """
         Delivers message to this agent.
         @param message: the message
         @type message: Message
+        @param result: dataflow-like object we use to feed-back answers
+        @type result: event.AsyncResult
         """
-        self._queue.put((priority, message))
+        self._default_queue.put((priority, message, result))
+
+    def _sync_deliver(self, message):
+        pass
 
     def cooperate(self):
         """
@@ -186,7 +193,7 @@ class Agent(gevent.Greenlet):
         @attention: It is not really meant to be called directly.
         @return: priority, Message
         """
-        return self._queue.get()
+        return self._default_queue.get()
 
     @property
     def id(self):
@@ -213,25 +220,21 @@ class Agent(gevent.Greenlet):
         receiver = self._address_book.resolve(receiver_id)
         message = Message(self.id, message_name, additional_parameters)
         # self.log_message(message_name, receiver, priority)
-        receiver.deliver(message, priority)
+        result = event.AsyncResult()
+        receiver.deliver(message, priority, result)
+        return result
 
     def build_unsupported_method_message(
             self, receiver_class, payload, additional_parameters):
-        additional_parameters = dict( name=payload,
+        additional_parameters = dict(name=payload,
             additional_parameters=additional_parameters)
         return getattr(receiver_class, 'unsupported_message')
-
-    def answer(self, receiver_id, answer, message_priority):
-        answer, additional_parameters = answer
-        priority = message_priority >> 1
-        additional_parameters.setdefault('priority', priority)
-        self.send(receiver_id, answer, **additional_parameters)
 
     def log_message(self, payload, receiver, priority):
         print 'Sending', payload, 'from', self.id, 'to', receiver.id,
         print 'with priority', priority
 
-    def process(self, message):
+    def process(self, message, result):
         """
         Processes the message. This means calling the message payload with
         self as argument.
@@ -241,9 +244,11 @@ class Agent(gevent.Greenlet):
         try:
             bound_method = getattr(self, action_name)
         except AttributeError:
-            return self.unsupported_message(action_name, **message.parameters)
+            value = self.unsupported_message(action_name, **message.parameters)
         else:
-            return bound_method(**message.parameters)
+            value = bound_method(**message.parameters)
+        # TODO: decide how to deal with exceptions
+        result.set(value)
 
     def run_loop(self):
         """
@@ -266,11 +271,8 @@ class Agent(gevent.Greenlet):
             are not made
         """
         while 1:
-            message_priority, message = self.read()
-            answer = self.process(message)
-            if answer is not None:
-                self.answer(message.sender, answer,
-                        message_priority=message_priority)
+            message_priority, message, result = self.read()
+            self.process(message, result)
             self.cooperate()
 
     def unsupported_message(self, name, additional_parameters):
@@ -334,13 +336,14 @@ class Node(Agent):
             or a callable extracting the node from the graph
         @type criterion_or_node:
             id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
-        @return: None
+        @return: an asyncronous value representing whether the
+            connection succeeded or not.
         """
         if callable(criterion_or_node):
             target_node = criterion_or_node(self.graph)
         else:
             target_node = criterion_or_node
-        self.send(target_node, 'accept_link',
+        return self.send(target_node, 'accept_link',
                 priority=priority,
                 originating_node=self.id)
 
@@ -370,6 +373,7 @@ class Node(Agent):
         @type originating_node: int
         """
         self.graph.add_edge(originating_node, self.id)
+        return True
 
     def drop_link(self, originating_node):
         """
@@ -379,3 +383,4 @@ class Node(Agent):
         @type originating_node: int
         """
         self.graph.remove_edge(originating_node, self.id)
+        return True

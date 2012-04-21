@@ -28,13 +28,6 @@ class TestAgent(TestCase):
         self.assertEqual(self.agent_a_id, self.agent_a.id)
         self.assertEqual(self.agent_b_id, self.agent_b.id)
 
-    def test_deliver(self):
-        message = core.Message(None, 'answer', parameters={})
-        self.agent_a.deliver(message, 
-                core.Priority.NORMAL)
-        self.agent_a.join()
-        self.assertEqual(42, self.agent_a.val)
-
     def test_send(self):
 
         self.agent_a.send(self.agent_b_id, 'question',

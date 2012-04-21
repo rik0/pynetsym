@@ -108,7 +108,7 @@ class Simulation(object):
         """
         graph_options = getattr(self, 'graph_options', {})
         ## deepcopy: no object sharing between different simulation
-        ## executions! 
+        ## executions!
         graph_options = copy.deepcopy(graph_options)
         self.graph = backend.NotifyingGraphWrapper(
             self.graph_type(**graph_options))
@@ -186,9 +186,9 @@ class Simulation(object):
         @param args: a string of command line options parsed with
             L{parse_arguments}. Default value=None. If it is None and no
             options have been passed with kwargs, sys.argv[1:] is processed
-        @param kwargs: option relevant for the model can be passed as 
+        @param kwargs: option relevant for the model can be passed as
             keyword options and they override values in args.
-        @attention: output and format are presently not working and are 
+        @attention: output and format are presently not working and are
             vestiges of an older version. However, we plan to add support
             for "easy" saving of networks which may make use of them and
             thus have not removed the options right now.
@@ -196,7 +196,7 @@ class Simulation(object):
             one-liners
         @rtype: Simulation
 
-        @warning: The idea here is either to call this method with all 
+        @warning: The idea here is either to call this method with all
             keyword arguments or with no arguments at all (in the case the
             program is run as a standalone script). However, it also makes
             sense to override (in the standalone script case) individual
@@ -262,26 +262,20 @@ class Activator(core.Agent):
                 activator_options)
         self.graph = graph
         vars(self).update(activator_arguments)
-        self.activations_pending = 0
 
     def tick(self):
+        # TODO: make it plural!
         node_id = self.choose_node()
-        self.activations_pending += 1
-        self.send(node_id, 'activate')
+        activated = self.send(node_id, 'activate')
+        activated.get() # FIXME: low concurrency
 
     def choose_node(self):
         return self.graph.random_node()
 
-    def activation_received(self, node_id):
-        assert self.activations_pending >= 0
-        self.activations_pending -= 1
-
     def simulation_ended(self):
-        if self.activations_pending:
-            self.sleep(0.5)
-            self.send(self.id, 'simulation_ended')
-        else:
-            self.kill()
+        # FIXME: introduce multiple channels so that it works
+        # correctly
+        self.kill()
 
 class Clock(core.Agent):
     name = 'clock'
@@ -293,8 +287,9 @@ class Clock(core.Agent):
 
     def _run(self):
         for step in xrange(self.max_steps):
-            self.send(Activator.name, 'tick', 
+            done = self.send(Activator.name, 'tick',
                       priority=core.Priority.LOW)
+            done.get()
         self.send(Activator.name, 'simulation_ended',
                   priority=core.Priority.LAST_BUT_NOT_LEAST)
 

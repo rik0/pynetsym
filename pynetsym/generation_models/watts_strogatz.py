@@ -10,7 +10,6 @@ class Node(core.Node):
         self.network_size = network_size
         super(Node, self).__init__(identifier, address_book, graph)
 
-    @core.answers('activation_received', node_id='id')
     def activate(self):
         for index in self.lattice_cw_neighbors():
             neighbors = self.graph.neighbors(self.id)
