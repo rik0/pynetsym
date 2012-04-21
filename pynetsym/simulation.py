@@ -91,7 +91,6 @@ class Simulation(object):
         """
         return Clock
 
-    #TODO: fixme
     @metautil.classproperty
     def configurator(self):
         """
