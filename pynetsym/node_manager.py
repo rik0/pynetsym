@@ -1,7 +1,7 @@
 import abc
 import sys
 
-from pynetsym import core, util, metautil, argutils
+from pynetsym import core, util, metautil, argutils, geventutil
 
 class IdManager(object):
     """
@@ -76,7 +76,7 @@ class NodeManager(core.Agent):
                        self.graph, **parameters)
         except Exception as e:
             self.id_manager.free_identifier(identifier)
-            ## FIXME: huge kludge
+            # if the node was added to the network, it shall be removed
             try: self.graph.remove_node(identifier)
             except Exception: pass
             return e
@@ -176,12 +176,10 @@ class SingleNodeConfigurator(Configurator):
     def setup(self):
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
-        for _ in xrange(self.network_size):
-            async_identifier = self.send(
-                NodeManager.name, 'create_node',
-                cls=self.node_cls,
-                parameters=self.node_arguments)
-            # FIXME: this can have better concurrency...
-            self.nodes.append(async_identifier.get())
+        node_ids = geventutil.SequenceAsyncResult(
+            [self.send(NodeManager.name, 'create_node',
+                       cls=self.node_cls, parameters=self.node_arguments)
+            for r in xrange(self.network_size)])
+        self.nodes = node_ids.get()
         self.initialize_nodes()
 

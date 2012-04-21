@@ -299,8 +299,7 @@ class Activator(core.Agent):
         return {}
 
     def simulation_ended(self):
-        # FIXME: introduce multiple channels so that it works
-        # correctly
+        # TODO: this should be done more cleanly
         self.kill()
 
 
