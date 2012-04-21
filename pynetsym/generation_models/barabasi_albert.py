@@ -33,6 +33,9 @@ class Activator(simulation.Activator):
         identifier = answer.get()
         self.send(identifier, 'activate')
 
+    def nodes_to_create(self):
+        return [(Node, dict(starting_edges=self.starting_edges))]
+
 class BA(simulation.Simulation):
     command_line_options = (
         ('-n', '--network-size', dict(default=100, type=int)),

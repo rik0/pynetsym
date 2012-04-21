@@ -2,12 +2,13 @@ import sys
 import argparse
 import copy
 
-from pynetsym import ioutil, core, timing, backend, metautil
+from pynetsym import ioutil, core, timing, backend, metautil, geventutil
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
 
 class ConfigurationError(RuntimeError):
     pass
+
 
 class Simulation(object):
     """
@@ -125,7 +126,7 @@ class Simulation(object):
             add_help=True,
             description='Synthetic Network Generation Utility')
         options = metautil.gather_from_ancestors(
-                self, 'command_line_options', list)
+            self, 'command_line_options', list)
         self._check_duplicated_options(options)
         self._load_arguments(parser, options)
         return parser
@@ -134,10 +135,10 @@ class Simulation(object):
         #TODO: try to fix so that more informative stuff happens
         names = [option_line[0] for option_line in options]
         names.extend(option_line[1] for option_line in options
-                     if isinstance(option_line[1], basestring))
+            if isinstance(option_line[1], basestring))
         if len(names) > len(set(names)):
             raise ConfigurationError(
-                    "Duplicated option name somewhere.")
+                "Duplicated option name somewhere.")
 
     def parse_arguments(self, args):
         """
@@ -211,12 +212,12 @@ class Simulation(object):
         cli_args_dict.update(kwargs)
 
         simulation_options = argutils.extract_options(
-                cli_args_dict, self.simulation_options)
+            cli_args_dict, self.simulation_options)
         vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
         configurator = self.configurator(
-                address_book, **cli_args_dict)
+            address_book, **cli_args_dict)
         node_manager = NodeManager(
             self.graph, address_book,
             self.id_manager)
@@ -225,7 +226,7 @@ class Simulation(object):
         configurator.join()
 
         activator = self.activator(self.graph, address_book,
-                **cli_args_dict)
+                                   **cli_args_dict)
         activator.start()
         with timing.Timer(self.callback):
             clock = self.clock(self.steps, address_book)
@@ -238,6 +239,7 @@ class Simulation(object):
 
     def exception_hook(self, node):
         raise node.exception
+
 
 class Activator(core.Agent):
     """
@@ -252,20 +254,40 @@ class Activator(core.Agent):
     """
     name = 'activator'
     activator_options = {}
+
     def __init__(self, graph, address_book, **additional_arguments):
         super(Activator, self).__init__(self.name, address_book)
         activator_options = metautil.gather_from_ancestors(
-                self, 'activator_options')
+            self, 'activator_options')
         activator_arguments = argutils.extract_options(
-                additional_arguments,
-                activator_options)
+            additional_arguments,
+            activator_options)
         self.graph = graph
         vars(self).update(activator_arguments)
 
-    def tick(self):
+    def activate_nodes(self):
         node_ids = self.nodes_to_activate()
         for node_id in node_ids:
             self.send(node_id, 'activate')
+
+    def destroy_nodes(self):
+        self.dying_nodes = self.nodes_to_destroy()
+        for node_id in self.dying_nodes:
+            # notice: this is "beautifully" queued
+            self.send(node_id, 'kill')
+
+    def create_nodes(self):
+        to_create = self.nodes_to_create()
+        node_ids = geventutil.SequenceAsyncResult(
+            [self.send(NodeManager.name, 'create_node',
+                       cls=node_class, parameters=node_parameters)
+             for node_class, node_parameters in to_create])
+        self.fresh_nodes = node_ids.get()
+
+    def tick(self):
+        self.destroy_nodes()
+        self.create_nodes()
+        self.activate_nodes()
 
     def nodes_to_activate(self):
         return [self.graph.random_node()]
@@ -280,6 +302,7 @@ class Activator(core.Agent):
         # FIXME: introduce multiple channels so that it works
         # correctly
         self.kill()
+
 
 class Clock(core.Agent):
     name = 'clock'
