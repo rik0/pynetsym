@@ -244,11 +244,15 @@ class Agent(gevent.Greenlet):
         try:
             bound_method = getattr(self, action_name)
         except AttributeError:
-            value = self.unsupported_message(action_name, **message.parameters)
+            value = self.unsupported_message(
+                    action_name, **message.parameters)
         else:
             value = bound_method(**message.parameters)
         # TODO: decide how to deal with exceptions
-        result.set(value)
+        if isinstance(value, Exception):
+            result.set_exception(value)
+        else:
+            result.set(value)
 
     def run_loop(self):
         """
@@ -265,7 +269,6 @@ class Agent(gevent.Greenlet):
                 message to be sent and the second element is a
                 dictionary of additional parameters that will be
                 passed along.
-
 
         @attention: checks regarding message_processor and similar
             are not made
