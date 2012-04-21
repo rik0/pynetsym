@@ -265,8 +265,7 @@ class Activator(core.Agent):
     def tick(self):
         # TODO: make it plural!
         node_id = self.choose_node()
-        activated = self.send(node_id, 'activate')
-        activated.get() # FIXME: low concurrency
+        self.send(node_id, 'activate')
 
     def choose_node(self):
         return self.graph.random_node()
