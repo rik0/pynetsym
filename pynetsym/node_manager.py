@@ -154,8 +154,6 @@ class Configurator(core.Agent):
         self.setup()
         self.run_loop()
 
-
-# TODO move in configurator the initialization stuff.
 class SingleNodeConfigurator(Configurator):
     """
     A SingleNodeConfigurator needs a network_size parameter

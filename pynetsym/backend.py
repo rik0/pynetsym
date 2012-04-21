@@ -310,7 +310,6 @@ else:
             """
             self.graph = graph
 
-        ## TODO: make this atomic as well
         def add_node(self, identifier, agent):
             self.graph.add_vertices(1)
             largest_index = len(self.graph.vs) - 1
