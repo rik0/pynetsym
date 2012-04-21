@@ -35,10 +35,10 @@ class Activator(simulation.Activator):
         super(Activator, self).__init__(*arguments, **kw)
         self.to_choose = 0
 
-    def choose_node(self):
+    def choose_nodes(self):
         node = self.to_choose
         self.to_choose += 1
-        return node
+        return [node]
 
 
 class WS(simulation.Simulation):
