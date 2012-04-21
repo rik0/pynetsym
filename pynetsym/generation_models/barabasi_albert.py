@@ -24,14 +24,8 @@ class Node(core.Node):
 class Activator(simulation.Activator):
     activator_options = {'starting_edges'}
 
-    def tick(self):
-        answer = self.send(
-            node_manager.NodeManager.name,
-            'create_node', cls=Node,
-            parameters=dict(
-                starting_edges=self.starting_edges))
-        identifier = answer.get()
-        self.send(identifier, 'activate')
+    def nodes_to_activate(self):
+        return self.fresh_nodes
 
     def nodes_to_create(self):
         return [(Node, dict(starting_edges=self.starting_edges))]
