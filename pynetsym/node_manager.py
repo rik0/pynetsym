@@ -79,16 +79,16 @@ class NodeManager(core.Agent):
             ## FIXME: huge kludge
             try: self.graph.remove_node(identifier)
             except Exception: pass
-            return 'creation_failed', {'exception': e}
+            return e
         else:
             node.link_value(self.node_terminated_hook)
             node.link_exception(self.node_failed_hook)
             node.start()
-            return 'created_node', {'identifier': identifier}
+            return identifier
 
     def node_failed_hook(self, node):
         """
-        Hooks an exception in the node. This implementation only 
+        Hooks an exception in the node. This implementation only
         prints stuff.
 
         @param node: the node that failed.
@@ -134,7 +134,8 @@ class Configurator(core.Agent):
             'error_level', self.LOG_ERROR)
         super(Configurator, self).__init__(
                 self.name, address_book, error_level)
-        full_options = metautil.gather_from_ancestors( self, 'configurator_options')
+        full_options = metautil.gather_from_ancestors(
+                self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
                 additional_arguments, full_options)
         vars(self).update(configurator_arguments)
@@ -148,7 +149,8 @@ class Configurator(core.Agent):
     def initialize_nodes(self):
         if self.initialize:
             for identifier in self.nodes:
-                self.send(identifier, 'initialize', priority=core.Priority.HIGH)
+                self.send(identifier, 'initialize',
+                        priority=core.Priority.HIGH)
         self.kill()
 
     def _run(self):
@@ -180,12 +182,11 @@ class SingleNodeConfigurator(Configurator):
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
         for _ in xrange(self.network_size):
-            self.send(
+            async_identifier = self.send(
                 NodeManager.name, 'create_node',
                 cls=self.node_cls,
                 parameters=self.node_arguments)
+            # FIXME: this can have better concurrency...
+            self.nodes.append(async_identifier.get())
+        self.initialize_nodes()
 
-    def created_node(self, identifier):
-        self.nodes.append(identifier)
-        if len(self.nodes) == self.network_size:
-            self.initialize_nodes()

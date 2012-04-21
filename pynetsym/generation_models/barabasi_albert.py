@@ -11,7 +11,6 @@ class Node(core.Node):
         super(Node, self).__init__(identifier, address_book, graph)
         self.starting_edges = starting_edges
 
-    @core.answers('activation_received', node_id='id')
     def activate(self):
         forbidden = set(self.graph.neighbors(self.id))
         forbidden.add(self.id)
@@ -26,14 +25,12 @@ class Activator(simulation.Activator):
     activator_options = {'starting_edges'}
 
     def tick(self):
-        self.activations_pending += 1
-        self.send(
+        answer = self.send(
             node_manager.NodeManager.name,
             'create_node', cls=Node,
             parameters=dict(
                 starting_edges=self.starting_edges))
-
-    def created_node(self, identifier):
+        identifier = answer.get()
         self.send(identifier, 'activate')
 
 class BA(simulation.Simulation):
