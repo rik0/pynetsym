@@ -16,7 +16,6 @@
     Probably np.array is the right class to hold the results. Because it is
     very easy to plot/save/whatever.
 7. Profile the transitive linking (regardless of how it scales).
-9. Introduce synchronous messages.
 10. Introduce the idea of an uninterruptible context that overrides
     cooperate() and that just marks that it should yield after the
     context if something happened inside
@@ -26,3 +25,7 @@
     having to resort to returning the handle.
 13. Create descriptors for properties that may (or may not) be
     persistent
+13. Fix the whole handle thing.
+14. Create "network observer that do stuff".
+15. Create "agents": AI have their own greenlet + reactive stuff.
+16. Create terminators that have a condition.
