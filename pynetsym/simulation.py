@@ -216,11 +216,15 @@ class Simulation(object):
         vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
+        termination_checker = TerminationChecker(
+            self.graph, address_book,
+            CountDownCondition(self.steps))
         configurator = self.configurator(
             address_book, **cli_args_dict)
         node_manager = NodeManager(
             self.graph, address_book,
             self.id_manager)
+        termination_checker.start()
         node_manager.start()
         configurator.start()
         configurator.join()
@@ -228,11 +232,11 @@ class Simulation(object):
         activator = self.activator(self.graph, address_book,
                                    **cli_args_dict)
         activator.start()
+        clock = self.clock(address_book)
         with timing.Timer(self.callback):
-            clock = self.clock(self.steps, address_book)
             clock.start()
 
-            activator.join()
+            termination_checker.join()
             if node_manager.failures:
                 sys.exit(1)
             return self
@@ -298,23 +302,88 @@ class Activator(core.Agent):
     def nodes_to_create(self):
         return {}
 
-    def simulation_ended(self):
-        # TODO: this should be done more cleanly
-        self.kill()
-
-
 class Clock(core.Agent):
     name = 'clock'
+    activator_can_terminate = False
 
-    def __init__(self, max_steps, address_book):
+    def __init__(self, address_book):
         super(Clock, self).__init__(self.name, address_book)
-        self.max_steps = max_steps
         self.activator = address_book.resolve(Activator.name)
+        self.active = True
+        
+    def send_tick(self):
+        return self.send(Activator.name, 'tick')
+    
+    def simulation_end(self):
+        self.active = False
+    
+    def ask_to_terminate(self):
+        return self.send(TerminationChecker.name, 'check')
 
     def _run(self):
-        for step in xrange(self.max_steps):
-            done = self.send(Activator.name, 'tick')
-            done.get()
-        self.send(Activator.name, 'simulation_ended')
+        while self.active:
+            done = self.send_tick()
+            if done.get() and self.activator_can_terminate:
+                self.simulation_end()
+            else:
+                should_stop = self.ask_to_terminate().get()
+                if should_stop:
+                    self.simulation_end()
 
+
+class FuncCondition(object):
+    def __init__(self, func, motive):
+        self.func = func
+        self.motive = motive
+        
+    def check(self, graph):
+        return self.func(graph)
+
+def make_condition(func, motive):
+    return FuncCondition(func, motive)
+
+class CountDownCondition(object):
+    def __init__(self, starting_value):
+        self.starting_value = starting_value
+        self.motive = "Exhausted Count Down."
+        
+    def check(self, graph):
+        # Notice: if we say that 100 steps have to be performed,
+        # we do steps 99...0, because the activator is called before
+        # the termination checker
+        self.starting_value -= 1
+        if self.starting_value:
+            return False
+        else:
+            return True
+    
+class TerminationChecker(core.Agent):
+    name = 'termination_checker'
+    
+    def __init__(self, graph, address_book, *conditions):
+        super(TerminationChecker, self).__init__(self.name, address_book)
+        self.graph = graph
+        self.conditions = list(conditions)
+        self.active = True
+        
+    def add_condition(self, condition):
+        self.condition.append(condition)
+        
+    def check(self):
+        for condition in self.conditions:
+            check = condition.check(self.graph)
+            if check:
+                self.motive = condition.motive
+                self.active = False
+                return check
+        else:
+            return False
+        
+    def _run(self):
+        while self.active:
+            message, result = self.read()
+            self.process(message, result)
+            self.cooperate()
+        else:
+            return self.motive
 
