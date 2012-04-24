@@ -348,8 +348,11 @@ class CountDownCondition(object):
         self.motive = "Exhausted Count Down."
         
     def check(self, graph):
+        # Notice: if we say that 100 steps have to be performed,
+        # we do steps 99...0, because the activator is called before
+        # the termination checker
+        self.starting_value -= 1
         if self.starting_value:
-            self.starting_value -= 1
             return False
         else:
             return True
@@ -383,5 +386,4 @@ class TerminationChecker(core.Agent):
             self.cooperate()
         else:
             return self.motive
-    
-        
+
