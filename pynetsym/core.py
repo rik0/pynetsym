@@ -1,8 +1,9 @@
-import abc
-import sys
 import collections
 import numbers
-import decorator
+
+import sys
+import pprint
+import copy
 
 import gevent
 
@@ -36,6 +37,12 @@ class AddressBook(object):
     """
 
     def __init__(self, graph):
+        """
+        Creates the address book.
+        
+        @param graph: the graph wrapper we use to store the network
+        @type graph: backend.GraphWrapper
+        """
         self.name_registry = {}
         self.graph = graph
 
@@ -84,7 +91,14 @@ class AddressBook(object):
             try:
                 return self.graph[identifier]
             except RuntimeError as e:
+                pprint.pprint(self.full_book(), sys.stderr)
                 raise AddressingError(e.message)
+            
+    def full_book(self):
+        named = copy.copy(self.name_registry)
+        numbered = list(self.graph.nodes())
+        return dict(named=named, nodes=numbered)
+        
 
 class Agent(gevent.Greenlet):
     """

@@ -2,7 +2,13 @@ import sys
 import argparse
 import copy
 
-from pynetsym import ioutil, core, timing, backend, metautil, geventutil
+from pynetsym import ioutil
+from pynetsym import core
+from pynetsym import timing
+from pynetsym import backend
+from pynetsym import metautil
+from pynetsym import geventutil
+from pynetsym import termination
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
 
@@ -216,11 +222,15 @@ class Simulation(object):
         vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
+        termination_checker = termination.TerminationChecker(
+            self.graph, address_book,
+            termination.count_down(self.steps))
         configurator = self.configurator(
             address_book, **cli_args_dict)
         node_manager = NodeManager(
             self.graph, address_book,
             self.id_manager)
+        termination_checker.start()
         node_manager.start()
         configurator.start()
         configurator.join()
@@ -228,11 +238,11 @@ class Simulation(object):
         activator = self.activator(self.graph, address_book,
                                    **cli_args_dict)
         activator.start()
+        clock = self.clock(address_book)
         with timing.Timer(self.callback):
-            clock = self.clock(self.steps, address_book)
             clock.start()
 
-            activator.join()
+            termination_checker.join()
             if node_manager.failures:
                 sys.exit(1)
             return self
@@ -298,23 +308,34 @@ class Activator(core.Agent):
     def nodes_to_create(self):
         return {}
 
-    def simulation_ended(self):
-        # TODO: this should be done more cleanly
-        self.kill()
-
 
 class Clock(core.Agent):
     name = 'clock'
+    activator_can_terminate = False
 
-    def __init__(self, max_steps, address_book):
+    def __init__(self, address_book):
         super(Clock, self).__init__(self.name, address_book)
-        self.max_steps = max_steps
         self.activator = address_book.resolve(Activator.name)
+        self.active = True
+
+    def send_tick(self):
+        return self.send(Activator.name, 'tick')
+
+    def simulation_end(self):
+        self.active = False
+
+    def ask_to_terminate(self):
+        return self.send(
+            termination.TerminationChecker.name, 'check')
 
     def _run(self):
-        for step in xrange(self.max_steps):
-            done = self.send(Activator.name, 'tick')
-            done.get()
-        self.send(Activator.name, 'simulation_ended')
+        while self.active:
+            done = self.send_tick()
+            if done.get() and self.activator_can_terminate:
+                self.simulation_end()
+            else:
+                should_stop = self.ask_to_terminate().get()
+                if should_stop:
+                    self.simulation_end()
 
 

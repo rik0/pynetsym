@@ -141,6 +141,16 @@ class GraphWrapper(object):
 
     @abc.abstractmethod
     def neighbors(self, node_identifier):
+        """
+        Return the neighbors of the specified node.
+        """
+        pass
+    
+    @abc.abstractmethod
+    def nodes(self):
+        """
+        Return a collection of all the nodes in the network.
+        """
         pass
 
 
@@ -291,6 +301,10 @@ else:
 
         def neighbors(self, node_identifier):
             return self.graph.neighbors(node_identifier)
+        
+        def nodes(self):
+            nodes_with_data = self.graph.nodes_iter(data=True)
+            return nodes_with_data
 
 try:
     import igraph
@@ -367,3 +381,9 @@ else:
 
         def neighbors(self, node_identifier):
             return self.graph.neighbors(node_identifier)
+        
+        def nodes(self):
+            indices = self.graph.vs.indices
+            for index in indices:
+                yield index, self.graph.vs[index].attributes()
+            
