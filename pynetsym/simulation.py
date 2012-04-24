@@ -2,7 +2,13 @@ import sys
 import argparse
 import copy
 
-from pynetsym import ioutil, core, timing, backend, metautil, geventutil
+from pynetsym import ioutil
+from pynetsym import core
+from pynetsym import timing
+from pynetsym import backend
+from pynetsym import metautil
+from pynetsym import geventutil
+from pynetsym import termination
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
 
@@ -216,9 +222,9 @@ class Simulation(object):
         vars(self).update(simulation_options)
 
         address_book = core.AddressBook(self.graph)
-        termination_checker = TerminationChecker(
+        termination_checker = termination.TerminationChecker(
             self.graph, address_book,
-            CountDownCondition(self.steps))
+            termination.count_down(self.steps))
         configurator = self.configurator(
             address_book, **cli_args_dict)
         node_manager = NodeManager(
@@ -302,6 +308,7 @@ class Activator(core.Agent):
     def nodes_to_create(self):
         return {}
 
+
 class Clock(core.Agent):
     name = 'clock'
     activator_can_terminate = False
@@ -310,15 +317,16 @@ class Clock(core.Agent):
         super(Clock, self).__init__(self.name, address_book)
         self.activator = address_book.resolve(Activator.name)
         self.active = True
-        
+
     def send_tick(self):
         return self.send(Activator.name, 'tick')
-    
+
     def simulation_end(self):
         self.active = False
-    
+
     def ask_to_terminate(self):
-        return self.send(TerminationChecker.name, 'check')
+        return self.send(
+            termination.TerminationChecker.name, 'check')
 
     def _run(self):
         while self.active:
@@ -330,60 +338,4 @@ class Clock(core.Agent):
                 if should_stop:
                     self.simulation_end()
 
-
-class FuncCondition(object):
-    def __init__(self, func, motive):
-        self.func = func
-        self.motive = motive
-        
-    def check(self, graph):
-        return self.func(graph)
-
-def make_condition(func, motive):
-    return FuncCondition(func, motive)
-
-class CountDownCondition(object):
-    def __init__(self, starting_value):
-        self.starting_value = starting_value
-        self.motive = "Exhausted Count Down."
-        
-    def check(self, graph):
-        # Notice: if we say that 100 steps have to be performed,
-        # we do steps 99...0, because the activator is called before
-        # the termination checker
-        self.starting_value -= 1
-        if self.starting_value:
-            return False
-        else:
-            return True
-    
-class TerminationChecker(core.Agent):
-    name = 'termination_checker'
-    
-    def __init__(self, graph, address_book, *conditions):
-        super(TerminationChecker, self).__init__(self.name, address_book)
-        self.graph = graph
-        self.conditions = list(conditions)
-        self.active = True
-        
-    def add_condition(self, condition):
-        self.condition.append(condition)
-        
-    def check(self):
-        for condition in self.conditions:
-            check = condition.check(self.graph)
-            if check:
-                self.motive = condition.motive
-                self.active = False
-                return check
-        else:
-            return False
-        
-    def _run(self):
-        while self.active:
-            message, result = self.read()
-            self.process(message, result)
-            self.cooperate()
-        else:
-            return self.motive
 
