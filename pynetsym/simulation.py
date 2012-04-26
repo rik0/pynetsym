@@ -63,7 +63,8 @@ class Simulation(object):
     """
 
     command_line_options = (
-        ("-s", "--steps", dict(default=100, type=int)))
+        ("-s", "--steps", dict(default=100, type=int)),
+    )
     """
     Each option line is in the form:
         1. (short_option_name, long_option_name, parameters)
