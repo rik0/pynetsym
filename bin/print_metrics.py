@@ -2,9 +2,33 @@ import argparse
 
 import networkx as nx
 
-from pynetsym import ioutil
+from os import path
 from matplotlib import pyplot as plt
 import pynetsym
+
+
+FORMATS = ('dot', 'gexf', 'gml', 'gpickle',
+           'graphml', 'pajek', 'yaml')
+"""Available formats"""
+
+def read_network(network_path, fmt=None, **kwargs):
+    """
+    Reads a network from filesystem.
+    @param network_path: The file to read the network from
+    @param fmt: the format the network was stored in (some kind of guessing is
+        made from the filename, if left blank)
+    @param kwargs: Additional arguments to be passed to the corresponding
+        networkx.read_* function
+    @return: the network
+    @rtype: networkx.Graph
+    """
+    if fmt is None:
+        _, ext = path.splitext(network_path)
+        fmt = ext[1:]
+        if fmt not in FORMATS:
+            raise IOError("Did not undestand format from filename %s." % network_path)
+    fn = getattr(nx, 'read_' + fmt)
+    return fn(network_path, **kwargs)
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -82,7 +106,7 @@ def process_network(G, namespace):
 
 def main(namespace):
     for network_path in namespace.paths:
-        G = ioutil.read_network(network_path)
+        G = read_network(network_path)
         process_network(G, namespace)
 
 
@@ -91,3 +115,4 @@ if __name__ == '__main__':
     parser = build_parser()
     namespace = parser.parse_args()
     main(namespace)
+

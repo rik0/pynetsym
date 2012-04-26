@@ -12,6 +12,7 @@ import gevent.event as event
 
 _M = collections.namedtuple('Message', 'sender payload parameters')
 
+
 class Message(_M):
     """
     An immutable object that is used to send a message among agents.
@@ -39,7 +40,7 @@ class AddressBook(object):
     def __init__(self, graph):
         """
         Creates the address book.
-        
+
         @param graph: the graph wrapper we use to store the network
         @type graph: backend.GraphWrapper
         """
@@ -93,12 +94,12 @@ class AddressBook(object):
             except RuntimeError as e:
                 pprint.pprint(self.full_book(), sys.stderr)
                 raise AddressingError(e.message)
-            
+
     def full_book(self):
         named = copy.copy(self.name_registry)
         numbered = list(self.graph.nodes())
         return dict(named=named, nodes=numbered)
-        
+
 
 class Agent(gevent.Greenlet):
     """

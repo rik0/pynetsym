@@ -2,7 +2,6 @@ import sys
 import argparse
 import copy
 
-from pynetsym import ioutil
 from pynetsym import core
 from pynetsym import timing
 from pynetsym import backend
@@ -11,6 +10,7 @@ from pynetsym import geventutil
 from pynetsym import termination
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
+
 
 class ConfigurationError(RuntimeError):
     pass
@@ -63,9 +63,7 @@ class Simulation(object):
     """
 
     command_line_options = (
-        ("-s", "--steps", dict(default=100, type=int)),
-        ("-o", "--output", dict(default=None)),
-        ("-f", "--format", dict(choices=ioutil.FORMATS, default=None)))
+        ("-s", "--steps", dict(default=100, type=int)))
     """
     Each option line is in the form:
         1. (short_option_name, long_option_name, parameters)
