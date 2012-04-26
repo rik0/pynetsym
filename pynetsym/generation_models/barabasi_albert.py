@@ -1,7 +1,7 @@
 from pynetsym import core
 from pynetsym import node_manager
 from pynetsym import simulation
-from pynetsym import backend
+from pynetsym import storage
 
 import igraph
 
@@ -40,7 +40,7 @@ class BA(simulation.Simulation):
 
     activator = Activator
 
-    graph_type = backend.IGraphWrapper
+    graph_type = storage.IGraphWrapper
     graph_options = dict(graph=igraph.Graph(0))
 
     class configurator(node_manager.SingleNodeConfigurator):

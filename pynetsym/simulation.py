@@ -4,7 +4,7 @@ import copy
 
 from pynetsym import core
 from pynetsym import timing
-from pynetsym import backend
+from pynetsym import storage
 from pynetsym import metautil
 from pynetsym import geventutil
 from pynetsym import termination
@@ -86,7 +86,7 @@ class Simulation(object):
         Returns the factory used to build the graph.
         @rtype: callable
         """
-        return backend.NXGraphWrapper
+        return storage.NXGraphWrapper
 
     @metautil.classproperty
     def clock(self):
@@ -114,13 +114,13 @@ class Simulation(object):
         ## deepcopy: no object sharing between different simulation
         ## executions!
         graph_options = copy.deepcopy(graph_options)
-        self.graph = backend.NotifyingGraphWrapper(
+        self.graph = storage.NotifyingGraphWrapper(
             self.graph_type(**graph_options))
         self.id_manager = IdManager()
         self.graph.register_observer(
             self.id_manager.node_removed,
-            backend.NotifyingGraphWrapper.REMOVE,
-            backend.NotifyingGraphWrapper.NODE)
+            storage.NotifyingGraphWrapper.REMOVE,
+            storage.NotifyingGraphWrapper.NODE)
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)

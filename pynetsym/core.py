@@ -42,7 +42,7 @@ class AddressBook(object):
         Creates the address book.
 
         @param graph: the graph wrapper we use to store the network
-        @type graph: backend.GraphWrapper
+        @type graph: storage.GraphWrapper
         """
         self.name_registry = {}
         self.graph = graph

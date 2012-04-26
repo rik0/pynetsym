@@ -1,5 +1,5 @@
 from unittest import TestCase
-from pynetsym import core, backend
+from pynetsym import core, storage
 
 
 class Agent(core.Agent):
@@ -17,7 +17,7 @@ class Agent(core.Agent):
 
 class TestAgent(TestCase):
     def setUp(self):
-        graph_wrapper = backend.NXGraphWrapper()
+        graph_wrapper = storage.NXGraphWrapper()
         address_book = core.AddressBook(graph_wrapper)
         self.agent_a_id = 'a'
         self.agent_a = Agent(self.agent_a_id, address_book)

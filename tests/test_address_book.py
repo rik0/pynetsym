@@ -1,5 +1,5 @@
 import unittest
-from pynetsym import core, backend
+from pynetsym import core, storage
 
 
 class FakeAgent(object):
@@ -9,7 +9,7 @@ class FakeAgent(object):
 
 class TestAddressBook(unittest.TestCase):
     def setUp(self):
-        graph_wrapper = backend.NXGraphWrapper()
+        graph_wrapper = storage.NXGraphWrapper()
         self.address_book = core.AddressBook(graph_wrapper)
 
     def fillWithValues(self, **kwargs):

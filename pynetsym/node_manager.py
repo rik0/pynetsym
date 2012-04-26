@@ -44,7 +44,7 @@ class NodeManager(core.Agent):
         """
         Creates a new node_manager
         @param graph: the graph to pass to the agents
-        @type graph: backend.GraphWrapper
+        @type graph: storage.GraphWrapper
         @param address_book: the address book to pass to the agents
         @type address_book: core.AddressBook
         @param id_manager: the source for nodes id

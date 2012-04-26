@@ -63,7 +63,7 @@ class Node(core.Node):
 
 
 class TL(simulation.Simulation):
-    graph_type = pynetsym.backend.IGraphWrapper
+    graph_type = pynetsym.storage.IGraphWrapper
     graph_options = dict(graph=igraph.Graph(0))
 
     command_line_options = (
