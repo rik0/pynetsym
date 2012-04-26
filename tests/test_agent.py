@@ -1,6 +1,7 @@
 from unittest import TestCase
 from pynetsym import core, backend
 
+
 class Agent(core.Agent):
     def __init__(self, identifier, address_book, value=0):
         super(Agent, self).__init__(identifier, address_book)
@@ -12,6 +13,7 @@ class Agent(core.Agent):
 
     def question(self, agent_id):
         self.send(agent_id, 'answer')
+
 
 class TestAgent(TestCase):
     def setUp(self):
@@ -34,7 +36,4 @@ class TestAgent(TestCase):
                 agent_id=self.agent_a_id)
         self.agent_a.join()
         self.assertEqual(42, self.agent_a.val)
-
-
-
 

@@ -3,6 +3,7 @@ import sys
 
 from pynetsym import core, util, metautil, argutils, geventutil
 
+
 class IdManager(object):
     """
     The IdManager is responsible to provide valid identifiers for Nodes.
@@ -77,8 +78,10 @@ class NodeManager(core.Agent):
         except Exception as e:
             self.id_manager.free_identifier(identifier)
             # if the node was added to the network, it shall be removed
-            try: self.graph.remove_node(identifier)
-            except Exception: pass
+            try:
+                self.graph.remove_node(identifier)
+            except Exception:
+                pass
             return e
         else:
             node.link_value(self.node_terminated_hook)
@@ -107,6 +110,7 @@ class NodeManager(core.Agent):
 
         """
         pass
+
 
 class Configurator(core.Agent):
     __metaclass__ = abc.ABCMeta
@@ -153,6 +157,7 @@ class Configurator(core.Agent):
     def _run(self):
         self.setup()
         self.run_loop()
+
 
 class SingleNodeConfigurator(Configurator):
     """

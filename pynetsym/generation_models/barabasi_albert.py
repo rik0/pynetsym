@@ -5,6 +5,7 @@ from pynetsym import backend
 
 import igraph
 
+
 class Node(core.Node):
     def __init__(self, identifier, address_book,
                  graph, starting_edges):
@@ -21,6 +22,7 @@ class Node(core.Node):
                 forbidden.add(random_node)
                 self.starting_edges -= 1
 
+
 class Activator(simulation.Activator):
     activator_options = {'starting_edges'}
 
@@ -29,6 +31,7 @@ class Activator(simulation.Activator):
 
     def nodes_to_create(self):
         return [(Node, dict(starting_edges=self.starting_edges))]
+
 
 class BA(simulation.Simulation):
     command_line_options = (

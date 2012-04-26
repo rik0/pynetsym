@@ -1,6 +1,7 @@
 import unittest
 from pynetsym.generation_models import watts_strogatz
 
+
 class TestWS(unittest.TestCase):
     def testRun(self):
         rewiring_probability = 0.1

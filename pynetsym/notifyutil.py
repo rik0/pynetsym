@@ -1,5 +1,6 @@
 import functools
 
+
 def notifies(event, kind):
     def add_notifications(func):
         def aux(self, *args, **kwargs):
@@ -15,8 +16,11 @@ def notifies(event, kind):
                     try:
                         observer(event, kind, self, *args, **kwargs)
                     except Exception, e:
-                        if suppress_exception: pass
-                        else: raise e
+                        if suppress_exception:
+                            pass
+                        else:
+                            raise e
+                return res  # TODO: recently added: check if it works
         functools.update_wrapper(aux, func)
         return aux
     return add_notifications
@@ -37,4 +41,3 @@ def notifier(cls):
     cls.unregister_observer = unregister_observer
     cls.observers = property(lambda self: observers)
     return cls
-

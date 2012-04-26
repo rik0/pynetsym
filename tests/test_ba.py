@@ -1,6 +1,7 @@
 import unittest
 from pynetsym.generation_models import barabasi_albert
 
+
 class TestBA(unittest.TestCase):
     def testRun(self):
         network_size = 100
@@ -15,6 +16,6 @@ class TestBA(unittest.TestCase):
         graph = sim.graph.handle
 
         self.assertEquals(
-               network_size+steps,
+               network_size + steps,
                len(graph.vs))
 

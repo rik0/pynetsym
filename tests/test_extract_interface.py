@@ -12,6 +12,7 @@ class A(object):
     def bar(self):
         pass
 
+
 class C(object):
     def a(self):
         pass
@@ -19,8 +20,10 @@ class C(object):
     def b(self):
         pass
 
+
 class D(A, C):
     pass
+
 
 class TestExtract_interface(TestCase):
     def test_extract_all_methods(self):
@@ -33,9 +36,8 @@ class TestExtract_interface(TestCase):
     def test_no_metaclass(self):
             class E(object):
                 pass
-            self.assertRaises(TypeError, 
+            self.assertRaises(TypeError,
                     metautil.abstract_interface_from(D), E)
-
 
     def test_methods(self):
         @metautil.abstract_interface_from(D)
@@ -43,4 +45,3 @@ class TestExtract_interface(TestCase):
             __metaclass__ = abc.ABCMeta
             pass
         self.assertRaises(TypeError, E)
-

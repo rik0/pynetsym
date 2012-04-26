@@ -1,13 +1,15 @@
 import unittest
-import sys
 
 from pynetsym import metautil
+
 
 class B(object):
     foo = {'x'}
 
+
 class A(B):
     foo = {'y'}
+
 
 class TestAccumulateOlderVariants(unittest.TestCase):
     def testA(self):

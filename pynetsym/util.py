@@ -8,6 +8,7 @@ import itertools as it
 from heapq import heappop, heappush
 from bisect import bisect_left
 
+
 def subdict(dct, keys, on_error=None):
     """
     Return a subdictionary of dct that contains only the keys specified in keys
@@ -24,10 +25,11 @@ def subdict(dct, keys, on_error=None):
     for k in keys:
         try:
             d[k] = dct[k]
-        except (KeyError, IndexError) as e:
+        except (KeyError, IndexError) as _e:
             if on_error is not None:
                 on_error(d, dct, k)
     return d
+
 
 def splitdict(dct, keys):
     """
@@ -137,6 +139,7 @@ class IntIdentifierStore(object):
                 self._upper_identifier -= 1
             else:
                 break
+
 
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)

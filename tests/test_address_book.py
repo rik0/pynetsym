@@ -1,9 +1,11 @@
 import unittest
 from pynetsym import core, backend
 
+
 class FakeAgent(object):
     def __init__(self, identifier=0):
         self.id = identifier
+
 
 class TestAddressBook(unittest.TestCase):
     def setUp(self):
@@ -24,8 +26,7 @@ class TestAddressBook(unittest.TestCase):
         self.fillWithValues(a=agent)
         self.assertEqual(
             agent,
-            self.address_book.resolve('a')
-        )
+            self.address_book.resolve('a'))
 
     def testReRegister(self):
         agent_a = FakeAgent()

@@ -1,6 +1,6 @@
 """
 Conditions are object that provide a check method that receives a graph
-and answers whether the simulation has to stop. After the condition evaluated 
+and answers whether the simulation has to stop. After the condition evaluated
 to True a motive attribute indicates the termination reason. It is intended
 to be meaningful for the user and not for the machine.
 """
@@ -32,9 +32,9 @@ class CountDownCondition(object):
         self.motive = "Exhausted Count Down."
 
     def check(self, graph):
-        # Notice: if we say that 100 steps have to be performed,
-        # we do steps 99...0, because the activator is called before
-        # the termination checker
+        ## Notice: if we say that 100 steps have to be performed,
+        ## we do steps 99...0, because the activator is called before
+        ## the termination checker
         self.starting_value -= 1
         if self.starting_value:
             return False

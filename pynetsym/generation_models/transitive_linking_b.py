@@ -2,7 +2,9 @@ import random
 import itertools as it
 
 from pynetsym.generation_models import transitive_linking
-from pynetsym import simulation, node_manager
+from pynetsym import simulation
+from pynetsym import node_manager
+
 
 class Node(transitive_linking.Node):
     def find_possible_links(self, graph, neighbors):
@@ -34,7 +36,6 @@ class TL(simulation.Simulation):
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
-
 
 
 if __name__ == '__main__':

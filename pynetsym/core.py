@@ -157,6 +157,7 @@ class Agent(gevent.Greenlet):
         """
         return self._default_queue.get()
 
+    ## TODO: absolutely change the name
     @property
     def id(self):
         """
@@ -241,6 +242,7 @@ class Agent(gevent.Greenlet):
 
     def __str__(self):
         return '%s(%s)' % (type(self), self.id)
+
 
 class Node(Agent):
     """

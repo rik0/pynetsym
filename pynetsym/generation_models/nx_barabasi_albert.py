@@ -1,6 +1,7 @@
-from pynetsym import core, node_manager
+from pynetsym import node_manager
 from pynetsym import simulation
 from pynetsym.generation_models import barabasi_albert
+
 
 class BA(simulation.Simulation):
     command_line_options = (

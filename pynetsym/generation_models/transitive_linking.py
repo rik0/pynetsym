@@ -1,6 +1,8 @@
-import random
-from pynetsym import core, node_manager
+from pynetsym import core
+from pynetsym import node_manager
 from pynetsym import simulation
+import random
+
 
 class Node(core.Node):
     MAX_TRIALS = 10
@@ -39,6 +41,7 @@ class Node(core.Node):
         self.graph.switch_node(self.id, self)
         target_node = self.graph.random_node()
         self.link_to(target_node)
+
 
 class TL(simulation.Simulation):
     command_line_options = (

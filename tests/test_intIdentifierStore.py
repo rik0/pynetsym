@@ -1,6 +1,7 @@
 from unittest import TestCase
 from pynetsym import util
 
+
 class TestIntIdentifierStore(TestCase):
     def setUp(self):
         self.store = util.IntIdentifierStore()
@@ -16,4 +17,3 @@ class TestIntIdentifierStore(TestCase):
     def testPop(self):
         self.assertEqual(0, self.store.pop())
         self.assertEqual(1, self.store.peek())
-

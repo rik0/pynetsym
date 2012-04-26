@@ -1,19 +1,16 @@
-import types
-import abc
-import random
-
-import itertools as it
-
-import pynetsym
-import pynetsym.metautil
-import pynetsym.rndutil
-import pynetsym.core
-
 from pynetsym.metautil import delegate, delegate_all
 from pynetsym.notifyutil import notifier, notifies
 
+import abc
+import itertools as it
+import pynetsym.rndutil
+import random
+import types
+
+
 class GraphError(RuntimeError):
     pass
+
 
 class GraphWrapper(object):
     __metaclass__ = abc.ABCMeta
@@ -63,7 +60,6 @@ class GraphWrapper(object):
             directed or undirected
         """
         pass
-
 
     @abc.abstractmethod
     def random_node(self):
@@ -145,7 +141,7 @@ class GraphWrapper(object):
         Return the neighbors of the specified node.
         """
         pass
-    
+
     @abc.abstractmethod
     def nodes(self):
         """
@@ -225,7 +221,7 @@ else:
                 fly out of your node.
             """
             ## TODO: this is wrong from a probabilistic point of view
-            ## Fix it using additional data structures and for example 
+            ## Fix it using additional data structures and for example
             ## a layer of indirection
             ## mapping each index with a single node
             try:
@@ -253,7 +249,7 @@ else:
                     xrange(self.graph.number_of_nodes()))
             try:
                 return pynetsym.rndutil.choice_from_iter(
-                        iterator, 
+                        iterator,
                         (self.graph.number_of_edges()
                             + self.graph.number_of_nodes()))
             except IndexError:
@@ -301,7 +297,7 @@ else:
 
         def neighbors(self, node_identifier):
             return self.graph.neighbors(node_identifier)
-        
+
         def nodes(self):
             nodes_with_data = self.graph.nodes_iter(data=True)
             return nodes_with_data
@@ -381,9 +377,8 @@ else:
 
         def neighbors(self, node_identifier):
             return self.graph.neighbors(node_identifier)
-        
+
         def nodes(self):
             indices = self.graph.vs.indices
             for index in indices:
                 yield index, self.graph.vs[index].attributes()
-            

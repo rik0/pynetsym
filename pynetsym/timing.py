@@ -4,12 +4,14 @@ This module deals with easy to use facilities to time execution.
 
 import time
 
+
 class TimerStateError(AttributeError):
     """
     This is raised when attributes are called in a Timer when not
     in the appropriate state (i.e., it did not __enter__ in the block
     or it did not __exit__ depending on the actual attribute)
     """
+
 
 class TimeLogger(object):
 
@@ -91,8 +93,8 @@ class Timer(object):
         if callable(self.callback):
             return self.callback(self)
 
-    def __exit__(self, type, value, traceback):
-        if type is None and value is None and traceback is None:
+    def __exit__(self, type_, value, traceback):
+        if type_ is None and value is None and traceback is None:
             self.toc()
 
     @property

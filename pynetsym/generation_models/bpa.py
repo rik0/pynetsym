@@ -1,8 +1,9 @@
 import fractions
 import random
 
-from pynetsym import simulation, core
 import pynetsym
+from pynetsym import simulation
+from pynetsym import core
 from pynetsym.node_manager import NodeManager
 
 
@@ -15,12 +16,13 @@ def distribution(s):
     else:
         return tuple(float(f) for f in parts)
 
+
 class Node(core.Node):
     def __init__(self, identifier, address_book, graph,
                  gamma, probability, strategy=None):
         """
         Create a BPA node.
-keyword
+
         If a strategy is specified, probability is ignored and strategy
         is simply selected.
 
@@ -30,7 +32,7 @@ keyword
         @param graph: the graph
         @type graph: backend.GraphWrapper
         @param gamma: the bias to select linkers
-        @param probability: the probability distribution of the nodes 
+        @param probability: the probability distribution of the nodes
             behavior
         @param strategy: the "forced" starting strategy
         """
@@ -55,7 +57,7 @@ keyword
         return self.id
 
     def passive_strategy(self):
-        pass ## exactly what we want
+        pass  # exactly what we want
 
     def inviter_strategy(self):
         ## Create a new node: as the node manager answers with a
@@ -71,10 +73,7 @@ keyword
 
     def linker_strategy(self):
         pass
-        # while 1:
-        #     node = self.graph.preferential_attachment_node()
-        #     if node in self.graph.handle:
-        #         pass
+
 
 class BPA(simulation.Simulation):
     class configurator(pynetsym.node_manager.SingleNodeConfigurator):

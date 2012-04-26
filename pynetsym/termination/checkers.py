@@ -30,4 +30,3 @@ class TerminationChecker(core.Agent):
             self.cooperate()
         else:
             return self.motive
-

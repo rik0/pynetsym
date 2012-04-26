@@ -1,7 +1,6 @@
 from unittest import TestCase
 from pynetsym.notifyutil import notifier, notifies
 
-__author__ = 'enrico'
 
 @notifier
 class A(object):
@@ -30,6 +29,7 @@ class A(object):
     def dec_bar(self):
         self.bar -= 1
 
+
 class TestNotifier(TestCase):
     def setUp(self):
         self.a = A(0, 0)
@@ -41,7 +41,7 @@ class TestNotifier(TestCase):
         self.a.inc_bar()
         self.a.dec_bar()
         self.a.inc_foo()
-        self.a.dec_foo() ## I did not call any observer!
+        self.a.dec_foo()  # I did not call any observer!
 
     def make_checker(self, event, kind):
         def checker(cevent, ckind, observed):

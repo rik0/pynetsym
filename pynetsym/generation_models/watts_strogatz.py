@@ -1,5 +1,9 @@
 import random
-from pynetsym import simulation, node_manager, core
+
+from pynetsym import simulation
+from pynetsym import node_manager
+from pynetsym import core
+
 
 class Node(core.Node):
     def __init__(self, identifier, address_book,
@@ -29,6 +33,7 @@ class Node(core.Node):
     def initialize(self):
         for index in self.lattice_cw_neighbors():
             self.link_to(index % self.network_size)
+
 
 class Activator(simulation.Activator):
     def __init__(self, *arguments, **kw):
@@ -61,4 +66,3 @@ class WS(simulation.Simulation):
 if __name__ == '__main__':
     sim = WS()
     sim.run()
-

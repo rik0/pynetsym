@@ -1,6 +1,7 @@
 from unittest import TestCase
 import pynetsym.metautil
 
+
 class BaseClass(object):
     ANSWER = 42
 
@@ -30,6 +31,7 @@ class BaseClass(object):
     @a_rw_property.setter
     def a_rw_property(self, value):
         self.val = value
+
 
 @pynetsym.metautil.delegate_all(BaseClass)
 class StandardDelegator(object):
@@ -102,6 +104,7 @@ class TestDelegate_all_To_Delegate_Subclass(TestDelegate_all):
         self.base = Subclass(10)
         self.delegator = SubclassDelegator(self.base)
 
+
 class TestDelegate_all_With_Delegator_Subclass(TestDelegate_all):
     def setUp(self):
 
@@ -111,4 +114,3 @@ class TestDelegate_all_With_Delegator_Subclass(TestDelegate_all):
 
         self.base = BaseClass(10)
         self.delegator = SubclassDelegator(self.base)
-

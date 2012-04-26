@@ -4,6 +4,7 @@ import inspect
 import types
 import decorator
 
+
 def copy_doc(cls):
     """
     Copy documentation from method with same name of cls.
@@ -25,8 +26,9 @@ def copy_doc(cls):
 
 def abstract_interface_from(cls, debug=False):
     """
-    Extracts the public methods from cls and adds them as abstract methods to new_cls.
-    new_cls is required to have a subclass of abc.ABCMeta as metaclass.
+    Extracts the public methods from cls and adds them as abstract methods
+    to new_cls. new_cls is required to have a subclass of abc.ABCMeta as
+    metaclass.
 
     Intended usage::
         @extract_interface(cls)
@@ -69,17 +71,20 @@ def abstract_interface_from(cls, debug=False):
                     try:
                         func = method.im_func
                     except AttributeError:
-                        if debug: print name
+                        if debug:
+                            print name
                     else:
                         setattr(new_cls, name, abc.abstractmethod(stub(func)))
                         new_abstract_methods.add(name)
         else:
             # add the new abstract methods to the class
-            new_cls.__abstractmethods__ |=  new_abstract_methods
-            new_cls.__abstractmethods__ = frozenset(new_cls.__abstractmethods__)
+            new_cls.__abstractmethods__ |= new_abstract_methods
+            new_cls.__abstractmethods__ = frozenset(
+                new_cls.__abstractmethods__)
         return new_cls
 
     return processor
+
 
 class classproperty(property):
     """
@@ -94,8 +99,9 @@ class classproperty(property):
         doc = fget.__doc__ if doc is None else doc
         super(classproperty, self).__init__(fget, fset, fdel, doc)
 
-    def __get__(self, obj, type=None):
-        return self.fget.__get__(None, type)()
+    def __get__(self, obj, clstype=None):
+        return self.fget.__get__(None, clstype)()
+
 
 class before(object):
     def __init__(self, before_action, *args, **kwargs):
@@ -122,6 +128,7 @@ class before(object):
 class DelegationError(StandardError):
     pass
 
+
 class delegate(object):
     def __new__(cls, delegate_or_function):
         obj = super(delegate, cls).__new__(cls)
@@ -146,6 +153,7 @@ class delegate(object):
         functools.update_wrapper(aux, func)
         return aux
 
+
 def delegate_methods(methods, before=None, after=None):
     def add_delegates(cls):
         for name in methods:
@@ -159,6 +167,7 @@ def delegate_methods(methods, before=None, after=None):
             setattr(cls, name, method)
         return cls
     return add_delegates
+
 
 class delegate_all(object):
     DEFAULT_EXCLUDED = ('__init__', )
@@ -196,17 +205,19 @@ class delegate_all(object):
                     return method(*args, **kwargs)
         return method
 
-
     def build_property(self, delegate_name, property_name):
         def fget(self):
             delegate = getattr(self, delegate_name)
             return getattr(delegate, property_name)
+
         def fset(self, value):
             delegate = getattr(self, delegate_name)
             setattr(delegate, property_name, value)
+
         def fdel(self):
             delegate = getattr(self, delegate_name)
             delattr(delegate, property_name)
+
         return property(fget, fset, fdel)
 
     def build_methods_list(self, new_cls):
@@ -248,6 +259,7 @@ class delegate_all(object):
 
         self.remove_abstract_methods(method_names, new_cls)
         return new_cls
+
 
 def gather_from_ancestors(child_obj, attr_name, acc_type=set):
     child_type = child_obj if isinstance(child_obj, type) else type(child_obj)

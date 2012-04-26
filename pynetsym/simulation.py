@@ -183,7 +183,6 @@ class Simulation(object):
         for option_element in options:
             self._load_line(option_element, parser)
 
-
     def run(self, args=None, **kwargs):
         """
         Runs the simulation.
@@ -335,5 +334,3 @@ class Clock(core.Agent):
                 should_stop = self.ask_to_terminate().get()
                 if should_stop:
                     self.simulation_end()
-
-
