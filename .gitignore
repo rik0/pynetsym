@@ -15,3 +15,5 @@ include/*
 .DS_Store
 .ropeproject
 share/*
+.project
+.pydevproject
