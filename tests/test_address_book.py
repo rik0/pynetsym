@@ -1,5 +1,6 @@
 import unittest
-from pynetsym import core, storage
+from pynetsym import core
+from pynetsym import storage
 
 
 class FakeAgent(object):

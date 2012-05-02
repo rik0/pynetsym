@@ -4,12 +4,12 @@ import copy
 
 from pynetsym import core
 from pynetsym import timing
-from pynetsym import storage
 from pynetsym import metautil
 from pynetsym import geventutil
 from pynetsym import termination
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
+from pynetsym import storage
 
 
 class ConfigurationError(RuntimeError):
