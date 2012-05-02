@@ -2,18 +2,17 @@ import sys
 import argparse
 import copy
 
-from pynetsym import core
+from pynetsym import core, configuration
 from pynetsym import timing
 from pynetsym import storage
 from pynetsym import metautil
 from pynetsym import geventutil
 from pynetsym import termination
 from pynetsym import argutils
+from pynetsym.configuration import ConfigurationError
 from pynetsym.node_manager import NodeManager, IdManager
 
 
-class ConfigurationError(RuntimeError):
-    pass
 
 
 class Simulation(object):
@@ -126,65 +125,7 @@ class Simulation(object):
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
 
-    def _build_parser(self):
-        parser = argparse.ArgumentParser(
-            add_help=True,
-            description='Synthetic Network Generation Utility')
-        options = metautil.gather_from_ancestors(
-            self, 'command_line_options', list)
-        self._check_duplicated_options(options)
-        self._load_arguments(parser, options)
-        return parser
-
-    def _check_duplicated_options(self, options):
-        #TODO: try to fix so that more informative stuff happens
-        names = [option_line[0] for option_line in options]
-        names.extend(option_line[1] for option_line in options
-            if isinstance(option_line[1], basestring))
-        if len(names) > len(set(names)):
-            raise ConfigurationError(
-                "Duplicated option name somewhere.")
-
-    def parse_arguments(self, args):
-        """
-        Parses an array of command line options into a dictionary
-        @param args: the command line options to parse
-        @type args: [str]
-        @return: a dictionary of options
-        @rtype: {str:any}
-        """
-        parser = self._build_parser()
-        namespace = parser.parse_args(args)
-        arguments_dictionary = vars(namespace)
-        return arguments_dictionary
-
-    def _load_line(self, option_element, parser):
-        try:
-            short_option, long_option, params = option_element
-            parser.add_argument(short_option, long_option, **params)
-        except ValueError:
-            try:
-                long_option, params = option_element
-                parser.add_argument(long_option, **params)
-            except ValueError:
-                parser.add_argument(option_element[0])
-
-    def _load_arguments(self, parser, options):
-        """
-        Loads options sequence into parser.
-
-        Each option line is in the form:
-            1. (short_option_name, long_option_name, parameters)
-            2. (long_option_name, parameters)
-
-        @param parser: the parser to configure
-        @type parser: argparse.ArgumentParser
-        @param options: sequence of options
-        """
-        for option_element in options:
-            self._load_line(option_element, parser)
-
-    def run(self, args=None, **kwargs):
+    def run(self, args=None, force_cli=False, **kwargs):
         """
         Runs the simulation.
         @param args: a string of command line options parsed with
@@ -208,12 +149,16 @@ class Simulation(object):
             args and keywords arguments (although working) is strongly
             discouraged.
         """
-        if not args:
-            args = [] if kwargs else sys.argv[1:]
-        else:
-            args = args.split()
-        cli_args_dict = self.parse_arguments(args)
-        cli_args_dict.update(kwargs)
+        options = metautil.gather_from_ancestors(
+            self, 'command_line_options', list)
+        configuration_manager = configuration.ConfigurationManager(options)
+        if (args is None and not kwargs) or force_cli:
+            configuration_manager.consider_command_line()
+        configuration_manager.consider_list(args)
+
+
+        configuration_manager.consider_dct(kwargs)
+        cli_args_dict = configuration_manager.process()
 
         simulation_options = argutils.extract_options(
             cli_args_dict, self.simulation_options)

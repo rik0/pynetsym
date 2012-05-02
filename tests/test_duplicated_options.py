@@ -14,12 +14,15 @@ class DummySimulationLong(simulation.Simulation):
 
 
 class DuplicatedOptions(unittest.TestCase):
+    def setUp(self):
+        self.empty_arguments = []
+
     def testShortDuplicated(self):
         self.assertRaises(
                 simulation.ConfigurationError,
-                DummySimulationShort().run)
+                DummySimulationShort().run, args=self.empty_arguments)
 
     def testLongDuplicated(self):
         self.assertRaises(
                 simulation.ConfigurationError,
-                DummySimulationLong().run)
+                DummySimulationLong().run, args=self.empty_arguments)

@@ -8,6 +8,7 @@ class TestBA(unittest.TestCase):
         steps = 1000
         starting_connections = 20
 
+        # FIXME: we have a bug starting_edges, not starting_connections!
         sim = barabasi_albert.BA()
         sim.run(
                 network_size=network_size,
