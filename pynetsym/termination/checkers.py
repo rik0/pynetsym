@@ -23,7 +23,7 @@ class TerminationChecker(core.Agent):
         else:
             return False
 
-    def _run(self):
+    def run_agent(self):
         while self.active:
             message, result = self.read()
             self.process(message, result)

@@ -1,6 +1,3 @@
-from pynetsym.metautil import delegate, delegate_all
-from pynetsym.notifyutil import notifier, notifies
-
 import abc
 import itertools as it
 import pynetsym.rndutil
@@ -148,46 +145,6 @@ class GraphWrapper(object):
         Return a collection of all the nodes in the network.
         """
         pass
-
-
-@notifier
-@delegate_all(GraphWrapper, 'delegate', include_specials=True)
-class NotifyingGraphWrapper(GraphWrapper):
-    ADD = 'add'
-    REMOVE = 'remove'
-    MODIFY = 'modify'
-
-    NODE = 'node'
-    EDGE = 'edge'
-
-    def __init__(self, delegate):
-        self.delegate = delegate
-
-    @notifies(ADD, NODE)
-    @delegate
-    def add_node(self, identifier, agent):
-        pass
-
-    @notifies(ADD, EDGE)
-    @delegate
-    def add_edge(self, source, target):
-        pass
-
-    @notifies(REMOVE, EDGE)
-    @delegate
-    def remove_egde(self, source, target):
-        pass
-
-    @notifies(REMOVE, NODE)
-    @delegate
-    def remove_node(self, identifier):
-        pass
-
-    @notifies(MODIFY, NODE)
-    @delegate
-    def switch_node(self, identifier, node, keep_contacts=False):
-        pass
-
 
 
 try:

@@ -76,6 +76,18 @@ class AddressBook(object):
         else:
             raise TypeError("Identifiers must be strings or integers")
 
+    def unregister(self, identifier):
+        agent = self.resolve(identifier)
+        if isinstance(identifier, basestring):
+            del self.name_registry[identifier]
+        elif isinstance(identifier, numbers.Integral):
+            if identifier in self.graph:
+                raise AddressingError(
+                    ("Could not rebind agent "
+                        "%r to identifier %r.") % (agent, identifier))
+            else:
+                self.graph.add_node(identifier, agent)
+
     def resolve(self, identifier):
         """
         Resolves :param: identifier to the actual agent.
@@ -123,7 +135,6 @@ class Agent(gevent.Greenlet):
         super(Agent, self).__init__()
         self._id = identifier
         self._address_book = address_book
-        self._address_book.register(identifier, self)
         self._default_queue = queue.Queue()
         self._queue = self._default_queue
 
@@ -146,8 +157,19 @@ class Agent(gevent.Greenlet):
     def sleep(self, seconds):
         gevent.sleep(seconds)
 
-    def _run(self):
+    def register(self):
+        self._address_book.register(self.id, self)
+
+    def unregister(self):
+        self._address_book.unregister(self.id)
+
+    def run_agent(self):
         self.run_loop()
+
+    def _run(self):
+        self.register()
+        self.run_agent()
+        self.unregister()
 
     def read(self):
         """

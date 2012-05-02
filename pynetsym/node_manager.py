@@ -20,12 +20,6 @@ class IdManager(object):
         """
         return self.store.pop()
 
-    def node_added(self, event, kind, source, identifier, _node):
-        self.store.mark(identifier)
-
-    def node_removed(self, event, kind, source, identifier):
-        self.free_identifier(identifier)
-
     def free_identifier(self, identifier):
         self.store.unmark(identifier)
 
@@ -100,6 +94,10 @@ class NodeManager(core.Agent):
         print >> sys.stderr, "Node failed: {}\n{}".format(
                 node, node.exception)
         self.failures.append(node)
+        self.node_cleanup(node)
+
+    def node_cleanup(self, node):
+        return self.id_manager.free_identifier(node.id)
 
     def node_terminated_hook(self, node):
         """
@@ -109,7 +107,7 @@ class NodeManager(core.Agent):
         @type node: Node
 
         """
-        pass
+        self.node_cleanup(node)
 
 
 class Configurator(core.Agent):
@@ -154,7 +152,7 @@ class Configurator(core.Agent):
                 self.send(identifier, 'initialize')
         self.kill()
 
-    def _run(self):
+    def run_agent(self):
         self.setup()
         self.run_loop()
 
