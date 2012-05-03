@@ -1,3 +1,4 @@
+from pynetsym import configuration
 from pynetsym import simulation
 
 import unittest
@@ -19,10 +20,10 @@ class DuplicatedOptions(unittest.TestCase):
 
     def testShortDuplicated(self):
         self.assertRaises(
-                simulation.ConfigurationError,
+                configuration.ConfigurationError,
                 DummySimulationShort().run, args=self.empty_arguments)
 
     def testLongDuplicated(self):
         self.assertRaises(
-                simulation.ConfigurationError,
+                configuration.ConfigurationError,
                 DummySimulationLong().run, args=self.empty_arguments)
