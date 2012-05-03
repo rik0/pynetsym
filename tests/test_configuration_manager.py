@@ -10,7 +10,6 @@ class TestConfigurationManager(TestCase):
             ('--alpha', dict(default=default_value)),
         )
         configuration_manager = configuration.ConfigurationManager(options)
-        configuration_manager.consider('')
         arguments = configuration_manager.process()
         self.assertDictEqual(dict(alpha=default_value), arguments)
 
