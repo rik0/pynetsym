@@ -257,7 +257,7 @@ class Node(Agent):
         @param address_book: the address book where we want to register
         @type address_book: AddressBook
         @param graph: the graph backing the social network
-        @type graph: networkx.Graph
+        @type graph: storage.GraphWrapper
         @return: the Node
         """
         super(Node, self).__init__(identifier, address_book)

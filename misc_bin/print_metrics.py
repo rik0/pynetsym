@@ -3,6 +3,8 @@ import argparse
 import networkx as nx
 
 from os import path
+
+# TODO: decide what to do
 from matplotlib import pyplot as plt
 import pynetsym
 
@@ -101,8 +103,6 @@ def process_network(G, namespace):
             plt.show()
         else:
             plt.save_fig(namespace.degree_distribution_out)
-
-
 
 def main(namespace):
     for network_path in namespace.paths:

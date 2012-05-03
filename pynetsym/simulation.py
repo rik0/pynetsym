@@ -10,8 +10,7 @@ from pynetsym import termination
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym import storage
-
-
+from pynetsym.storage.basic import NotifyingGraphWrapper
 
 
 class Simulation(object):
@@ -113,13 +112,13 @@ class Simulation(object):
         ## deepcopy: no object sharing between different simulation
         ## executions!
         graph_options = copy.deepcopy(graph_options)
-        self.graph = storage.NotifyingGraphWrapper(
+        self.graph = NotifyingGraphWrapper(
             self.graph_type(**graph_options))
         self.id_manager = IdManager()
         self.graph.register_observer(
             self.id_manager.node_removed,
-            storage.NotifyingGraphWrapper.REMOVE,
-            storage.NotifyingGraphWrapper.NODE)
+            NotifyingGraphWrapper.REMOVE,
+            NotifyingGraphWrapper.NODE)
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)

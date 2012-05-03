@@ -1,8 +1,9 @@
 import math
 import random
 import networkx
-from numpy import cumsum, sum
 
+# TODO: decide what to do with this
+from numpy import cumsum, sum
 
 def ccdf(dist):
     return 1 - (cumsum(dist, dtype=float) / sum(dist))
