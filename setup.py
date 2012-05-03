@@ -11,12 +11,10 @@ long_description = open(README).read() + "\n\n"
 
 GENERATION_MODELS_DIR = 'pynetsym/generation_models'
 
-
-def find_generation_models():
-    scripts = glob.glob(path.join(GENERATION_MODELS_DIR, '*.py'))
-    scripts.remove(path.join(GENERATION_MODELS_DIR, '__init__.py'))
-    return scripts
-
+# def find_generation_models():
+#     scripts = glob.glob(path.join(GENERATION_MODELS_DIR, '*.py'))
+#     scripts.remove(path.join(GENERATION_MODELS_DIR, '__init__.py'))
+#     return scripts
 
 setup(
     name='pynetsym', version=version,
@@ -36,8 +34,9 @@ setup(
     url="https://github.com/rik0/pynetsym",
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    scripts=find_generation_models(),
+    # scripts=find_generation_models(),
     install_requires=[
-        'decorator',
+        'decorator', 'pytest', 'gevent',
+        'networkx', 'python-igraph'
     ],
 )
