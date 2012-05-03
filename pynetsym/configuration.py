@@ -1,3 +1,4 @@
+import collections
 import argparse
 import sys
 
@@ -5,23 +6,16 @@ import sys
 class ConfigurationError(RuntimeError):
     pass
 
-class _LineTask(object):
-    def __init__(self, parser, line):
-        self.line = line
-        self.parser = parser
-
-    def process(self):
-        namespace = self.parser.parse_args(self.line.split())
-        return vars(namespace)
 
 class _ListTask(object):
-    def __init__(self, parser, list):
-        self.lst = list
+    def __init__(self, parser, lst):
+        self.lst = lst
         self.parser = parser
 
     def process(self):
         namespace = self.parser.parse_args(self.lst)
         return vars(namespace)
+
 
 class _DictTask(object):
     def __init__(self, parser, dct):
@@ -31,29 +25,44 @@ class _DictTask(object):
     def process(self):
         return dict(self.dct)
 
+
 class ConfigurationManager(object):
     def __init__(self, option_description):
         self.option_description = option_description
         self._check_duplicated_options(self.option_description)
         self.tasks = []
         self._build_parser()
+        self._consider_defaults()
 
     def consider_command_line(self):
         self.tasks.append(_ListTask(self.parser, sys.argv))
 
-    def consider_line(self, line):
-        if line:
-            self.tasks.append(_LineTask(self.parser, line))
+    def consider(self, entity):
+        if isinstance(entity, collections.Mapping):
+            self._consider_dict(entity)
+        elif isinstance(entity, basestring):
+            self._consider_seq(entity.split())
+        elif hasattr(entity, 'read'):
+            self._consider_file(entity)
+        elif isinstance(entity, collections.Sequence):
+            self._consider_seq(entity)
+        elif entity is None:
+            pass
+        else:
+            raise TypeError("Don't know what to do with %s" % entity)
 
-    def consider_list(self, lst):
-        if lst:
-            self.tasks.append(_ListTask(self.parser, lst))
+    def _consider_defaults(self):
+        self.tasks.append(_ListTask(self.parser, []))
 
-    def consider_dct(self, dct):
+    def _consider_dict(self, dct):
         if dct:
             self.tasks.append(_DictTask(self.parser, dct))
 
-    def consider_file(self, file_handle):
+    def _consider_seq(self, seq):
+        if seq:
+            self.tasks.append(_ListTask(self.parser, seq))
+
+    def _consider_file(self, file_handle):
         raise NotImplementedError()
 
     def _build_parser(self):

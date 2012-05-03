@@ -1,15 +1,14 @@
 import sys
-import argparse
 import copy
 
-from pynetsym import core, configuration
+from pynetsym import core
+from pynetsym import configuration
 from pynetsym import timing
 from pynetsym import storage
 from pynetsym import metautil
 from pynetsym import geventutil
 from pynetsym import termination
 from pynetsym import argutils
-from pynetsym.configuration import ConfigurationError
 from pynetsym.node_manager import NodeManager, IdManager
 
 
@@ -154,10 +153,8 @@ class Simulation(object):
         configuration_manager = configuration.ConfigurationManager(options)
         if (args is None and not kwargs) or force_cli:
             configuration_manager.consider_command_line()
-        configuration_manager.consider_list(args)
-
-
-        configuration_manager.consider_dct(kwargs)
+        configuration_manager.consider(args)
+        configuration_manager.consider(kwargs)
         cli_args_dict = configuration_manager.process()
 
         simulation_options = argutils.extract_options(
