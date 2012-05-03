@@ -37,6 +37,7 @@ setup(
     # scripts=find_generation_models(),
     install_requires=[
         'decorator', 'pytest', 'gevent',
-        'networkx', 'python-igraph'
+        'networkx', 'python-igraph',
+        'neo4j-embedded'
     ],
 )
