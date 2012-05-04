@@ -3,7 +3,7 @@ import types
 from pynetsym.storage.basic import GraphError, GraphWrapper
 
 try:
-    import igraph_impl
+    import igraph
 except ImportError, igraph_import_exception:
     igraph = types.ModuleType('igraph', 'Fake module')
 
