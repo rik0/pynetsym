@@ -50,3 +50,4 @@ class BA(simulation.Simulation):
 if __name__ == '__main__':
     sim = BA()
     sim.run()
+    sim.output_processor(igraph.Graph.write, 'ba_%d_%d.graphml' % (sim.network_size, sim.steps))

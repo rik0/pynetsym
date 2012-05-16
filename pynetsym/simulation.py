@@ -156,9 +156,9 @@ class Simulation(object):
         configuration_manager.consider(kwargs)
         cli_args_dict = configuration_manager.process()
 
-        simulation_options = argutils.extract_options(
-            cli_args_dict, self.simulation_options)
-        vars(self).update(simulation_options)
+#        simulation_options = argutils.extract_options(
+#            cli_args_dict, self.simulation_options)
+        vars(self).update(cli_args_dict)
 
         address_book = core.AddressBook(self.graph)
         termination_checker = termination.TerminationChecker(
@@ -189,6 +189,8 @@ class Simulation(object):
     def exception_hook(self, node):
         raise node.exception
 
+    def output_processor(self, processor, *additional_arguments):
+        self.graph.output_processor(processor, *additional_arguments)
 
 class Activator(core.Agent):
     """

@@ -144,6 +144,9 @@ class GraphWrapper(object):
         """
         pass
 
+    def output_processor(self, processor, *additional_arguments):
+        processor(self.handle, *additional_arguments)
+
 
 @notifier
 @delegate_all(GraphWrapper, 'delegate', include_specials=True)

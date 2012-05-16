@@ -32,3 +32,13 @@ def approximate_cpl(graph, q=0.5, delta=0.15, eps=0.05):
     averages.sort()
     median_index = int(len(averages) * q + 1)
     return averages[median_index]
+
+def trivial_power_law_estimator(dataset, x0=None):
+    if x0 is None:
+        x0 = min(dataset)
+        xs = dataset
+    else:
+        xs = [x for x in dataset if x >= x0]
+
+    s = sum(math.log(x/x0) for x in xs)
+    return 1. + len(dataset) / s
