@@ -41,7 +41,7 @@ class BA(simulation.Simulation):
     activator = Activator
 
     graph_type = storage.IGraphWrapper
-    graph_options = dict(graph=igraph.Graph(0))
+    graph_options = dict(graph=igraph.Graph(0, directed=True))
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
@@ -50,4 +50,5 @@ class BA(simulation.Simulation):
 if __name__ == '__main__':
     sim = BA()
     sim.run()
-    sim.output_processor(igraph.Graph.write, 'ba_%d_%d.graphml' % (sim.network_size, sim.steps))
+    sim.output_processor(igraph.Graph.write, 'ba_%d_%d_%d.graphml' %
+            (sim.network_size, sim.steps, sim.starting_edges))

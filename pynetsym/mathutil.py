@@ -3,7 +3,7 @@ import random
 import networkx
 
 # TODO: decide what to do with this
-from numpy import cumsum, sum
+from numpy import cumsum, sum, zeros
 
 def ccdf(dist):
     return 1 - (cumsum(dist, dtype=float) / sum(dist))
@@ -42,3 +42,11 @@ def trivial_power_law_estimator(dataset, x0=None):
 
     s = sum(math.log(x/x0) for x in xs)
     return 1. + len(dataset) / s
+
+def degrees_to_hist(dct):
+    xs = dct.values()
+    xs.sort()
+    vals = zeros(xs[-1] + 1, dtype=int)
+    for val in xs:
+        vals[val] += 1
+    return vals

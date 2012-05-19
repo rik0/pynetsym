@@ -155,7 +155,12 @@ class Agent(gevent.Greenlet):
         @attention: It is not really meant to be called directly.
         @return: (Message, event.AsyncResult)
         """
-        return self._default_queue.get()
+        entry = self._default_queue.get()
+        # self.log_received(entry[0])
+        return entry
+
+    def log_received(self, msg):
+        print 'Got', msg.payload, 'from', msg.sender, '(', self.id, ')'
 
     ## TODO: absolutely change the name
     @property
