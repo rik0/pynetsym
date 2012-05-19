@@ -4,6 +4,7 @@ import inspect
 import types
 import decorator
 
+
 def copy_doc(cls):
     """
     Copy documentation from method with same name of cls.

@@ -142,7 +142,7 @@ class Simulation(object):
         vars(self).update(self._cli_args_dict)
         self._set_parameters = True
 
-    def setup_parameters(self, args, force_cli, kwargs):
+    def setup_parameters(self, args=None, force_cli=False, **kwargs):
         cli_args_dict = self.build_parameters(args, force_cli, kwargs)
         self.set_parameters(cli_args_dict)
 

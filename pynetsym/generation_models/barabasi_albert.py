@@ -41,7 +41,7 @@ class BA(simulation.Simulation):
     activator = Activator
 
     graph_type = storage.IGraphWrapper
-    graph_options = dict(graph=igraph.Graph(0, directed=True))
+    graph_options = dict(graph=igraph.Graph(0))
 
     class configurator(node_manager.SingleNodeConfigurator):
         node_cls = Node
