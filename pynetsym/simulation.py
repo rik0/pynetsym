@@ -119,9 +119,30 @@ class Simulation(object):
             self.id_manager.node_removed,
             NotifyingGraphWrapper.REMOVE,
             NotifyingGraphWrapper.NODE)
+        self._set_parameters = False
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
+
+    @classmethod
+    def build_parameters(cls, args, force_cli, kwargs):
+        options = metautil.gather_from_ancestors(
+            cls, 'command_line_options', list)
+        configuration_manager = configuration.ConfigurationManager(options)
+        if (args is None and not kwargs) or force_cli:
+            configuration_manager.consider_command_line()
+        configuration_manager.consider(args)
+        configuration_manager.consider(kwargs)
+        cli_args_dict = configuration_manager.process()
+        return cli_args_dict
+
+    def set_parameters(self, cli_args_dict):
+        vars(self).update(cli_args_dict)
+        self._set_parameters = True
+
+    def setup_parameters(self, args, force_cli, kwargs):
+        cli_args_dict = self.build_parameters(args, force_cli, kwargs)
+        self.set_parameters(cli_args_dict)
 
     def run(self, args=None, force_cli=False, **kwargs):
         """
@@ -147,18 +168,10 @@ class Simulation(object):
             args and keywords arguments (although working) is strongly
             discouraged.
         """
-        options = metautil.gather_from_ancestors(
-            self, 'command_line_options', list)
-        configuration_manager = configuration.ConfigurationManager(options)
-        if (args is None and not kwargs) or force_cli:
-            configuration_manager.consider_command_line()
-        configuration_manager.consider(args)
-        configuration_manager.consider(kwargs)
-        cli_args_dict = configuration_manager.process()
-
-#        simulation_options = argutils.extract_options(
-#            cli_args_dict, self.simulation_options)
-        vars(self).update(cli_args_dict)
+        if not self._set_parameters:
+            self.setup_parameters(args, force_cli, kwargs)
+        else:
+            self.set_parameters(kwargs)
 
         address_book = core.AddressBook(self.graph)
         termination_checker = termination.TerminationChecker(
