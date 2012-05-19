@@ -155,7 +155,12 @@ class Agent(gevent.Greenlet):
         @attention: It is not really meant to be called directly.
         @return: (Message, event.AsyncResult)
         """
-        return self._default_queue.get()
+        entry = self._default_queue.get()
+        # self.log_received(entry[0])
+        return entry
+
+    def log_received(self, msg):
+        print 'Got', msg.payload, 'from', msg.sender, '(', self.id, ')'
 
     ## TODO: absolutely change the name
     @property
@@ -257,7 +262,7 @@ class Node(Agent):
         @param address_book: the address book where we want to register
         @type address_book: AddressBook
         @param graph: the graph backing the social network
-        @type graph: networkx.Graph
+        @type graph: storage.GraphWrapper
         @return: the Node
         """
         super(Node, self).__init__(identifier, address_book)

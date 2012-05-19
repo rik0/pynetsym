@@ -4,14 +4,13 @@ import copy
 from pynetsym import core
 from pynetsym import configuration
 from pynetsym import timing
-from pynetsym import storage
 from pynetsym import metautil
 from pynetsym import geventutil
 from pynetsym import termination
 from pynetsym import argutils
 from pynetsym.node_manager import NodeManager, IdManager
-
-
+from pynetsym import storage
+from pynetsym.storage.basic import NotifyingGraphWrapper
 
 
 class Simulation(object):
@@ -113,13 +112,13 @@ class Simulation(object):
         ## deepcopy: no object sharing between different simulation
         ## executions!
         graph_options = copy.deepcopy(graph_options)
-        self.graph = storage.NotifyingGraphWrapper(
+        self.graph = NotifyingGraphWrapper(
             self.graph_type(**graph_options))
         self.id_manager = IdManager()
         self.graph.register_observer(
             self.id_manager.node_removed,
-            storage.NotifyingGraphWrapper.REMOVE,
-            storage.NotifyingGraphWrapper.NODE)
+            NotifyingGraphWrapper.REMOVE,
+            NotifyingGraphWrapper.NODE)
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
@@ -157,9 +156,9 @@ class Simulation(object):
         configuration_manager.consider(kwargs)
         cli_args_dict = configuration_manager.process()
 
-        simulation_options = argutils.extract_options(
-            cli_args_dict, self.simulation_options)
-        vars(self).update(simulation_options)
+#        simulation_options = argutils.extract_options(
+#            cli_args_dict, self.simulation_options)
+        vars(self).update(cli_args_dict)
 
         address_book = core.AddressBook(self.graph)
         termination_checker = termination.TerminationChecker(
@@ -190,6 +189,8 @@ class Simulation(object):
     def exception_hook(self, node):
         raise node.exception
 
+    def output_processor(self, processor, *additional_arguments):
+        self.graph.output_processor(processor, *additional_arguments)
 
 class Activator(core.Agent):
     """

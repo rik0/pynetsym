@@ -1,5 +1,6 @@
 from unittest import TestCase
-from pynetsym import core, storage
+from pynetsym import core
+from pynetsym import storage
 
 
 class Agent(core.Agent):

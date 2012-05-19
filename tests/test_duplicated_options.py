@@ -1,28 +1,27 @@
+from pynetsym import configuration
+from pynetsym import metautil
 from pynetsym import simulation
 
+import py
 import unittest
 
 
 class DummySimulationShort(simulation.Simulation):
     command_line_options = (
-      ('-o', '--orcs', dict()),)
+      ('-s', '--super', dict()),)
 
 
 class DummySimulationLong(simulation.Simulation):
     command_line_options = (
-      ('--output',  dict()),)
+      ('--steps',  dict()),)
 
+@py.test.mark.parametrize(("cls", ), [
+    (DummySimulationShort, ),
+    (DummySimulationLong, ),
+])
+def test_duplicated_options(cls):
+    empty_arguments = []
+    options = metautil.gather_from_ancestors(cls, 'command_line_options', list)
 
-class DuplicatedOptions(unittest.TestCase):
-    def setUp(self):
-        self.empty_arguments = []
-
-    def testShortDuplicated(self):
-        self.assertRaises(
-                simulation.ConfigurationError,
-                DummySimulationShort().run, args=self.empty_arguments)
-
-    def testLongDuplicated(self):
-        self.assertRaises(
-                simulation.ConfigurationError,
-                DummySimulationLong().run, args=self.empty_arguments)
+    py.test.raises(configuration.ConfigurationError,
+        configuration.ConfigurationManager, options)

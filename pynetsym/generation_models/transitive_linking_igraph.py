@@ -5,6 +5,7 @@ import random
 from pynetsym import core
 from pynetsym import node_manager
 from pynetsym import simulation
+from pynetsym import storage
 
 
 class Node(core.Node):
@@ -63,7 +64,7 @@ class Node(core.Node):
 
 
 class TL(simulation.Simulation):
-    graph_type = pynetsym.storage.IGraphWrapper
+    graph_type = storage.IGraphWrapper
     graph_options = dict(graph=igraph.Graph(0))
 
     command_line_options = (

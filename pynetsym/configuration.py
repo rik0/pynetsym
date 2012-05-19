@@ -35,7 +35,7 @@ class ConfigurationManager(object):
         self._consider_defaults()
 
     def consider_command_line(self):
-        self.tasks.append(_ListTask(self.parser, sys.argv))
+        self.tasks.append(_ListTask(self.parser, sys.argv[1:]))
 
     def consider(self, entity):
         if isinstance(entity, collections.Mapping):
