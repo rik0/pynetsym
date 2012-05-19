@@ -2,6 +2,7 @@ import abc
 import functools
 import inspect
 import types
+import decorator
 
 def copy_doc(cls):
     """

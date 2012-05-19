@@ -119,6 +119,7 @@ class Simulation(object):
             self.id_manager.node_removed,
             NotifyingGraphWrapper.REMOVE,
             NotifyingGraphWrapper.NODE)
+        self._cli_args_dict = {}
         self._set_parameters = False
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
@@ -137,7 +138,8 @@ class Simulation(object):
         return cli_args_dict
 
     def set_parameters(self, cli_args_dict):
-        vars(self).update(cli_args_dict)
+        self._cli_args_dict.update(cli_args_dict)
+        vars(self).update(self._cli_args_dict)
         self._set_parameters = True
 
     def setup_parameters(self, args, force_cli, kwargs):
@@ -178,7 +180,7 @@ class Simulation(object):
             self.graph, address_book,
             termination.count_down(self.steps))
         configurator = self.configurator(
-            address_book, **cli_args_dict)
+            address_book, **self._cli_args_dict)
         node_manager = NodeManager(
             self.graph, address_book,
             self.id_manager)
@@ -188,7 +190,7 @@ class Simulation(object):
         configurator.join()
 
         activator = self.activator(self.graph, address_book,
-                                   **cli_args_dict)
+                                   **self._cli_args_dict)
         activator.start()
         clock = self.clock(address_book)
         with timing.Timer(self.callback):
@@ -204,6 +206,7 @@ class Simulation(object):
 
     def output_processor(self, processor, *additional_arguments):
         self.graph.output_processor(processor, *additional_arguments)
+
 
 class Activator(core.Agent):
     """
