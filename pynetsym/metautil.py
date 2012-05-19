@@ -260,6 +260,16 @@ class delegate_all(object):
 
 
 def gather_from_ancestors(child_obj, attr_name, acc_type=set):
+    """
+    Accumulate all the options sets defined over the class hierarchy.
+
+    @param child_obj: an object instance or a class from which to start 
+        gathering. If is an instance, its type is obtained.
+    @param attr_name: the name of the attribute to accumulate.
+    @type attr_name: str
+    @param acc_type: a factory of the type of objects were to accumulate stuff.
+        Examples are sets or lists (depending on the intended semantics).
+    """
     child_type = child_obj if isinstance(child_obj, type) else type(child_obj)
 
     reverted_mro = reversed(child_type.__mro__)
