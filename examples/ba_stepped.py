@@ -9,7 +9,6 @@ from pynetsym import core
 from pynetsym import simulation
 from pynetsym import node_manager
 
-import gevent
 
 def barabasi_albert_stepper(n, m, seed=None):
     if m < 1 or  m >= n:
@@ -72,9 +71,12 @@ class Activator(simulation.Activator):
 
 
 class BA(simulation.Simulation):
+    default_starting_edges = 5
     command_line_options = (
-        ('-n', '--network-size', dict(default=100, type=int)),
-        ('-m', '--starting-edges', dict(default=5, type=int)),
+        ('-n', '--starting-network-size',
+            dict(default=default_starting_edges, type=int)),
+        ('-m', '--starting-edges',
+            dict(default=default_starting_edges, type=int)),
         ('--seed', dict(default=None, type=int)))
 
     activator_type = Activator
@@ -84,13 +86,10 @@ class BA(simulation.Simulation):
         node_options = {'stepper'}
 
     def set_up(self):
+        total_network_size = self.starting_network_size + self.steps
         stepper = barabasi_albert_stepper(
-            self.network_size, self.starting_edges, self.seed)
+            total_network_size, self.starting_edges, self.seed)
         self.add_parameter('stepper', stepper)
-        print self.get_parameters()
-        self.add_parameter(
-            'network_size', self.network_size - self.starting_edges)
-        print self.get_parameters()
 
 if __name__ == '__main__':
     sim = BA()
