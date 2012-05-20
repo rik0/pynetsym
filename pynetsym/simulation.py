@@ -108,6 +108,9 @@ class Simulation(object):
         graph_type setting the attribute graph_options to a dictionary.
         @return:
         """
+        object.__setattr__(self, '_simulation_parameters', {})
+        self._set_parameters = False
+
         graph_options = getattr(self, 'graph_options', {})
         ## deepcopy: no object sharing between different simulation
         ## executions!
@@ -119,11 +122,37 @@ class Simulation(object):
             self.id_manager.node_removed,
             NotifyingGraphWrapper.REMOVE,
             NotifyingGraphWrapper.NODE)
-        self._cli_args_dict = {}
-        self._set_parameters = False
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
+
+    def add_parameter(self, key, value):
+        self._simulation_parameters[key] = value
+
+    def remove_parameter(self, key):
+        self._simulation_parameters.pop(key)
+
+    def update_parameters(self, cli_args_dict):
+        self._simulation_parameters.update(cli_args_dict)
+
+    def __getattr__(self, name):
+        try:
+            return self._simulation_parameters[name]
+        except KeyError, e:
+            raise AttributeError(e.message)
+
+    def __setattr__(self, name, value):
+        if name in self._simulation_parameters:
+            raise AttributeError('Read only attribute %s.' % name)
+        else:
+            object.__setattr__(self, name, value)
+
+    def setup_parameters(self, args=None, force_cli=False, **kwargs):
+        cli_args_dict = self.build_parameters(args, force_cli, kwargs)
+        self.update_parameters(cli_args_dict)
+
+    def get_parameters(self):
+        return self._simulation_parameters.copy()
 
     @classmethod
     def build_parameters(cls, args, force_cli, kwargs):
@@ -137,14 +166,8 @@ class Simulation(object):
         cli_args_dict = configuration_manager.process()
         return cli_args_dict
 
-    def set_parameters(self, cli_args_dict):
-        self._cli_args_dict.update(cli_args_dict)
-        vars(self).update(self._cli_args_dict)
-        self._set_parameters = True
-
-    def setup_parameters(self, args=None, force_cli=False, **kwargs):
-        cli_args_dict = self.build_parameters(args, force_cli, kwargs)
-        self.set_parameters(cli_args_dict)
+    def set_up(self):
+        pass
 
     def run(self, args=None, force_cli=False, **kwargs):
         """
@@ -171,16 +194,18 @@ class Simulation(object):
             discouraged.
         """
         if not self._set_parameters:
-            self.setup_parameters(args, force_cli, kwargs)
+            self.setup_parameters(args, force_cli, **kwargs)
         else:
-            self.set_parameters(kwargs)
+            self.update_parameters(kwargs)
+
+        self.set_up()
 
         address_book = core.AddressBook(self.graph)
         termination_checker = termination.TerminationChecker(
             self.graph, address_book,
             termination.count_down(self.steps))
         configurator = self.configurator(
-            address_book, **self._cli_args_dict)
+            address_book, **self._simulation_parameters)
         node_manager = NodeManager(
             self.graph, address_book,
             self.id_manager)
@@ -190,7 +215,7 @@ class Simulation(object):
         configurator.join()
 
         activator = self.activator(self.graph, address_book,
-                                   **self._cli_args_dict)
+                                   **self._simulation_parameters)
         activator.start()
         clock = self.clock(address_book)
         with timing.Timer(self.callback):
