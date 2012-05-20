@@ -145,11 +145,7 @@ class Simulation(object):
         if name in self._simulation_parameters:
             raise AttributeError('Read only attribute %s.' % name)
         else:
-            try:
-                object.__setattr__(self, name, value)
-            except AttributeError, e:
-                print name, value
-                raise e
+            object.__setattr__(self, name, value)
 
     def setup_parameters(self, args=None, force_cli=False, **kwargs):
         cli_args_dict = self.build_parameters(args, force_cli, kwargs)
