@@ -5,7 +5,7 @@ from pynetsym.generation_models import barabasi_albert
 
 class BA(simulation.Simulation):
     command_line_options = (
-        ('-n', '--network-size', dict(default=100, type=int)),
+        ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('-m', '--starting-edges', dict(default=5, type=int)))
 
     activator_type = barabasi_albert.Activator

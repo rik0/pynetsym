@@ -83,7 +83,7 @@ class BPA(simulation.Simulation):
     activator_options = {'edges'}
 
     command_line_options = (
-        ('-n', '--network-size', dict(default=100, type=int)),
+        ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('--gamma', dict(default=0.01, type=float)),
         ('-p', '--probability', dict(default='1/3:1/3:1/3',
                                      type=distribution)),

@@ -4,19 +4,19 @@ from pynetsym.generation_models import barabasi_albert
 
 class TestBA(unittest.TestCase):
     def testRun(self):
-        network_size = 100
+        starting_network_size = 100
         steps = 1000
         starting_connections = 20
 
         # FIXME: we have a bug starting_edges, not starting_connections!
         sim = barabasi_albert.BA()
         sim.run(
-                network_size=network_size,
+                starting_network_size=starting_network_size,
                 steps=steps,
                 starting_connections=starting_connections)
         graph = sim.graph.handle
 
         self.assertEquals(
-               network_size + steps,
+               starting_network_size + steps,
                len(graph.vs))
 

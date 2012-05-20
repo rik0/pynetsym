@@ -8,10 +8,10 @@ from pynetsym import core
 class Node(core.Node):
     def __init__(self, identifier, address_book,
                  graph, rewiring_probability,
-                 lattice_connections, network_size):
+                 lattice_connections, starting_network_size):
         self.rewiring_probability = rewiring_probability
         self.lattice_connections = lattice_connections
-        self.network_size = network_size
+        self.starting_network_size = starting_network_size
         super(Node, self).__init__(identifier, address_book, graph)
 
     def activate(self):
@@ -32,7 +32,7 @@ class Node(core.Node):
 
     def initialize(self):
         for index in self.lattice_cw_neighbors():
-            self.link_to(index % self.network_size)
+            self.link_to(index % self.starting_network_size)
 
 
 class Activator(simulation.Activator):
@@ -48,7 +48,7 @@ class Activator(simulation.Activator):
 
 class WS(simulation.Simulation):
     command_line_options = (
-        ('-n', '--network-size', dict(default=100, type=int)),
+        ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('-k', '--lattice-connections', dict(default=2, type=int)),
         ('-p', '--rewiring-probability', dict(default=0.3, type=float)))
 
@@ -60,7 +60,7 @@ class WS(simulation.Simulation):
         node_options = {
                 "rewiring_probability",
                 "lattice_connections",
-                "network_size"}
+                "starting_network_size"}
         activator_options = {"lattice_connections"}
 
 if __name__ == '__main__':

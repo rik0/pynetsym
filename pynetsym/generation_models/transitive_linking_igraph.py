@@ -68,7 +68,7 @@ class TL(simulation.Simulation):
     graph_options = dict(graph=igraph.Graph(0))
 
     command_line_options = (
-        ('-n', '--network-size', dict(default=100, type=int)),
+        ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',

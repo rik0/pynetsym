@@ -152,7 +152,6 @@ class Configurator(core.Agent):
         if self.initialize:
             for identifier in self.nodes:
                 self.send(identifier, 'initialize')
-        self.kill()
 
     def _run(self):
         self.setup()
@@ -168,7 +167,7 @@ class SingleNodeConfigurator(Configurator):
     of the configurator) are created and are passed the arguments
     from additional_arguments specified in node_options.
     """
-    configurator_options = {"network_size"}
+    configurator_options = {"starting_network_size"}
 
     @metautil.classproperty
     def node_cls(self):
@@ -184,7 +183,9 @@ class SingleNodeConfigurator(Configurator):
         node_ids = geventutil.SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',
                        cls=self.node_cls, parameters=self.node_arguments)
-            for r in xrange(self.network_size)])
+            for _r in xrange(self.starting_network_size)])
         self.nodes = node_ids.get()
         self.initialize_nodes()
+        self.kill()
+
 
