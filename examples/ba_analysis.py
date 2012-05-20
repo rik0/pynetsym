@@ -12,15 +12,21 @@ Node = barabasi_albert.Node
 Activator = barabasi_albert.Activator
 BA = barabasi_albert.BA
 
-multipliers = [1, 10, 100, 1000]
-markers = ['+', 'x', '*', '.']
-colors = ['blue', 'red', 'green', 'cyan']
+multipliers = [1, 10, 100]
+markers = ['+', '*', '.']
+colors = ['blue', 'green', 'cyan']
+
+ba_color = 'red'
+ba_label = 'NetworkX Barabasi Albert'
+ba_marker = 'x'
 
 if __name__ == '__main__':
     directory_name = "ba_test_%d" % time.time()
     os.mkdir(directory_name)
 
-    F = plt.figure(figsize=(10, 4))
+    F_dst = plt.figure()
+    F_ccdf = plt.figure()
+    ba_graph = None
 
     for starting_size_multiplier, marker, color in zip(
             multipliers, markers, colors):
@@ -31,25 +37,42 @@ if __name__ == '__main__':
         filename = path.join(
             os.curdir,
             directory_name,
-            "%(steps)s_%(network_size)s_%(starting_edges)s.graphml" % vars(sim))
+            "%(steps)s_%(network_size)s_%(starting_edges)s.graphml" % vars(sim)
+        )
         sim.graph.handle.write(filename)
 
         label = '%d starting size' % sim.network_size
+        steps = sim.steps
+        starting_edges = sim.starting_edges
+
         del sim
 
         graph = nx.read_graphml(filename)
         dst = mathutil.degrees_to_hist(graph.degree())
         ccdf = mathutil.ccdf(dst)
 
-        plt.subplot(121)
-        plt.loglog(dst, marker=marker, color=color, linestyle='',
-            label=label)
+        if ba_graph is None:
+            ba_graph = nx.barabasi_albert_graph(
+                steps + starting_edges,
+                starting_edges)
 
-        plt.subplot(122)
-        plt.loglog(ccdf, color=color, label=label)
+            print 'Agent:', graph.number_of_nodes(),
+            print  graph.number_of_edges()
+            print 'PB:', ba_graph.number_of_nodes(),
+            print  ba_graph.number_of_edges()
 
-    plt.subplot(121)
-    plt.legend()
-    plt.savefig(path.join(os.curdir, directory_name, 'plt.png'),
+            ba_dst = mathutil.degrees_to_hist(ba_graph.degree())
+            F_dst.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
+                linestyle='', label=ba_label)
+            ba_ccdf = mathutil.ccdf(ba_dst)
+            F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
+
+        F_dst.gca().loglog(dst, marker=marker, color=color,
+            linestyle='', label=label)
+        F_ccdf.gca().loglog(ccdf, color=color, label=label)
+
+    F_dst.savefig(path.join(os.curdir, directory_name, 'dst.png'),
                 dpi=1000, format='png')
-    
+    F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
+                dpi=1000, format='png')
+
