@@ -169,6 +169,30 @@ class Simulation(object):
     def set_up(self):
         pass
 
+    def create_service_agents(self):
+        self.address_book = core.AddressBook(self.graph)
+        self.termination_checker = termination.TerminationChecker(self.graph,
+            self.address_book, termination.count_down(self.steps))
+        self.configurator = self.configurator(
+            self.address_book, **self._simulation_parameters)
+        self.node_manager = NodeManager(
+            self.graph, self.address_book,
+            self.id_manager)
+
+    def pre_configure_network(self):
+        self.termination_checker.start()
+        self.node_manager.start()
+        self.configurator.start()
+        self.configurator.join()
+
+    def create_simulation_agents(self):
+        self.activator = self.activator(self.graph, self.address_book, **self._simulation_parameters)
+        self.activator.start()
+        self.clock = self.clock(self.address_book)
+
+    def start_simulation(self):
+        self.clock.start()
+
     def run(self, args=None, force_cli=False, **kwargs):
         """
         Runs the simulation.
@@ -200,29 +224,14 @@ class Simulation(object):
 
         self.set_up()
 
-        address_book = core.AddressBook(self.graph)
-        termination_checker = termination.TerminationChecker(
-            self.graph, address_book,
-            termination.count_down(self.steps))
-        configurator = self.configurator(
-            address_book, **self._simulation_parameters)
-        node_manager = NodeManager(
-            self.graph, address_book,
-            self.id_manager)
-        termination_checker.start()
-        node_manager.start()
-        configurator.start()
-        configurator.join()
-
-        activator = self.activator(self.graph, address_book,
-                                   **self._simulation_parameters)
-        activator.start()
-        clock = self.clock(address_book)
+        self.create_service_agents()
+        self.pre_configure_network()
+        self.create_simulation_agents()
         with timing.Timer(self.callback):
-            clock.start()
+            self.start_simulation()
 
-            termination_checker.join()
-            if node_manager.failures:
+            self.termination_checker.join()
+            if self.node_manager.failures:
                 sys.exit(1)
             return self
 
