@@ -5,6 +5,7 @@ import networkx
 # TODO: decide what to do with this
 from numpy import cumsum, sum, zeros
 
+
 def ccdf(dist):
     return 1 - (cumsum(dist, dtype=float) / sum(dist))
 
@@ -33,6 +34,7 @@ def approximate_cpl(graph, q=0.5, delta=0.15, eps=0.05):
     median_index = int(len(averages) * q + 1)
     return averages[median_index]
 
+
 def trivial_power_law_estimator(dataset, x0=None):
     if x0 is None:
         x0 = min(dataset)
@@ -40,13 +42,19 @@ def trivial_power_law_estimator(dataset, x0=None):
     else:
         xs = [x for x in dataset if x >= x0]
 
-    s = sum(math.log(x/x0) for x in xs)
+    s = sum(math.log(x / x0) for x in xs)
     return 1. + len(dataset) / s
+
+
+def make_hist(xs):
+    vals = zeros(xs[-1] + 1, dtype=int)
+    for val in xs:
+        vals[val] += 1
+    return vals
+
 
 def degrees_to_hist(dct):
     xs = dct.values()
     xs.sort()
-    vals = zeros(xs[-1] + 1, dtype=int)
-    for val in xs:
-        vals[val] += 1
+    vals = make_hist(xs)
     return vals
