@@ -34,9 +34,12 @@ class Activator(simulation.Activator):
 
 
 class BA(simulation.Simulation):
+    default_starting_network_size = 5
     command_line_options = (
-        ('-n', '--starting-network-size', dict(default=100, type=int)),
-        ('-m', '--starting-edges', dict(default=5, type=int)))
+        ('-n', '--starting-network-size',
+            dict(default=default_starting_network_size, type=int)),
+        ('-m', '--starting-edges',
+            dict(default=default_starting_network_size, type=int)))
 
     activator_type = Activator
 
@@ -51,4 +54,4 @@ if __name__ == '__main__':
     sim = BA()
     sim.run()
     sim.output_processor(igraph.Graph.write, 'ba_%d_%d_%d.graphml' %
-            (sim.network_size, sim.steps, sim.starting_edges))
+            (sim.starting_network_size, sim.steps, sim.starting_edges))
