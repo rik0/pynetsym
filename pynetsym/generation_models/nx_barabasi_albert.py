@@ -8,9 +8,9 @@ class BA(simulation.Simulation):
         ('-n', '--network-size', dict(default=100, type=int)),
         ('-m', '--starting-edges', dict(default=5, type=int)))
 
-    activator = barabasi_albert.Activator
+    activator_type = barabasi_albert.Activator
 
-    class configurator(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.SingleNodeConfigurator):
         node_cls = barabasi_albert.Node
         node_options = {'starting_edges'}
 

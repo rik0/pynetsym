@@ -75,7 +75,7 @@ class TL(simulation.Simulation):
             const=lambda graph: graph.preferential_attachment_node(),
             default=lambda graph: graph.random_node())))
 
-    class configurator(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
 

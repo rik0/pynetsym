@@ -77,9 +77,9 @@ class BA(simulation.Simulation):
         ('-m', '--starting-edges', dict(default=5, type=int)),
         ('--seed', dict(default=None, type=int)))
 
-    activator = Activator
+    activator_type = Activator
 
-    class configurator(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {'stepper'}
 
@@ -90,6 +90,7 @@ class BA(simulation.Simulation):
         print self.get_parameters()
         self.add_parameter(
             'network_size', self.network_size - self.starting_edges)
+        print self.get_parameters()
 
 if __name__ == '__main__':
     sim = BA()

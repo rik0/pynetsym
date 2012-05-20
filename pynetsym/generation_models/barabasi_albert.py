@@ -38,12 +38,12 @@ class BA(simulation.Simulation):
         ('-n', '--network-size', dict(default=100, type=int)),
         ('-m', '--starting-edges', dict(default=5, type=int)))
 
-    activator = Activator
+    activator_type = Activator
 
     graph_type = storage.IGraphWrapper
     graph_options = dict(graph=igraph.Graph(0))
 
-    class configurator(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.SingleNodeConfigurator):
         node_cls = Node
         node_options = {'starting_edges'}
 

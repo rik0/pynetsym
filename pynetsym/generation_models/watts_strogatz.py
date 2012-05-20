@@ -52,9 +52,9 @@ class WS(simulation.Simulation):
         ('-k', '--lattice-connections', dict(default=2, type=int)),
         ('-p', '--rewiring-probability', dict(default=0.3, type=float)))
 
-    activator = Activator
+    activator_type = Activator
 
-    class configurator(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.SingleNodeConfigurator):
         initialize = True
         node_cls = Node
         node_options = {

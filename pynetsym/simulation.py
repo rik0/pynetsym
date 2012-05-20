@@ -20,20 +20,20 @@ class Simulation(object):
     Some parameters have to be overridden to customize behavior. Most of
     these parameters may be class parameters in the overridden class as well
     as instance variables. It is for example acceptable to define an
-    enclosed class `activator` that "satisfies" the need for an L{activator}
+    enclosed class `activator_type` that "satisfies" the need for an L{activator_type}
     attribute.
-        1. L{Simulation.activator}: the callable that creates the activator
+        1. L{Simulation.activator_type}: the callable that creates the activator_type
             for the simulation
         2. L{Simulation.graph_type}: the callable that creates the graph
             which holds the network.
-        3. L{Simulation.clock}: the callable that creates the clock in the
+        3. L{Simulation.clock_type}: the callable that creates the clock_type in the
             simulation
         4. L{Simulation.command_line_options}
-        5. L{Simulation.configurator}
+        5. L{Simulation.configurator_type}
 
-    Of these, L{Simulation.activator}, L{Simulation.graph_type},
+    Of these, L{Simulation.activator_type}, L{Simulation.graph_type},
     L{Simulation.command_line_options} and
-    L{Simulation.clock} have sensible default values (respectively,
+    L{Simulation.clock_type} have sensible default values (respectively,
     L{generation.Activator}, L{backend.NXGraphWrapper},
     a list of default options and L{generation.Clock}.
     The other arguments need to be supplied by the subclass.
@@ -47,10 +47,10 @@ class Simulation(object):
 
     The preferred way to deal with these options is like::
         class SimulationSubclass(Simulation):
-            class activator(Activator):
+            class activator_type(Activator):
                 # ...
 
-            class configurator(generation.SingleNodeConfigurator):
+            class configurator_type(generation.SingleNodeConfigurator):
                 node_cls = Node
                 node_options = {...}
                 activator_options = {...}
@@ -71,7 +71,7 @@ class Simulation(object):
     simulation_options = {"steps", "output", "format"}
 
     @metautil.classproperty
-    def activator(self):
+    def activator_type(self):
         """
         Factory used to create the Activator.
         @rtype: callable(graph, address_book)
@@ -87,15 +87,15 @@ class Simulation(object):
         return storage.NXGraphWrapper
 
     @metautil.classproperty
-    def clock(self):
+    def clock_type(self):
         """
-        Factory used to create the clock.
+        Factory used to create the clock_type.
         @rtype: callable(int steps, address_book) -> core.Clock
         """
         return Clock
 
     @metautil.classproperty
-    def configurator(self):
+    def configurator_type(self):
         """
         Returns the builder of the Configurator to be passed to NodeManager
         @rtype: callable
@@ -145,7 +145,11 @@ class Simulation(object):
         if name in self._simulation_parameters:
             raise AttributeError('Read only attribute %s.' % name)
         else:
-            object.__setattr__(self, name, value)
+            try:
+                object.__setattr__(self, name, value)
+            except AttributeError, e:
+                print name, value
+                raise e
 
     def setup_parameters(self, args=None, force_cli=False, **kwargs):
         cli_args_dict = self.build_parameters(args, force_cli, kwargs)
@@ -173,7 +177,7 @@ class Simulation(object):
         self.address_book = core.AddressBook(self.graph)
         self.termination_checker = termination.TerminationChecker(self.graph,
             self.address_book, termination.count_down(self.steps))
-        self.configurator = self.configurator(
+        self.configurator_type = self.configurator_type(
             self.address_book, **self._simulation_parameters)
         self.node_manager = NodeManager(
             self.graph, self.address_book,
@@ -182,13 +186,14 @@ class Simulation(object):
     def pre_configure_network(self):
         self.termination_checker.start()
         self.node_manager.start()
-        self.configurator.start()
-        self.configurator.join()
+        self.configurator_type.start()
+        self.configurator_type.join()
 
     def create_simulation_agents(self):
-        self.activator = self.activator(self.graph, self.address_book, **self._simulation_parameters)
+        self.activator = self.activator_type(self.graph, self.address_book,
+            **self._simulation_parameters)
         self.activator.start()
-        self.clock = self.clock(self.address_book)
+        self.clock = self.clock_type(self.address_book)
 
     def start_simulation(self):
         self.clock.start()
@@ -253,7 +258,7 @@ class Activator(core.Agent):
     tick, simulation_ended and choose_node are meant to be overrode by
     implementations.
     """
-    name = 'activator'
+    name = 'activator_type'
     activator_options = {}
 
     def __init__(self, graph, address_book, **additional_arguments):
@@ -301,12 +306,12 @@ class Activator(core.Agent):
 
 
 class Clock(core.Agent):
-    name = 'clock'
+    name = 'clock_type'
     activator_can_terminate = False
 
     def __init__(self, address_book):
         super(Clock, self).__init__(self.name, address_book)
-        self.activator = address_book.resolve(Activator.name)
+        self.activator_type = address_book.resolve(Activator.name)
         self.active = True
 
     def send_tick(self):
