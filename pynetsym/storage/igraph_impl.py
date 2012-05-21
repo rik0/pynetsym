@@ -60,7 +60,10 @@ else:
                 if random_index < no_vertices:
                     return random_index
                 else:
-                    return self.graph.es[random_index - no_vertices].source
+                    if random.choice([True, False]):
+                        return self.graph.es[random_index - no_vertices].source
+                    else:
+                        return self.graph.es[random_index - no_vertices].target
 
         def remove_node(self, identifier):
             raise NotImplementedError()
