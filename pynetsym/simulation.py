@@ -1,16 +1,23 @@
-import sys
-import copy
-
-from pynetsym import core
-from pynetsym import configuration
-from pynetsym import timing
-from pynetsym import metautil
-from pynetsym import geventutil
-from pynetsym import termination
+from matplotlib import pyplot as plt
 from pynetsym import argutils
-from pynetsym.node_manager import NodeManager, IdManager
+from pynetsym import configuration
+from pynetsym import core
+from pynetsym import geventutil
+from pynetsym import metautil
 from pynetsym import storage
+from pynetsym import termination
+from pynetsym import mathutil
+
+from pynetsym import timing
+from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
+import copy
+import sys
+import time
+from os import path
+import os
+
+
 
 
 class Simulation(object):
@@ -291,6 +298,8 @@ class Activator(core.Agent):
         self.destroy_nodes()
         self.create_nodes()
         self.activate_nodes()
+        self.cooperate()
+        self.stuff()
 
     def nodes_to_activate(self):
         return [self.graph.random_node()]
@@ -300,6 +309,25 @@ class Activator(core.Agent):
 
     def nodes_to_create(self):
         return {}
+
+    tmp_directory = 'tmp_%d' % time.time()
+
+    def stuff(self):
+        pass
+#        if not hasattr(self, 'counter'):
+#            self.counter = 0
+#            os.mkdir(self.tmp_directory)
+#        else:
+#            self.counter += 1
+#        filename = 'frame%d.png' % self.counter
+#        filepath = path.join(self.tmp_directory, filename)
+#        fig = plt.figure(figsize=(5, 5))
+#        ax = fig.add_subplot(111)
+#        graph = self.graph.handle
+#        dst = mathutil.degrees_to_hist(graph.degree())
+#        ccdf = mathutil.ccdf(dst)
+#        ax.loglog(ccdf)
+#        fig.savefig(filepath)
 
 
 class Clock(core.Agent):
