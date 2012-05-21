@@ -7,15 +7,16 @@ from pynetsym import metautil
 from pynetsym import storage
 from pynetsym import termination
 from pynetsym import mathutil
-
 from pynetsym import timing
 from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
+
 import copy
 import sys
 import time
 from os import path
 import os
+import gevent
 
 
 
@@ -298,8 +299,10 @@ class Activator(core.Agent):
         self.destroy_nodes()
         self.create_nodes()
         self.activate_nodes()
-        self.cooperate()
-        self.stuff()
+        return self.should_terminate()
+
+    def should_terminate(self):
+        return False
 
     def nodes_to_activate(self):
         return [self.graph.random_node()]
@@ -338,6 +341,13 @@ class Clock(core.Agent):
         super(Clock, self).__init__(self.name, address_book)
         self.activator_type = address_book.resolve(Activator.name)
         self.active = True
+        self.observers = []
+
+    def register_observer(self, name):
+        self.observers.append(name)
+
+    def unregister_observer(self, name):
+        self.observers.remove(name)
 
     def send_tick(self):
         return self.send(Activator.name, 'tick')
@@ -350,8 +360,11 @@ class Clock(core.Agent):
             termination.TerminationChecker.name, 'check')
 
     def _run(self):
+        gevent.spawn(self.run_loop)
         while self.active:
             done = self.send_tick()
+            for observer in self.observers:
+                self.send(observer, 'ticked')
             if done.get() and self.activator_can_terminate:
                 self.simulation_end()
             else:
