@@ -13,7 +13,7 @@ class Node(core.Node):
         self.starting_edges = starting_edges
 
     def activate(self):
-        forbidden = set(self.graph.neighbors(self.id))
+        forbidden = set()
         forbidden.add(self.id)
         while self.starting_edges:
             random_node = self.graph.preferential_attachment_node()
@@ -53,5 +53,5 @@ class BA(simulation.Simulation):
 if __name__ == '__main__':
     sim = BA()
     sim.run()
-    sim.output_processor(igraph.Graph.write, 'ba_%d_%d_%d.graphml' %
-            (sim.starting_network_size, sim.steps, sim.starting_edges))
+#    sim.output_processor(igraph.Graph.write, 'ba_%d_%d_%d.graphml' %
+#            (sim.starting_network_size, sim.steps, sim.starting_edges))
