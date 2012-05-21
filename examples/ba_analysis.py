@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 
 import networkx as nx
 
-# from pynetsym.generation_models import barabasi_albert
-import ba_stepped2 as barabasi_albert
+from pynetsym.generation_models import barabasi_albert
+#from . import ba_stepped2 as barabasi_albert
 from pynetsym import mathutil
 
 Node = barabasi_albert.Node
