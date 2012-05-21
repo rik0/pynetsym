@@ -313,25 +313,6 @@ class Activator(core.Agent):
     def nodes_to_create(self):
         return {}
 
-    tmp_directory = 'tmp_%d' % time.time()
-
-    def stuff(self):
-        pass
-#        if not hasattr(self, 'counter'):
-#            self.counter = 0
-#            os.mkdir(self.tmp_directory)
-#        else:
-#            self.counter += 1
-#        filename = 'frame%d.png' % self.counter
-#        filepath = path.join(self.tmp_directory, filename)
-#        fig = plt.figure(figsize=(5, 5))
-#        ax = fig.add_subplot(111)
-#        graph = self.graph.handle
-#        dst = mathutil.degrees_to_hist(graph.degree())
-#        ccdf = mathutil.ccdf(dst)
-#        ax.loglog(ccdf)
-#        fig.savefig(filepath)
-
 
 class Clock(core.Agent):
     name = 'clock_type'
