@@ -19,21 +19,27 @@ else:
             @type graph: igraph.Graph
             """
             self.graph = graph
+            self.repeated_nodes = []
 
         def add_node(self, identifier, agent):
             self.graph.add_vertices(1)
             largest_index = len(self.graph.vs) - 1
             self.graph.vs[largest_index]["identifier"] = identifier
             self.graph.vs[largest_index]["agent"] = agent
+            self.repeated_nodes.append(identifier)
 
         def __getitem__(self, identifier):
             return self.graph.vs[identifier]["agent"]
 
         def add_edge(self, source, target):
             self.graph.add_edges(((source, target), ))
+            self.repeated_nodes.append(source)
+            self.repeated_nodes.append(target)
 
         def remove_edge(self, source, target):
             self.graph.delete_edges(((source, target), ))
+            self.repeated_nodes.remove(source)
+            self.repeated_nodes.remove(target)
 
         def random_node(self):
             try:
@@ -50,20 +56,10 @@ else:
                         "Extracting edge from graph with no edges")
 
         def preferential_attachment_node(self):
-            no_vertices = len(self.graph.vs)
-            no_edges = len(self.graph.es)
             try:
-                random_index = random.randrange(no_vertices + no_edges)
+                return random.choice(self.repeated_nodes)
             except IndexError:
                 raise GraphError("Extracting node from empty graph.")
-            else:
-                if random_index < no_vertices:
-                    return random_index
-                else:
-                    if random.choice([True, False]):
-                        return self.graph.es[random_index - no_vertices].source
-                    else:
-                        return self.graph.es[random_index - no_vertices].target
 
         def remove_node(self, identifier):
             raise NotImplementedError()
