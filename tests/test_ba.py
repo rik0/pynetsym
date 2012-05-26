@@ -1,5 +1,5 @@
 import unittest
-from pynetsym.generation_models import barabasi_albert
+from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 
 
 class TestBA(unittest.TestCase):
@@ -18,5 +18,5 @@ class TestBA(unittest.TestCase):
 
         self.assertEquals(
                starting_network_size + steps,
-               len(graph.vs))
+               graph.number_of_nodes())
 
