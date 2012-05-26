@@ -26,7 +26,7 @@ if __name__ == '__main__':
     directory_name = "ba_test_%d" % time.time()
     os.mkdir(directory_name)
 
-    F_dst = plt.figure()
+    F_pdf = plt.figure()
     F_ccdf = plt.figure()
     ba_graph = None
 
@@ -72,16 +72,16 @@ if __name__ == '__main__':
             print  ba_graph.number_of_edges()
 
             ba_dst = mathutil.degrees_to_hist(ba_graph.degree())
-            F_dst.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
+            F_pdf.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
                 linestyle='', label=ba_label)
             ba_ccdf = mathutil.ccdf(ba_dst)
             F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
 
-        F_dst.gca().loglog(dst, marker=marker, color=color,
+        F_pdf.gca().loglog(dst, marker=marker, color=color,
             linestyle='', label=label)
         F_ccdf.gca().loglog(ccdf, color=color, label=label)
 
-    F_dst.savefig(path.join(os.curdir, directory_name, 'dst.png'),
+    F_pdf.savefig(path.join(os.curdir, directory_name, 'dst.png'),
                 dpi=DPI, format='png')
     F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
                 dpi=DPI, format='png')

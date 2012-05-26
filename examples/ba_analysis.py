@@ -1,20 +1,27 @@
+from matplotlib import pyplot as plt
+from os import path
+from pynetsym import mathutil
+from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
+import networkx as nx
 import os
 import time
-from os import path
-from matplotlib import pyplot as plt
+import numpy as np
 
-import networkx as nx
 
-from pynetsym.generation_models import barabasi_albert
 #from . import ba_stepped2 as barabasi_albert
-from pynetsym import mathutil
+
+
+def average_distribution(dst):
+    pad(dst)
+    dst = np.vstack(dst)
+    return np.average(dst, axis=0)
 
 Node = barabasi_albert.Node
 Activator = barabasi_albert.Activator
 BA = barabasi_albert.BA
 
+ITERATIONS = 10
 DPI = 100
-multipliers = [1, 10, 100]
 markers = ['+', '*', '.']
 colors = ['blue', 'green', 'cyan']
 
@@ -22,67 +29,94 @@ ba_color = 'red'
 ba_label = 'NetworkX Barabasi Albert'
 ba_marker = 'x'
 
+def pad(seq):
+    """
+    Pads a sequence of arrays to make them vstackable.
+
+    @return: None
+    """
+    max_ = max(el.size for el in seq)
+    for el in seq:
+        el.resize(max_, refcheck=False)
+
 if __name__ == '__main__':
-    directory_name = "ba_test_%d" % time.time()
+    directory_name = "ba_analysis_%d" % time.time()
     os.mkdir(directory_name)
 
-    F_dst = plt.figure()
+    F_pdf = plt.figure()
     F_ccdf = plt.figure()
     ba_graph = None
 
-    for starting_size_mul, marker, color in zip(
-            multipliers, markers, colors):
+    pynetsym_ccdfs = []
+    pynetsym_pdfs = []
+    ba_ccdfs = []
+    ba_pdfs = []
+
+    for _iteration in xrange(ITERATIONS):
         sim = BA()
         sim.setup_parameters()
-        sim.run(
-            starting_network_size=sim.starting_edges * starting_size_mul)
-
-        filename = path.join(
-            os.curdir,
-            directory_name,
-            ("%(steps)s_%(starting_network_size)s_%(starting_edges)s.graphml" %
-                sim.get_parameters()))
+        sim.run()
 
         label = '%d starting size' % sim.starting_network_size
         steps = sim.steps
         starting_edges = sim.starting_edges
         starting_networks_size = sim.starting_network_size
 
-        if isinstance(sim.graph.handle, nx.Graph):
-            graph = sim.graph.handle
-        else:
-            sim.graph.handle.write(filename)
-            graph = nx.read_graphml(filename)
-
-        print graph.number_of_nodes(), graph.number_of_edges()
+        graph = sim.graph.handle
 
         del sim
 
-        dst = mathutil.degrees_to_hist(graph.degree())
-        ccdf = mathutil.ccdf(dst)
+        bins = np.bincount(graph.degree().values())
+        ccdf = mathutil.ccdf(bins)
+        pdf = np.asfarray(bins) / len(bins)
 
-        if ba_graph is None:
-            ba_graph = nx.barabasi_albert_graph(
-                steps + starting_networks_size,
-                starting_edges)
+        pynetsym_ccdfs.append(ccdf)
+        pynetsym_pdfs.append(pdf)
 
-            print 'Agent:', graph.number_of_nodes(),
-            print  graph.number_of_edges()
-            print 'PB:', ba_graph.number_of_nodes(),
-            print  ba_graph.number_of_edges()
+        ba_graph = nx.barabasi_albert_graph(
+            steps + starting_networks_size,
+            starting_edges)
 
-            ba_dst = mathutil.degrees_to_hist(ba_graph.degree())
-            F_dst.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
-                linestyle='', label=ba_label)
-            ba_ccdf = mathutil.ccdf(ba_dst)
-            F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
+        bins = np.bincount(ba_graph.degree().values())
+        ccdf = mathutil.ccdf(bins)
+        pdf = np.asfarray(bins) / len(bins)
 
-        F_dst.gca().loglog(dst, marker=marker, color=color,
-            linestyle='', label=label)
-        F_ccdf.gca().loglog(ccdf, color=color, label=label)
+        ba_ccdfs.append(ccdf)
+        ba_pdfs.append(ccdf)
 
-    F_dst.savefig(path.join(os.curdir, directory_name, 'dst.png'),
-                dpi=DPI, format='png')
+    ccdf_axes = F_ccdf.gca()
+    pdf_axes = F_pdf.gca()
+
+    pynetsym_avg_ccdf = average_distribution(pynetsym_ccdfs)
+    ba_avg_ccdf = average_distribution(ba_ccdfs)
+    pynetsym_avg_pdf = average_distribution(pynetsym_pdfs)
+    ba_avg_pdf = average_distribution(ba_pdfs)
+
+    ccdf_axes.loglog(pynetsym_avg_ccdf, color='blue', label=label)
+    ccdf_axes.loglog(ba_avg_ccdf, color='red', label=label)
+
     F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
-                dpi=DPI, format='png')
+        dpi=DPI, format='png')
+
+    pdf_axes.loglog(pynetsym_avg_pdf, color='blue', marker='+', linestyle='',
+        label=label)
+    pdf_axes.loglog(ba_avg_pdf, color='red', marker='x', linestyle='',
+        label=label)
+    F_pdf.savefig(path.join(os.curdir, directory_name, 'pdf.png'),
+        dpi=DPI, format='png')
+
+
+#            F_pdf.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
+#                linestyle='', label=ba_label)
+#            ba_ccdf = mathutil.ccdf(ba_dst)
+#            F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
+#
+#        F_pdf.gca().loglog(dst, marker=marker, color=color,
+#            linestyle='', label=label)
+#        F_ccdf.gca().loglog(ccdf, color=color, label=label)
+#
+#    F_pdf.savefig(path.join(os.curdir, directory_name, 'dst.png'),
+#                dpi=DPI, format='png')
+#    F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
+#                dpi=DPI, format='png')
 
