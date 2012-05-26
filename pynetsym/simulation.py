@@ -343,12 +343,9 @@ class Clock(core.Agent):
     def _run(self):
         gevent.spawn(self.run_loop)
         while self.active:
-            done = self.send_tick()
+            self.send_tick()
             for observer in self.observers:
                 self.send(observer, 'ticked')
-            if done.get() and self.activator_can_terminate:
+            should_stop = self.ask_to_terminate().get()
+            if should_stop:
                 self.simulation_end()
-            else:
-                should_stop = self.ask_to_terminate().get()
-                if should_stop:
-                    self.simulation_end()
