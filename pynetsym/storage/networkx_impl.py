@@ -16,6 +16,7 @@ else:
     class NXGraphWrapper(GraphWrapper):
         def __init__(self):
             self.graph = nx.Graph()
+            self.repeated_nodes = []
 
         @property
         def handle(self):
@@ -58,22 +59,20 @@ else:
             @return: a node
             @rtype: int
             """
-            iterator = it.chain(
-                    (edge[0] for edge in self.graph.edges_iter()),
-                    xrange(self.graph.number_of_nodes()))
             try:
-                return pynetsym.rndutil.choice_from_iter(
-                        iterator,
-                        (self.graph.number_of_edges()
-                            + self.graph.number_of_nodes()))
+                return random.choice(self.repeated_nodes)
             except IndexError:
                 raise GraphError("Extracting node from empty graph.")
 
         def add_edge(self, source, target):
             self.graph.add_edge(source, target)
+            self.repeated_nodes.append(source)
+            self.repeated_nodes.append(target)
 
         def remove_edge(self, source, target):
             self.graph.remove_edge(source, target)
+            self.repeated_nodes.remove(source)
+            self.repeated_nodes.remove(target)
 
         def random_edge(self):
             """
@@ -96,9 +95,11 @@ else:
         def add_node(self, identifier, agent):
             self.graph.add_node(identifier, agent=agent)
             assert identifier == agent.id
+            self.repeated_nodes.append(identifier)
 
         def remove_node(self, identifier):
             self.graph.remove_node(identifier)
+            self.repeated_nodes.remove(identifier)
 
         def __contains__(self, identifier):
             return identifier in self.graph
