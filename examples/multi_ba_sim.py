@@ -2,11 +2,11 @@ from matplotlib import pyplot as plt
 from os import path
 from pynetsym import mathutil
 from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
-import networkx as nx
+import numpy as np
 import os
 import time
-import numpy as np
 import itertools as it
+
 
 #from . import ba_stepped2 as barabasi_albert
 
@@ -28,6 +28,7 @@ ba_color = 'red'
 ba_label = 'NetworkX Barabasi Albert'
 ba_marker = 'x'
 
+
 def pad(seq):
     """
     Pads a sequence of arrays to make them vstackable.
@@ -39,20 +40,30 @@ def pad(seq):
         el.resize(max_, refcheck=False)
 
 if __name__ == '__main__':
-    directory_name = "nx_ba_%d" % time.time()
+    directory_name = "multi_ba_sim_%d" % time.time()
     os.mkdir(directory_name)
 
     F_pdf = plt.figure()
     F_ccdf = plt.figure()
-    ba_graph = None
 
     ba_ccdfs = []
     ba_pdfs = []
 
     for _iteration in xrange(ITERATIONS):
-        ba_graph = nx.barabasi_albert_graph(STEPS, 5)
+        sim = barabasi_albert.BA()
+        sim.setup_parameters()
+        sim.run()
 
-        bins = np.bincount(ba_graph.degree().values())
+        label = '%d starting size' % sim.starting_network_size
+        steps = sim.steps
+        starting_edges = sim.starting_edges
+        starting_networks_size = sim.starting_network_size
+
+        graph = sim.graph.handle
+
+        del sim
+
+        bins = np.bincount(graph.degree().values())
         ccdf = mathutil.ccdf(bins)
         pdf = np.asfarray(bins) / len(bins)
 
@@ -65,7 +76,7 @@ if __name__ == '__main__':
     for dst, color in zip(ba_ccdfs, colors):
         ccdf_axes.loglog(dst, color=color)
 
-    #ba_avg_ccdf = average_distribution(ba_ccdfs)
+    ba_avg_ccdf = average_distribution(ba_ccdfs)
     #ccdf_axes.loglog(ba_avg_ccdf, color='red')
 
     F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
@@ -74,7 +85,7 @@ if __name__ == '__main__':
     for dst, color, marker in zip(ba_pdfs, colors, markers):
         pdf_axes.loglog(dst, color=color, marker=marker, linestyle='')
 
-    #ba_avg_pdf = average_distribution(ba_pdfs)
+    ba_avg_pdf = average_distribution(ba_pdfs)
     #pdf_axes.loglog(ba_avg_pdf, color='red', marker='x', linestyle='')
 
     F_pdf.savefig(path.join(os.curdir, directory_name, 'pdf.png'),
