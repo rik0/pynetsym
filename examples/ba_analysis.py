@@ -1,3 +1,9 @@
+"""
+This script generates several BA model networks both with our generator and 
+with the one included in NetworkX. Then computes the averages among all the
+degree distributions and plots them (both PDF and CCDF).
+"""
+
 from matplotlib import pyplot as plt
 from os import path
 from pynetsym import mathutil
@@ -6,9 +12,6 @@ import networkx as nx
 import os
 import time
 import numpy as np
-
-
-#from . import ba_stepped2 as barabasi_albert
 
 
 def average_distribution(dst):
@@ -40,7 +43,7 @@ def pad(seq):
         el.resize(max_, refcheck=False)
 
 if __name__ == '__main__':
-    directory_name = "ba_analysis_%d" % time.time()
+    directory_name = "average_comaprison_analysis_%d" % time.time()
     os.mkdir(directory_name)
 
     F_pdf = plt.figure()
