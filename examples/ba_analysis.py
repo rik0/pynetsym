@@ -106,17 +106,3 @@ if __name__ == '__main__':
         dpi=DPI, format='png')
 
 
-#            F_pdf.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
-#                linestyle='', label=ba_label)
-#            ba_ccdf = mathutil.ccdf(ba_dst)
-#            F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
-#
-#        F_pdf.gca().loglog(dst, marker=marker, color=color,
-#            linestyle='', label=label)
-#        F_ccdf.gca().loglog(ccdf, color=color, label=label)
-#
-#    F_pdf.savefig(path.join(os.curdir, directory_name, 'dst.png'),
-#                dpi=DPI, format='png')
-#    F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
-#                dpi=DPI, format='png')
-
