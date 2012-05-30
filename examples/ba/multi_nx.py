@@ -39,7 +39,7 @@ def pad(seq):
         el.resize(max_, refcheck=False)
 
 if __name__ == '__main__':
-    directory_name = "nx_ba_%d" % time.time()
+    directory_name = "multi_nx_%d" % time.time()
     os.mkdir(directory_name)
 
     F_pdf = plt.figure()
