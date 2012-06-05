@@ -124,7 +124,7 @@ class Configurator(core.Agent):
     or directly in the class like::
 
         class SomeSimulation(simulation.Simulation):
-            class configurator(node_manager.SingleNodeConfigurator):
+            class configurator(node_manager.BasicConfigurator):
                 initialize = True
     """
     configurator_options = {}
@@ -158,9 +158,9 @@ class Configurator(core.Agent):
         self.run_loop()
 
 
-class SingleNodeConfigurator(Configurator):
+class BasicConfigurator(Configurator):
     """
-    A SingleNodeConfigurator needs a network_size parameter
+    A BasicConfigurator needs a network_size parameter
     that specifies the size of the initial network.
 
     network_size nodes of type node_cls (specified in the body

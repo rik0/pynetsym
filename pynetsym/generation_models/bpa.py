@@ -76,7 +76,7 @@ class Node(core.Node):
 
 
 class BPA(simulation.Simulation):
-    class configurator_type(pynetsym.node_manager.SingleNodeConfigurator):
+    class configurator_type(pynetsym.node_manager.BasicConfigurator):
         node_cls = Node
         node_options = {'probability', 'gamma'}
 

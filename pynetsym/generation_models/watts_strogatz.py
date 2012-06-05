@@ -54,7 +54,7 @@ class WS(simulation.Simulation):
 
     activator_type = Activator
 
-    class configurator_type(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.BasicConfigurator):
         initialize = True
         node_cls = Node
         node_options = {

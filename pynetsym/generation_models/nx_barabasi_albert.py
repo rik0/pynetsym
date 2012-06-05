@@ -40,7 +40,7 @@ class BA(simulation.Simulation):
 
     activator_type = Activator
 
-    class configurator_type(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.BasicConfigurator):
         node_cls = Node
         node_options = {'starting_edges'}
 
