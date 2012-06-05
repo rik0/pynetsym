@@ -1,4 +1,3 @@
-from matplotlib import pyplot as plt
 from pynetsym import argutils
 from pynetsym import configuration
 from pynetsym import core
@@ -6,18 +5,13 @@ from pynetsym import geventutil
 from pynetsym import metautil
 from pynetsym import storage
 from pynetsym import termination
-from pynetsym import mathutil
 from pynetsym import timing
 from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
-
 import copy
-import sys
-import time
-from os import path
-import os
 import gevent
-
+import itertools
+import sys
 
 
 
@@ -250,6 +244,10 @@ class Simulation(object):
 
     def output_processor(self, processor, *additional_arguments):
         self.graph.output_processor(processor, *additional_arguments)
+
+    @property
+    def handle(self):
+        return self.graph.handle
 
 
 class Activator(core.Agent):
