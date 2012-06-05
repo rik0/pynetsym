@@ -236,7 +236,7 @@ class Agent(gevent.Greenlet):
             self.process(message, result)
             self.cooperate()
 
-    def unsupported_message(self, name, additional_parameters):
+    def unsupported_message(self, name, **additional_parameters):
         """
         Prints out something if we received a message we could not process.
         """
