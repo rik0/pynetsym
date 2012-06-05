@@ -28,7 +28,7 @@ def approximate_cpl(graph, q=0.5, delta=0.15, eps=0.05):
     averages = []
     for node in sample:
         path_lengths = networkx.single_source_shortest_path_length(graph, node)
-        average = sum(path_lengths.itervalues()) / float(len(path_lengths))
+        average = sum(path_lengths.values()) / float(len(path_lengths))
         averages.append(average)
     averages.sort()
     median_index = int(len(averages) * q + 1)

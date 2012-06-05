@@ -312,12 +312,12 @@ class Activator(core.Agent):
         return {}
 
 
-class Clock(core.Agent):
+class BaseClock(core.Agent):
     name = 'clock_type'
     activator_can_terminate = False
 
     def __init__(self, address_book):
-        super(Clock, self).__init__(self.name, address_book)
+        super(BaseClock, self).__init__(self.name, address_book)
         self.activator_type = address_book.resolve(Activator.name)
         self.active = True
         self.observers = []
@@ -338,6 +338,20 @@ class Clock(core.Agent):
         return self.send(
             termination.TerminationChecker.name, 'check')
 
+
+class AsyncClock(BaseClock):
+    def _run(self):
+        gevent.spawn(self.run_loop)
+        while self.active:
+            self.send_tick()
+            for observer in self.observers:
+                self.send(observer, 'ticked')
+            should_stop = self.ask_to_terminate().get()
+            if should_stop:
+                self.simulation_end()
+
+
+class Clock(BaseClock):
     def _run(self):
         gevent.spawn(self.run_loop)
         while self.active:

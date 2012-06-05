@@ -1,3 +1,9 @@
+"""
+This script generates several BA model networks both with our generator and 
+with the one included in NetworkX. Then computes the averages among all the
+degree distributions and plots them (both PDF and CCDF).
+"""
+
 from matplotlib import pyplot as plt
 from os import path
 from pynetsym import mathutil
@@ -6,9 +12,6 @@ import networkx as nx
 import os
 import time
 import numpy as np
-
-
-#from . import ba_stepped2 as barabasi_albert
 
 
 def average_distribution(dst):
@@ -40,7 +43,7 @@ def pad(seq):
         el.resize(max_, refcheck=False)
 
 if __name__ == '__main__':
-    directory_name = "ba_analysis_%d" % time.time()
+    directory_name = "average_comaprison_analysis_%d" % time.time()
     os.mkdir(directory_name)
 
     F_pdf = plt.figure()
@@ -105,18 +108,4 @@ if __name__ == '__main__':
     F_pdf.savefig(path.join(os.curdir, directory_name, 'pdf.png'),
         dpi=DPI, format='png')
 
-
-#            F_pdf.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
-#                linestyle='', label=ba_label)
-#            ba_ccdf = mathutil.ccdf(ba_dst)
-#            F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
-#
-#        F_pdf.gca().loglog(dst, marker=marker, color=color,
-#            linestyle='', label=label)
-#        F_ccdf.gca().loglog(ccdf, color=color, label=label)
-#
-#    F_pdf.savefig(path.join(os.curdir, directory_name, 'dst.png'),
-#                dpi=DPI, format='png')
-#    F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
-#                dpi=DPI, format='png')
 

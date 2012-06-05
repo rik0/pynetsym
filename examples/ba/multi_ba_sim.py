@@ -6,6 +6,7 @@ import numpy as np
 import os
 import time
 import itertools as it
+import matplotlib
 
 
 #from . import ba_stepped2 as barabasi_albert
@@ -19,8 +20,13 @@ def average_distribution(dst):
 
 ITERATIONS = 10
 STEPS = 10000
-DPI = 100
-markers = it.cycle(['+', '*', '.'])
+DPI = 1000
+FORMATS = [
+    'pdf',
+    'eps',
+]
+
+markers = it.cycle(['+', '*', '.', 'x', 'o'])
 colors = ['blue', 'green', 'cyan', '0.75', 'black', '0.5', '#FF8080',
     '#56F712', '#10EE62', '#848484']
 
@@ -28,6 +34,7 @@ ba_color = 'red'
 ba_label = 'NetworkX Barabasi Albert'
 ba_marker = 'x'
 
+matplotlib.rc('font', size=20)
 
 def pad(seq):
     """
@@ -51,7 +58,7 @@ if __name__ == '__main__':
 
     for _iteration in xrange(ITERATIONS):
         sim = barabasi_albert.BA()
-        sim.setup_parameters()
+        sim.setup_parameters(starting_edges=11, starting_network_size=11, steps=STEPS)
         sim.run()
 
         label = '%d starting size' % sim.starting_network_size
@@ -68,25 +75,40 @@ if __name__ == '__main__':
         pdf = np.asfarray(bins) / len(bins)
 
         ba_ccdfs.append(ccdf)
-        ba_pdfs.append(ccdf)
+        ba_pdfs.append(pdf)
 
     ccdf_axes = F_ccdf.gca()
     pdf_axes = F_pdf.gca()
 
     for dst, color in zip(ba_ccdfs, colors):
         ccdf_axes.loglog(dst, color=color)
-
-    ba_avg_ccdf = average_distribution(ba_ccdfs)
+        
     #ccdf_axes.loglog(ba_avg_ccdf, color='red')
 
-    F_ccdf.savefig(path.join(os.curdir, directory_name, 'ccdf.png'),
-        dpi=DPI, format='png')
+    ccdf_axes.set_title('CCDF BA(%d, %d)' % (steps, starting_edges))
+    ccdf_axes.set_xlabel('Degree $x$')
+    ccdf_axes.set_ylabel('Probability')
+    ccdf_axes.set_xlim(left=starting_edges-1)
+    ccdf_axes.grid(True)
 
     for dst, color, marker in zip(ba_pdfs, colors, markers):
         pdf_axes.loglog(dst, color=color, marker=marker, linestyle='')
+        
+    pdf_axes.set_title('PMF BA(%d, %d)' % (steps, starting_edges))
+    pdf_axes.set_xlabel('Degree $x$')
+    pdf_axes.set_ylabel('Probability')
+    pdf_axes.set_xlim(left=starting_edges-1)
+    pdf_axes.grid(True)
+    
 
-    ba_avg_pdf = average_distribution(ba_pdfs)
     #pdf_axes.loglog(ba_avg_pdf, color='red', marker='x', linestyle='')
+    
+    F_ccdf.tight_layout(pad=0.4)
+    F_pdf.tight_layout(pad=0.4)
+    
+    for format in FORMATS:
+        F_ccdf.savefig(path.join(os.curdir, directory_name, 'multi-ccdf.%s' % format),
+                       dpi=DPI, format=format)
+        F_pdf.savefig(path.join(os.curdir, directory_name, 'multi-pdf.%s' % format),
+                      dpi=DPI, format=format)
 
-    F_pdf.savefig(path.join(os.curdir, directory_name, 'pdf.png'),
-        dpi=DPI, format='png')
