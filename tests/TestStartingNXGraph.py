@@ -44,7 +44,7 @@ GRAPHS = [
 
 @pytest.mark.parametrize(("original_graph", "recreated_graph"),
     [(graph, run_simulation(graph)) for graph in GRAPHS])
-def test_eval(original_graph, recreated_graph):
+def test_same_graph(original_graph, recreated_graph):
     print 'foo'
     assert isinstance(original_graph, nx.Graph)
     assert isinstance(recreated_graph, type(original_graph))
