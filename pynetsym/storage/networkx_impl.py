@@ -1,8 +1,8 @@
+from pynetsym.storage.basic import GraphError, GraphWrapper
 import itertools as it
 import pynetsym.rndutil
 import random
 import types
-from pynetsym.storage.basic import GraphError, GraphWrapper
 
 try:
     import networkx as nx
@@ -21,6 +21,10 @@ else:
         @property
         def handle(self):
             return self.graph
+
+        def random_nodes(self, how_many):
+            sample = random.sample(self.nodes())
+            return [node.id for node in sample]
 
         def random_node(self):
             """
@@ -48,6 +52,7 @@ else:
                 if self.graph.has_node(chosen_index):
                     return chosen_index
                 else:
+                    logging.warning("The network is not filled.")
                     return pynetsym.rndutil.choice_from_iter(
                         self.graph.nodes_iter(),
                         max_value)

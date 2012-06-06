@@ -41,6 +41,13 @@ else:
             self.repeated_nodes.remove(source)
             self.repeated_nodes.remove(target)
 
+        def random_nodes(self, how_many):
+            """
+            Return a sample of how_many nodes.
+            """
+            return random.sample(how_many, range(0, len(self.graph.vs)))
+
+
         def random_node(self):
             try:
                 return random.randrange(0, len(self.graph.vs))

@@ -191,6 +191,7 @@ class Simulation(object):
     def create_simulation_agents(self):
         self.activator = self.activator_type(self.graph, self.address_book,
             **self._simulation_parameters)
+        self.activator.setup()
         self.activator.start()
         self.clock = self.clock_type(self.address_book)
 
@@ -261,7 +262,7 @@ class Activator(core.Agent):
     tick, simulation_ended and choose_node are meant to be overrode by
     implementations.
     """
-    name = 'activator_type'
+    name = 'activator'
     activator_options = {}
 
     def __init__(self, graph, address_book, **additional_arguments):
@@ -273,6 +274,9 @@ class Activator(core.Agent):
             activator_options)
         self.graph = graph
         vars(self).update(activator_arguments)
+        
+    def setup(self):
+        pass
 
     def activate_nodes(self):
         node_ids = self.nodes_to_activate()
