@@ -238,7 +238,7 @@ class Simulation(simulation.Simulation):
 
 if __name__ == '__main__':
     sim = Simulation()
-    sim.run(starting_graph=nx.fast_gnp_random_graph(1000, 0.2, directed=True),
+    sim.run(starting_graph=nx.fast_gnp_random_graph(100, 0.2, directed=True),
         steps=10000)
 
     print Content.how_many()
