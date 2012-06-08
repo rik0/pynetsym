@@ -3,10 +3,10 @@ from pynetsym import geventutil
 from pynetsym.configurators.misc import either_p
 from scipy import stats
 import collections
+import functools
 import itertools
 import networkx as nx
 import pprint
-import functools
 
 
 UPDATE_PARAM = 1. / 48
@@ -46,7 +46,7 @@ class Content(object):
         assert by_whom in self.expected_recipients
         self.receivers.add(by_whom)
 
-    def __str__(self):
+    def __repr__(self):
         return ('Content{{index={}, author={}, '
             'age={}, followers={}, received={}}}').format(
                 self.index, self.author, self.age,
@@ -92,6 +92,7 @@ class OfflineState(State):
         pass
 
     def pushing_new_content(self, content):
+        print 'fail'
         pass
 
     def send_me_new_content(self, since, from_):
@@ -139,29 +140,33 @@ class Node(core.Node):
     def initialize(self):
         self.online_state = OnlineState(self)
         self.offline_state = OfflineState(self)
-        self.state = self.offline_state
+        self._state = self.offline_state
         self.contents = []
 
     def generate(self, age):
-        self.state = self.online_state
-        self.state.generate(age)
+        self.go_online()
+        self._state.generate(age)
         self.send(Activator.name, 'stop_me_at',
             agent=self.id, time=age+1)
 
     def update(self, age):
-        self.state = self.online_state
-        self.state.update(age)
+        return
+        self.go_online()
+        self._state.update(age)
         self.send(Activator.name, 'stop_me_at',
             agent=self.id, time=age+1)
 
     def pushing_new_content(self, content):
-        self.state.pushing_new_content(content)
+        self._state.pushing_new_content(content)
 
     def send_me_new_content(self, since, from_):
-        return self.state.send_me_new_content(since, from_)
+        return self._state.send_me_new_content(since, from_)
 
     def go_offline(self):
-        self.state = self.offline_state
+        self._state = self.offline_state
+
+    def go_online(self):
+        self._state = self.online_state
 
     def receive_contents(self, contents):
         contents.sort()
@@ -185,9 +190,13 @@ class Node(core.Node):
 class BittorrentNode(Node):
     def initialize(self):
         super(BittorrentNode, self).initialize()
-        self.state = self.online_state
+        self._state = self.online_state
+        self.offline_state = self.online_state
 
     def go_offline(self):
+        pass
+
+    def go_online(self):
         pass
 
 
@@ -219,6 +228,7 @@ class Activator(simulation.Activator):
 
     def put_to_sleep(self):
         nodes = self.to_stop.get(self.age, {})
+        print nodes
         self.send_all(nodes, 'go_offline')
 
     def stop_me_at(self, agent, time):
@@ -248,13 +258,21 @@ class Simulation(simulation.Simulation):
 
     class configurator_type(configurators.StartingNXGraphConfigurator):
         initialize = True
-        node_cls = either_p(Node, BittorrentNode, 0.77)
+        node_cls = either_p(Node, BittorrentNode, 0.0)
         node_options = {}
 
 if __name__ == '__main__':
+    #starting_graph = nx.fast_gnp_random_graph(100, 0.2, directed=True)
+    starting_graph = nx.complete_graph(100, create_using=nx.DiGraph())
+
     sim = Simulation()
-    sim.run(starting_graph=nx.fast_gnp_random_graph(100, 0.2, directed=True),
-        steps=10000)
+    sim.run(starting_graph=starting_graph, steps=100)
 
     print Content.how_many()
     print Content.avg_missed()
+
+    pprint.pprint(Content.all_content)
+
+    #nx.draw(sim.graph.handle)
+    #from matplotlib import pyplot as plt
+    #plt.show()
