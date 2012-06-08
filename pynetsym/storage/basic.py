@@ -64,7 +64,7 @@ class GraphWrapper(object):
         @rtype: int
         """
         pass
-    
+
     @abc.abstractmethod
     def random_nodes(self, how_many):
         """
@@ -151,11 +151,11 @@ class GraphWrapper(object):
         Return a collection of all the nodes in the network.
         """
         pass
-    
+
     def number_of_nodes(self):
         """
         Return the number of nodes in the network.
-        
+
         @warning: the default implementation is not efficient, as it calls self.nodes()
         """
         return len(self.nodes())

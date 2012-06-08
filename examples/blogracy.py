@@ -6,6 +6,7 @@ import collections
 import itertools
 import networkx as nx
 import pprint
+import functools
 
 
 UPDATE_PARAM = 1. / 48
@@ -20,22 +21,36 @@ def probability(str_):
         return p
 
 
-class Content(
-    collections.namedtuple(
-        'Content', 'index author age expected_recipients')):
+def add_null_object(*args):
+    def attr_setter(cls):
+        cls.null = cls(*args)
+        return cls
+    return attr_setter
+
+
+@add_null_object(None, -1, [])
+@functools.total_ordering
+class Content(object):
     counter = itertools.count()
     all_content = []
 
     def __init__(self, author, age, expected_recipients):
-        super(Content, self).__init__(
-            next(self.counter), author, age,
-            frozenset(expected_recipients))
+        self.index = next(self.counter)
+        self.author = author
+        self.age = age
+        self.expected_recipients = frozenset(expected_recipients)
         self.all_content.append(self)
-        self.receivers = {}
+        self.receivers = set()
 
     def mark_received(self, by_whom):
         assert by_whom in self.expected_recipients
         self.receivers.add(by_whom)
+
+    def __lt__(self, other):
+        if self.index < other.index:
+            return True
+        else:
+            return False
 
     @classmethod
     def how_many(cls):
@@ -50,6 +65,7 @@ class Content(
             global_missed += len(missed)
             global_expected += len(content.expected_recipients)
         return float(global_missed) / global_expected
+
 
 class State(object):
     def __init__(self, node):
@@ -73,17 +89,17 @@ class OfflineState(State):
 class OnlineState(State):
     def generate(self, age):
         node = self.node
-        graph = self.node.graph
+        graph = self.node.graph.handle
         assert isinstance(graph, nx.DiGraph)
         content = Content(node.id, age,
             graph.predecessors_iter(node.id))
-        self.send_all(graph.in_degree_iter(self.node.id),
+        node.send_all(graph.predecessors_iter(node.id),
             'created_content',
             content=content)
 
     def update(self, age):
         node = self.node
-        graph = self.node.graph
+        graph = self.node.graph.handle
         assert isinstance(graph, nx.DiGraph)
         require_content_from = set(graph.successors_iter(node.id))
 
@@ -92,11 +108,11 @@ class OnlineState(State):
                 if follower != node.id:
                     require_content_from.add(follower)
 
-        contents = self.send_all(require_content_from,
+        contents = node.send_all(require_content_from,
             'get_new_content',
             since=node.most_recently_received(),
             from_=set(graph.successors_iter(node.id)))
-        node.receive_contents(node, contents.flatten())
+        node.receive_contents(contents.flatten())
 
     def created_content(self, content):
         self.node.contents.append(content)
@@ -148,8 +164,7 @@ class Node(core.Node):
             if content.author != self.id:
                 return content
         else:
-            # None compares less than everything else
-            return None
+            return Content.null
 
 
 class BittorrentNode(Node):
@@ -167,14 +182,17 @@ class Activator(simulation.Activator):
 
     def setup(self):
         self.age = 0
+        self.to_stop = {}
+
+    def initialize_variates(self):
         number_of_nodes = self.graph.number_of_nodes()
         self.generation_variate = stats.binom(
             number_of_nodes, self.generation_probability)
         self.update_variate = stats.binom(
             number_of_nodes, self.update_probability)
-        self.to_stop = {}
 
     def tick(self):
+        self.initialize_variates()
         # todo... check what we have to do when stuff is awake or not
         self.put_to_sleep()
         self.generation_stage()
@@ -211,6 +229,7 @@ class Simulation(simulation.Simulation):
     )
 
     activator_type = Activator
+    graph_options = dict(graph=nx.DiGraph())
 
     class configurator_type(configurators.StartingNXGraphConfigurator):
         initialize = True
@@ -219,7 +238,7 @@ class Simulation(simulation.Simulation):
 
 if __name__ == '__main__':
     sim = Simulation()
-    sim.run(starting_graph=nx.powerlaw_cluster_graph(100, 4, 0.1),
+    sim.run(starting_graph=nx.fast_gnp_random_graph(1000, 0.2, directed=True),
         steps=10000)
 
     print Content.how_many()

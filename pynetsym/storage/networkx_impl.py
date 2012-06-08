@@ -15,8 +15,8 @@ except ImportError, nx_import_exception:
             raise nx_import_exception
 else:
     class NXGraphWrapper(GraphWrapper):
-        def __init__(self):
-            self.graph = nx.Graph()
+        def __init__(self, graph=None):
+            self.graph = nx.Graph() if graph is None else graph
             self.repeated_nodes = []
 
         @property
