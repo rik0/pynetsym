@@ -1,9 +1,11 @@
 from pynetsym import core, configurators, simulation
 from pynetsym import geventutil
+from pynetsym.configurators.misc import either_p
 from scipy import stats
 import collections
 import itertools
 import networkx as nx
+import pprint
 
 
 UPDATE_PARAM = 1. / 48
@@ -33,7 +35,6 @@ class Content(
 
     def mark_received(self, by_whom):
         assert by_whom in self.expected_recipients
-        print 'received'
         self.receivers.add(by_whom)
 
     @classmethod
@@ -55,7 +56,7 @@ class State(object):
         self.node = node
 
 
-class OfflineState(object):
+class OfflineState(State):
     def generate(self, age):
         pass
 
@@ -69,7 +70,7 @@ class OfflineState(object):
         return []
 
 
-class OnlineState(object):
+class OnlineState(State):
     def generate(self, age):
         node = self.node
         graph = self.node.graph
@@ -109,7 +110,6 @@ class OnlineState(object):
 
 
 class Node(core.Node):
-
     def initialize(self):
         self.online_state = OnlineState(self)
         self.offline_state = OfflineState(self)
@@ -118,13 +118,13 @@ class Node(core.Node):
 
     def generate(self, age):
         self.state = self.online_state
-        self.state.generate()
+        self.state.generate(age)
         self.send(Activator.name, 'stop_me_at',
             agent=self.id, time=age+1)
 
     def update(self, age):
         self.state = self.online_state
-        self.state.update()
+        self.state.update(age)
         self.send(Activator.name, 'stop_me_at',
             agent=self.id, time=age+1)
 
@@ -213,7 +213,8 @@ class Simulation(simulation.Simulation):
     activator_type = Activator
 
     class configurator_type(configurators.StartingNXGraphConfigurator):
-        node_cls = Node
+        initialize = True
+        node_cls = either_p(Node, BittorrentNode, 0.77)
         node_options = {}
 
 if __name__ == '__main__':
