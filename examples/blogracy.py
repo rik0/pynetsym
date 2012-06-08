@@ -2,6 +2,7 @@ from pynetsym import core, configurators, simulation
 from pynetsym import geventutil
 from pynetsym.configurators.misc import either_p
 from scipy import stats
+import numpy as np
 import collections
 import functools
 import itertools
@@ -34,17 +35,32 @@ class Content(object):
     counter = itertools.count()
     all_content = []
 
+    @classmethod
+    def insert_into_stats(cls, content):
+        if content.index > 0:
+            cls.all_content.append(content)
+
     def __init__(self, author, age, expected_recipients):
         self.index = next(self.counter)
         self.author = author
         self.age = age
         self.expected_recipients = frozenset(expected_recipients)
-        self.all_content.append(self)
         self.receivers = set()
-
+        self.insert_into_stats(self)
+        
     def mark_received(self, by_whom):
         assert by_whom in self.expected_recipients
         self.receivers.add(by_whom)
+        
+    @property
+    def missing_receivers(self):
+        return self.expected_recipients - self.receivers
+    
+    def success_rate(self):
+        if self.expected_recipients:
+            return float(len(self.receivers))/len(self.expected_recipients)
+        else:
+            return 1.
 
     def __repr__(self):
         return ('Content{{index={}, author={}, '
@@ -69,14 +85,8 @@ class Content(object):
         return len(cls.all_content)
 
     @classmethod
-    def avg_missed(cls):
-        global_missed = 0
-        global_expected = 0
-        for content in cls.all_content:
-            missed = content.expected_recipients - content.receivers
-            global_missed += len(missed)
-            global_expected += len(content.expected_recipients)
-        return float(global_missed) / global_expected
+    def average_success_rate(cls):
+        return np.average([c.success_rate() for c in cls.all_content])
 
 
 class State(object):
@@ -270,9 +280,8 @@ if __name__ == '__main__':
     sim.run(starting_graph=starting_graph, steps=100)
 
     print Content.how_many()
-    print Content.avg_missed()
+    print Content.average_success_rate()
 
-    pprint.pprint(Content.all_content)
 
     #nx.draw(sim.graph.handle)
     #from matplotlib import pyplot as plt
