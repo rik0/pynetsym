@@ -146,15 +146,12 @@ class Node(core.Node):
     def generate(self, age):
         self.go_online()
         self._state.generate(age)
-        self.send(Activator.name, 'stop_me_at',
-            agent=self.id, time=age+1)
+        return self.id, 1
 
     def update(self, age):
-        return
         self.go_online()
-        self._state.update(age)
-        self.send(Activator.name, 'stop_me_at',
-            agent=self.id, time=age+1)
+#        self._state.update(age)
+        return self.id, 1
 
     def pushing_new_content(self, content):
         self._state.pushing_new_content(content)
@@ -206,7 +203,7 @@ class Activator(simulation.Activator):
 
     def setup(self):
         self.age = 0
-        self.to_stop = {}
+        self.to_stop = collections.defaultdict(set)
 
     def initialize_variates(self):
         number_of_nodes = self.graph.number_of_nodes()
@@ -227,22 +224,26 @@ class Activator(simulation.Activator):
         self.age += 1
 
     def put_to_sleep(self):
-        nodes = self.to_stop.get(self.age, {})
-        print nodes
+        nodes = self.to_stop[self.age]
         self.send_all(nodes, 'go_offline')
 
-    def stop_me_at(self, agent, time):
-        self.to_stop.setdefault(time, set()).add(agent)
+    def mark_for_offline(self, seq):
+        for node_id, steps in seq:
+            time = self.age + steps
+            self.to_stop[time].add(node_id)
 
     def generation_stage(self):
         number_of_nodes = self.generation_variate.rvs()
         nodes = self.graph.random_nodes(number_of_nodes)
-        self.send_all(nodes, 'generate', age=self.age)
+        answers = self.send_all(nodes, 'generate', age=self.age)
+        self.mark_for_offline(answers.get())
+        
 
     def update_stage(self):
         number_of_nodes = self.update_variate.rvs()
         nodes = self.graph.random_nodes(number_of_nodes)
-        self.send_all(nodes, 'update', age=self.age)
+        answers = self.send_all(nodes, 'update', age=self.age)
+        self.mark_for_offline(answers.get())
 
 
 class Simulation(simulation.Simulation):
