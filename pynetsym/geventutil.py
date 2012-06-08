@@ -12,4 +12,5 @@ class SequenceAsyncResult(object):
         return [value.get() for value in self.seq]
 
     def flatten(self):
-        return list(itertools.chain.from_iterable(self.get()))
+        items = self.get()
+        return list(itertools.chain.from_iterable(items))

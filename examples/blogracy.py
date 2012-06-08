@@ -160,7 +160,7 @@ class Node(core.Node):
 
     def update(self, age):
         self.go_online()
-#        self._state.update(age)
+        self._state.update(age)
         return self.id, 1
 
     def pushing_new_content(self, content):
