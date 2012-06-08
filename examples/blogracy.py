@@ -131,11 +131,11 @@ class OnlineState(State):
                 if follower != node.id:
                     require_content_from.add(follower)
 
-        contents = node.send_all(require_content_from,
+        node.send_all(require_content_from,
             'send_me_new_content',
             since=node.most_recently_received(),
-            from_=set(graph.successors_iter(node.id)))
-        node.receive_contents(contents.flatten())
+            from_=set(graph.successors_iter(node.id)),
+            to=node.id)
 
     def pushing_new_content(self, content):
         self.node.receive_content(content)
@@ -166,8 +166,9 @@ class Node(core.Node):
     def pushing_new_content(self, content):
         self._state.pushing_new_content(content)
 
-    def send_me_new_content(self, since, from_):
-        return self._state.send_me_new_content(since, from_)
+    def send_me_new_content(self, since, from_, to):
+        contents = self._state.send_me_new_content(since, from_)
+        self.send(to, 'receive_contents', contents=contents)
 
     def go_offline(self):
         self._state = self.offline_state
