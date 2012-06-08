@@ -1,6 +1,8 @@
-from pynetsym import node_manager
 from pynetsym import argutils
+from pynetsym import node_manager
+from pynetsym import geventutil
 
+import itertools
 import networkx as nx
 
 
@@ -18,11 +20,13 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
 
         self.node_map = {}
         # create all the nodes
-        for node in graph.nodes_iter():
-            answ = self.send(node_manager_id, 'create_node',
+        nit_1, nit_2 = itertools.tee(graph.nodes_iter())
+        answers = [self.send(node_manager_id, 'create_node',
                        cls=self.node_cls, parameters=self.node_arguments)
-            identifier = answ.get()
-            self.node_map[node] = identifier
+                       for _node in nit_1]
+        self.node_map = {node: identifier for node, identifier
+            in itertools.izip(nit_2,
+                geventutil.SequenceAsyncResult(answers).get())}
         for u, v in graph.edges_iter():
             u1 = self.node_map[u]
             v1 = self.node_map[v]
