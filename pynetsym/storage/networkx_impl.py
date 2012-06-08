@@ -3,6 +3,7 @@ import itertools as it
 import pynetsym.rndutil
 import random
 import types
+import logging
 
 try:
     import networkx as nx
