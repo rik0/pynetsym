@@ -274,7 +274,7 @@ class Activator(core.Agent):
             activator_options)
         self.graph = graph
         vars(self).update(activator_arguments)
-        
+
     def setup(self):
         pass
 
@@ -317,7 +317,7 @@ class Activator(core.Agent):
 
 
 class BaseClock(core.Agent):
-    name = 'clock_type'
+    name = 'clock'
     activator_can_terminate = False
 
     def __init__(self, address_book):
