@@ -46,6 +46,12 @@ class Content(object):
         assert by_whom in self.expected_recipients
         self.receivers.add(by_whom)
 
+    def __str__(self):
+        return ('Content{{index={}, author={}, '
+            'age={}, followers={}, received={}}}').format(
+                self.index, self.author, self.age,
+                self.expected_recipients, self.receivers)
+
     def __lt__(self, other):
         if self.index < other.index:
             return True
@@ -63,7 +69,7 @@ class Content(object):
         return len(cls.all_content)
 
     @classmethod
-    def avg_received(cls):
+    def avg_missed(cls):
         global_missed = 0
         global_expected = 0
         for content in cls.all_content:
@@ -85,10 +91,10 @@ class OfflineState(State):
     def update(self, age):
         pass
 
-    def created_content(self, content):
+    def pushing_new_content(self, content):
         pass
 
-    def get_new_content(self, since, from_):
+    def send_me_new_content(self, since, from_):
         return []
 
 
@@ -100,7 +106,7 @@ class OnlineState(State):
         content = Content(node.id, age,
             graph.predecessors_iter(node.id))
         node.send_all(graph.predecessors_iter(node.id),
-            'created_content',
+            'pushing_new_content',
             content=content)
 
     def update(self, age):
@@ -115,17 +121,15 @@ class OnlineState(State):
                     require_content_from.add(follower)
 
         contents = node.send_all(require_content_from,
-            'get_new_content',
+            'send_me_new_content',
             since=node.most_recently_received(),
             from_=set(graph.successors_iter(node.id)))
         node.receive_contents(contents.flatten())
 
-    def created_content(self, content):
-        self.node.contents.append(content)
-        # should be mostly ordered, preternaturally fast with timsort
-        self.node.contents.sort()
+    def pushing_new_content(self, content):
+        self.node.receive_content(content)
 
-    def get_new_content(self, since, from_):
+    def send_me_new_content(self, since, from_):
         contents = self.node.contents
         new_contents = [c for c in contents if c > since and c.author in from_]
         return new_contents
@@ -150,11 +154,11 @@ class Node(core.Node):
         self.send(Activator.name, 'stop_me_at',
             agent=self.id, time=age+1)
 
-    def created_content(self, content):
-        self.state.created_content(content)
+    def pushing_new_content(self, content):
+        self.state.pushing_new_content(content)
 
-    def get_new_content(self, since, from_):
-        return self.state.get_new_content(since, from_)
+    def send_me_new_content(self, since, from_):
+        return self.state.send_me_new_content(since, from_)
 
     def go_offline(self):
         self.state = self.offline_state
@@ -164,6 +168,11 @@ class Node(core.Node):
         for content in contents:
             content.mark_received(self.id)
         self.contents.extend(contents)
+
+    def receive_content(self, content):
+        content.mark_received(self.id)
+        self.contents.append(content)
+        self.contents.sort()
 
     def most_recently_received(self):
         for content in reversed(self.contents):
@@ -244,8 +253,8 @@ class Simulation(simulation.Simulation):
 
 if __name__ == '__main__':
     sim = Simulation()
-    sim.run(starting_graph=nx.fast_gnp_random_graph(1000, 0.2, directed=True),
+    sim.run(starting_graph=nx.fast_gnp_random_graph(100, 0.2, directed=True),
         steps=10000)
 
     print Content.how_many()
-    print Content.avg_received()
+    print Content.avg_missed()
