@@ -175,8 +175,8 @@ class Agent(gevent.Greenlet):
 
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
-            self.send(receiver_id, message, **additional_parameters)
-            for receiver_id in receivers)
+            [self.send(receiver_id, message, **additional_parameters)
+            for receiver_id in receivers])
 
     def send(self, receiver_id, message_name, **additional_parameters):
         """

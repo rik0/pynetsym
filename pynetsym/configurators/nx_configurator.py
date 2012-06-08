@@ -27,6 +27,7 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
             u1 = self.node_map[u]
             v1 = self.node_map[v]
             self.send(v1, 'accept_link', originating_node=u1)
+        self.nodes = self.node_map.viewvalues()
         self.initialize_nodes()
         self.kill()
 
