@@ -23,8 +23,8 @@ else:
             return self.graph
 
         def random_nodes(self, how_many):
-            sample = random.sample(self.nodes())
-            return [node.id for node in sample]
+            sample = random.sample(self.graph.nodes(), how_many)
+            return sample
 
         def random_node(self):
             """
@@ -121,3 +121,6 @@ else:
         def nodes(self):
             nodes_with_data = self.graph.nodes_iter(data=True)
             return nodes_with_data
+
+        def number_of_nodes(self):
+            return self.graph.number_of_nodes()

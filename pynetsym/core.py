@@ -1,14 +1,15 @@
+from pynetsym import geventutil
 import collections
-import numbers
-
-import sys
-import pprint
 import copy
-
 import gevent
-
-import gevent.queue as queue
 import gevent.event as event
+import gevent.queue as queue
+import numbers
+import pprint
+import sys
+
+
+
 
 _M = collections.namedtuple('Message', 'sender payload parameters')
 
@@ -171,7 +172,7 @@ class Agent(gevent.Greenlet):
         @attention: In fact, the only requirement is that it is hashable
         """
         return self._id
-    
+
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
             self.send(receiver_id, message, **additional_parameters)

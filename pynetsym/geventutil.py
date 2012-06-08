@@ -1,3 +1,6 @@
+import itertools
+
+
 class SequenceAsyncResult(object):
     def __init__(self, seq):
         self.seq = seq
@@ -7,3 +10,6 @@ class SequenceAsyncResult(object):
 
     def get(self):
         return [value.get() for value in self.seq]
+
+    def flatten(self):
+        return list(itertools.chain.from_iterable(self.get()))
