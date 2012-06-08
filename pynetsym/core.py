@@ -157,7 +157,7 @@ class Agent(gevent.Greenlet):
         @return: (Message, event.AsyncResult)
         """
         entry = self._default_queue.get()
-        self.log_received(entry[0])
+        #self.log_received(entry[0])
         return entry
 
     def log_received(self, msg):
