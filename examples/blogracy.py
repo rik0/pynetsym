@@ -1,5 +1,4 @@
 from pynetsym import core, configurators, simulation
-from pynetsym import geventutil
 from pynetsym.configurators.misc import either_p
 from scipy import stats
 import numpy as np
@@ -47,15 +46,15 @@ class Content(object):
         self.expected_recipients = frozenset(expected_recipients)
         self.receivers = set()
         self.insert_into_stats(self)
-        
+
     def mark_received(self, by_whom):
         assert by_whom in self.expected_recipients
         self.receivers.add(by_whom)
-        
+
     @property
     def missing_receivers(self):
         return self.expected_recipients - self.receivers
-    
+
     def success_rate(self):
         if self.expected_recipients:
             return float(len(self.receivers))/len(self.expected_recipients)
@@ -102,7 +101,6 @@ class OfflineState(State):
         pass
 
     def pushing_new_content(self, content):
-        print 'fail'
         pass
 
     def send_me_new_content(self, since, from_):
@@ -248,7 +246,7 @@ class Activator(simulation.Activator):
         nodes = self.graph.random_nodes(number_of_nodes)
         answers = self.send_all(nodes, 'generate', age=self.age)
         self.mark_for_offline(answers.get())
-        
+
 
     def update_stage(self):
         number_of_nodes = self.update_variate.rvs()
@@ -270,20 +268,26 @@ class Simulation(simulation.Simulation):
 
     class configurator_type(configurators.StartingNXGraphConfigurator):
         initialize = True
-        node_cls = either_p(Node, BittorrentNode, 0.0)
+        node_cls = either_p(Node, BittorrentNode, 0.77)
         node_options = {}
+
+
+def main(starting_graph, steps=100):
+    sim = Simulation()
+    sim.run(starting_graph=starting_graph, steps=steps)
+    return sim.handle
+
 
 if __name__ == '__main__':
     #starting_graph = nx.fast_gnp_random_graph(100, 0.2, directed=True)
-    starting_graph = nx.complete_graph(100, create_using=nx.DiGraph())
+    # starting_graph = nx.complete_graph(100, create_using=nx.DiGraph())
+    starting_graph = nx.powerlaw_cluster_graph(1000, 8, 0.1)
 
-    sim = Simulation()
-    sim.run(starting_graph=starting_graph, steps=100)
+    graph = main(starting_graph)
 
+    #pprint.pprint(Content.all_content)
     print Content.how_many()
     print Content.average_success_rate()
+    print 'Bittorrent nodes', len([node for node, data in graph.nodes(data=True)
+        if isinstance(data['agent'], BittorrentNode)])
 
-
-    #nx.draw(sim.graph.handle)
-    #from matplotlib import pyplot as plt
-    #plt.show()
