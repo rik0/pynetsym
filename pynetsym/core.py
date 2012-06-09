@@ -213,6 +213,7 @@ class Agent(gevent.Greenlet):
                     action_name, **message.parameters)
         else:
             value = bound_method(**message.parameters)
+            del bound_method
         if isinstance(value, Exception):
             result.set_exception(value)
         else:
@@ -240,6 +241,7 @@ class Agent(gevent.Greenlet):
         while 1:
             message, result = self.read()
             self.process(message, result)
+            del message, result
             self.cooperate()
 
     def unsupported_message(self, name, **additional_parameters):

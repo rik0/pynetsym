@@ -10,7 +10,6 @@ from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
 import copy
 import gevent
-import itertools
 import sys
 
 
@@ -174,7 +173,8 @@ class Simulation(object):
 
     def create_service_agents(self):
         self.address_book = core.AddressBook(self.graph)
-        self.termination_checker = termination.TerminationChecker(self.graph,
+        self.termination_checker = \
+                termination.TerminationChecker(self.graph,
             self.address_book, termination.count_down(self.steps))
         self.configurator_type = self.configurator_type(
             self.address_book, **self._simulation_parameters)
@@ -189,8 +189,9 @@ class Simulation(object):
         self.configurator_type.join()
 
     def create_simulation_agents(self):
-        self.activator = self.activator_type(self.graph, self.address_book,
-            **self._simulation_parameters)
+        self.activator = self.activator_type(
+                self.graph, self.address_book,
+                **self._simulation_parameters)
         self.activator.setup()
         self.activator.start()
         self.clock = self.clock_type(self.address_book)
