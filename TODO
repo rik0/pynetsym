@@ -1,19 +1,13 @@
-* Queue unhandled messages: this may be useful. When the agent is eventually
-    created, it gets all the messages. We may however have too many messages
-    accumulated. Perhaps we need some pruning strategy here. [NO]
+* AddressBooks
+* DiskBased Agents
+* DiskBased Network
+* Work on Network Proxy concepts
+
 * Catch addressing errors and? This is how erlang works. However, it may not
     be appropriate for Python. [CHECK]
 * Devise the interface for something gathering simulation results.
     Probably np.array is the right class to hold the results. Because it is
     very easy to plot/save/whatever.
-* Profile the transitive linking (regardless of how it scales).
-* Introduce the idea of an uninterruptible context that overrides
-    cooperate() and that just marks that it should yield after the
-    context if something happened inside
-* Introduce the idea of some "network attribute caching" to make
-    things more efficient without continuosly querying the sn
-* Introduce the idea of operations run on the handle, without
-    having to resort to returning the handle.
 * Create descriptors for properties that may (or may not) be
     persistent
 * Create GUI!
