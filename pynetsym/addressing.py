@@ -76,6 +76,13 @@ class FlatAddressBook(AddressBook):
         else:
             self.name_registry[identifier] = agent
 
+    def unregister(self, identifier):
+        try:
+            del self.name_registry[identifier]
+        except KeyError:
+            raise AddressingError(
+                    "Could not remove unregistered identifier %r" % (
+                    identifier))
 
     def resolve(self, identifier):
         try:
@@ -86,3 +93,10 @@ class FlatAddressBook(AddressBook):
 
     def list(self):
         return self.name_registry.viewkeys()
+    
+class NamespacedAddressBook(AddressBook):
+    def register_namespace(self, namespace, address_book):
+        pass
+    
+    def resolve(self, namespace, *rest):
+        pass
