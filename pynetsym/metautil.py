@@ -285,3 +285,14 @@ def gather_from_ancestors(child_obj, attr_name, acc_type=set):
         new_value = parent.__dict__.get(attr_name, acc_type())
         acc_method(new_value)
     return values
+
+def encapsulate_global(key, encapsulated_globals={}):
+    def get_encapsulated_global():
+        try:
+            return encapsulated_globals[key]
+        except KeyError:
+            raise NameError("Name '%s' is not defined" % key)
+    
+    def set_encapsulated_global(value):
+        encapsulated_globals[key] = value
+    return get_encapsulated_global, set_encapsulated_global
