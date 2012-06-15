@@ -95,8 +95,38 @@ class FlatAddressBook(AddressBook):
         return self.name_registry.viewkeys()
     
 class NamespacedAddressBook(AddressBook):
+    def __init__(self, E={}, **F):
+        self.namespaces = {}
+        self.namespaces.update(E, **F)
+
+    def resolve_namespace(self, namespace):
+        try:
+            return self.namespaces[namespace]
+        except KeyError:
+            raise AddressingError(
+                "Could not find specified namespace '%s'" % namespace)
+
+    def unregister_namespace(self, namespace):
+        try:
+            del self.namespaces[namespace]
+        except KeyError:
+            raise AddressingError(
+                "Could not find specified namespace '%s'" % namespace)
+
     def register_namespace(self, namespace, address_book):
-        pass
+        try:
+            current = self.namespaces[namespace]
+            if current is not address_book:
+                raise AddressingError(
+                    "Could not rebind address_book %r to namespace %r." % (
+                        address_book, namespace))
+        except KeyError:
+            self.namespaces[namespace] = address_book
     
     def resolve(self, namespace, *rest):
-        pass
+        address_book = self.resolve_namespace(namespace)
+        return address_book.resolve(*rest)
+
+    def register(self, namespace, *rest):
+        address_book = self.resolve_namespace(namespace)
+        address_book.register(*rest)

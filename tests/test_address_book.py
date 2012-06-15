@@ -34,3 +34,24 @@ class TestFlatAddressBook(unittest.TestCase):
         agent_a = object()
         self.fillWithValues(a=agent_a)
         self.address_book.register('a', agent_a)
+
+class TestNamespacedAddressBook(unittest.TestCase):
+    def setUp(self):
+        self.present_object = object()
+        self.flat_address_book = addressing.FlatAddressBook()
+        self.flat_address_book.register('present', self.present_object)
+        self.address_book = addressing.NamespacedAddressBook()
+        self.namespace_name = 'ns'
+        self.address_book.register_namespace(self.namespace_name, self.flat_address_book)
+
+    def test_existing(self):
+        self.assertEqual(self.present_object,
+                         self.address_book.resolve(self.namespace_name, 'present'))
+
+    def test_non_existing_agent(self):
+        self.assertRaises(addressing.AddressingError,
+                          self.address_book.resolve, self.namespace_name, 'absent')
+
+    def test_non_existing_namespace(self):
+        self.assertRaises(addressing.AddressingError,
+                          self.address_book.resolve, 'invalid_namespace', 'present')
