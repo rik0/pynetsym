@@ -51,6 +51,9 @@ class AddressBook(object):
         raise NotImplementedError()
     
     def list(self):
+        return list(self.list_iter())
+
+    def list_iter(self):
         raise NotImplementedError()
     
 
@@ -91,6 +94,9 @@ class FlatAddressBook(AddressBook):
             raise AddressingError(
                 "Could not find node with address %r." % identifier)
 
+    def list_iter(self):
+        return self.name_registry.iterkeys()
+
     def list(self):
         return self.name_registry.viewkeys()
     
@@ -130,3 +136,15 @@ class NamespacedAddressBook(AddressBook):
     def register(self, namespace, *rest):
         address_book = self.resolve_namespace(namespace)
         address_book.register(*rest)
+
+    def unregister(self, namespace, *rest):
+        address_book = self.resolve_namespace(namespace)
+        address_book.unregister(*rest)
+
+    def list_iter(self):
+        for namespace, ab in self.namespaces.iteritems():
+            for identifier in ab.list():
+                yield namespace, identifier
+
+    def list(self):
+        return list(self.list_iter())

@@ -55,3 +55,36 @@ class TestNamespacedAddressBook(unittest.TestCase):
     def test_non_existing_namespace(self):
         self.assertRaises(addressing.AddressingError,
                           self.address_book.resolve, 'invalid_namespace', 'present')
+
+    def test_unregister_ns(self):
+        self.address_book.unregister_namespace(self.namespace_name)
+        self.assertRaises(addressing.AddressingError,
+                          self.address_book.resolve, self.namespace_name, 'present')
+
+    def test_unregister_agent(self):
+        self.address_book.unregister(self.namespace_name, 'present')
+        self.assertRaises(addressing.AddressingError,
+                          self.address_book.resolve, self.namespace_name, 'present')
+
+    def test_unregister_fake_namespace(self):
+        self.assertRaises(addressing.AddressingError,
+                          self.address_book.unregister_namespace,
+                          'fake_namespace')
+
+    def test_composite_list(self):
+        another_address_book = addressing.FlatAddressBook()
+        another_object = object()
+        another_address_book.register('another_object', another_object)
+
+        self.address_book.register_namespace('another_namespace', another_address_book)
+
+        complete_list = self.address_book.list()
+
+        for identifier in self.address_book.list_iter():
+            if identifier in map(lambda x: ('another_namespace', x), another_address_book.list()):
+                complete_list.remove(identifier)
+            if identifier in map(lambda x: (self.namespace_name, x), self.flat_address_book.list()):
+               complete_list.remove(identifier)
+
+        self.assertEqual([], complete_list)
+
