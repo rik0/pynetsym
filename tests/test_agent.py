@@ -1,6 +1,6 @@
 from unittest import TestCase
 from pynetsym import core
-from pynetsym import storage
+from pynetsym import addressing
 
 
 class Agent(core.Agent):
@@ -18,8 +18,7 @@ class Agent(core.Agent):
 
 class TestAgent(TestCase):
     def setUp(self):
-        graph_wrapper = storage.NXGraphWrapper()
-        address_book = core.AddressBook(graph_wrapper)
+        address_book = addressing.FlatAddressBook()
         self.agent_a_id = 'a'
         self.agent_a = Agent(self.agent_a_id, address_book)
         self.agent_b_id = 'b'

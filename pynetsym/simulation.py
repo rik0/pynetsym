@@ -1,3 +1,4 @@
+from pynetsym import addressing
 from pynetsym import argutils
 from pynetsym import configuration
 from pynetsym import core
@@ -11,6 +12,7 @@ from pynetsym.storage.basic import NotifyingGraphWrapper
 import copy
 import gevent
 import sys
+import operator
 
 
 
@@ -172,7 +174,12 @@ class Simulation(object):
         pass
 
     def create_service_agents(self):
-        self.address_book = core.AddressBook(self.graph)
+        main_address_book = addressing.FlatAddressBook()
+        node_address_book = addressing.FlatAddressBook()
+        self.address_book = addressing.AutoResolvingAddressBook(
+                main=main_address_book, node=node_address_book)
+        self.address_book.add_resolver('node', operator.isNumberType)
+        self.address_book.add_resolver('main', lambda o: isinstance(o, basestring))
         self.termination_checker = \
                 termination.TerminationChecker(self.graph,
             self.address_book, termination.count_down(self.steps))

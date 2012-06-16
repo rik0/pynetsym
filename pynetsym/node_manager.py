@@ -75,6 +75,7 @@ class NodeManager(core.Agent):
         try:
             node = cls(identifier, self._address_book,
                        self.graph, **parameters)
+            self.graph.add_node(identifier, node)
         except Exception as e:
             self.id_manager.free_identifier(identifier)
             # if the node was added to the network, it shall be removed

@@ -8,7 +8,7 @@ class TestFlatAddressBook(unittest.TestCase):
 
     def fillWithValues(self, **kwargs):
         for k, v in kwargs.iteritems():
-            self.address_book.register(k, v)
+            self.address_book.register(v, k)
 
     def testEmpty(self):
         self.assertRaises(
@@ -28,18 +28,18 @@ class TestFlatAddressBook(unittest.TestCase):
         self.fillWithValues(a=agent_a)
         self.assertRaises(
             addressing.AddressingError,
-            self.address_book.register, 'a', agent_b)
+            self.address_book.register, agent_b, 'a')
 
     def testSelfReRegister(self):
         agent_a = object()
         self.fillWithValues(a=agent_a)
-        self.address_book.register('a', agent_a)
+        self.address_book.register(agent_a, 'a')
 
 class TestNamespacedAddressBook(unittest.TestCase):
     def setUp(self):
         self.present_object = object()
         self.flat_address_book = addressing.FlatAddressBook()
-        self.flat_address_book.register('present', self.present_object)
+        self.flat_address_book.register(self.present_object, 'present')
         self.address_book = addressing.NamespacedAddressBook()
         self.namespace_name = 'ns'
         self.address_book.register_namespace(self.namespace_name, self.flat_address_book)
@@ -74,7 +74,7 @@ class TestNamespacedAddressBook(unittest.TestCase):
     def test_composite_list(self):
         another_address_book = addressing.FlatAddressBook()
         another_object = object()
-        another_address_book.register('another_object', another_object)
+        another_address_book.register(another_object, 'another_object')
 
         self.address_book.register_namespace('another_namespace', another_address_book)
 

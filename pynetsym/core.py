@@ -124,7 +124,7 @@ class Agent(gevent.Greenlet):
         super(Agent, self).__init__()
         self._id = identifier
         self._address_book = address_book
-        self._address_book.register(identifier, self)
+        self._address_book.register(self, identifier)
         self._default_queue = queue.Queue()
         self._queue = self._default_queue
 

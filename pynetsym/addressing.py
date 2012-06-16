@@ -1,6 +1,7 @@
 import abc
 
 from pynetsym import metautil
+from pygments.lexers._vimbuiltins import auto
 
 class AddressingError(Exception):
     """
@@ -24,7 +25,7 @@ class AddressBook(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def register(self, identifier, agent):
+    def register(self, agent, identifier):
         """
         Binds the identifier with the agent
 
@@ -49,13 +50,13 @@ class AddressBook(object):
 
     def unregister(self, identifier):
         raise NotImplementedError()
-    
+
     def list(self):
         return list(self.list_iter())
 
     def list_iter(self):
         raise NotImplementedError()
-    
+
 
 class FlatAddressBook(AddressBook):
     """
@@ -70,7 +71,7 @@ class FlatAddressBook(AddressBook):
         """
         self.name_registry = {}
 
-    def register(self, identifier, agent):
+    def register(self, agent, identifier):
         if (identifier in self.name_registry
                 and self.name_registry[identifier] is not agent):
             raise AddressingError(
@@ -99,7 +100,7 @@ class FlatAddressBook(AddressBook):
 
     def list(self):
         return self.name_registry.viewkeys()
-    
+
 class NamespacedAddressBook(AddressBook):
     def __init__(self, E={}, **F):
         self.namespaces = {}
@@ -128,14 +129,14 @@ class NamespacedAddressBook(AddressBook):
                         address_book, namespace))
         except KeyError:
             self.namespaces[namespace] = address_book
-    
+
     def resolve(self, namespace, *rest):
         address_book = self.resolve_namespace(namespace)
         return address_book.resolve(*rest)
 
-    def register(self, namespace, *rest):
+    def register(self, agent, namespace, *rest):
         address_book = self.resolve_namespace(namespace)
-        address_book.register(*rest)
+        address_book.register(agent, *rest)
 
     def unregister(self, namespace, *rest):
         address_book = self.resolve_namespace(namespace)
@@ -146,5 +147,36 @@ class NamespacedAddressBook(AddressBook):
             for identifier in ab.list():
                 yield namespace, identifier
 
-    def list(self):
-        return list(self.list_iter())
+
+class AutoResolvingAddressBook(NamespacedAddressBook):
+    def __init__(self, E={}, **F):
+        super(AutoResolvingAddressBook, self).__init__(E, **F)
+        self.resolvers = []
+
+    def add_resolver(self, namespace, checker):
+        self.resolvers.append((checker, namespace))
+
+    def resolve_identifier(self, identifier):
+        for resolver_check, namespace in self.resolvers:
+            if resolver_check(identifier):
+                return self.resolve_namespace(namespace)
+        else:
+            raise AddressingError(
+                "Could not find namespace for '%s'" % identifier)
+
+    def resolve(self, identifier):
+        address_book = self.resolve_identifier(identifier)
+        return address_book.resolve(identifier)
+
+    def register(self, agent, identifier):
+        address_book = self.resolve_identifier(identifier)
+        address_book.register(agent, identifier)
+
+    def unregister(self, namespace, *rest):
+        address_book = self.resolve_identifier(identifier)
+        address_book.unregister(identifier)
+
+    def list_iter(self):
+        return itertools.imap(operator.itemgetter(1),
+                       super(AutoResolvingAddressBook, self).list_iter())
+
