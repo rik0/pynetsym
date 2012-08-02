@@ -173,13 +173,16 @@ class Simulation(object):
     def set_up(self):
         pass
 
-    def create_service_agents(self):
+
+    def create_address_book(self):
         main_address_book = addressing.FlatAddressBook()
         node_address_book = addressing.FlatAddressBook()
-        self.address_book = addressing.AutoResolvingAddressBook(
-                main=main_address_book, node=node_address_book)
+        self.address_book = addressing.AutoResolvingAddressBook(main=main_address_book, node=node_address_book)
         self.address_book.add_resolver('node', operator.isNumberType)
-        self.address_book.add_resolver('main', lambda o: isinstance(o, basestring))
+        self.address_book.add_resolver('main', lambda o:isinstance(o, basestring))
+
+    def create_service_agents(self):
+        self.create_address_book()
         self.termination_checker = \
                 termination.TerminationChecker(self.graph,
             self.address_book, termination.count_down(self.steps))
