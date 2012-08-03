@@ -63,7 +63,7 @@ class Activator2(Activator):
 class BA2(BA):
     activator_type = Activator2
 
-    class configurator_type(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.BasicConfigurator):
         node_cls = Node2
         node_options = {'starting_edges'}
 
