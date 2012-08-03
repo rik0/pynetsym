@@ -8,6 +8,7 @@ import numbers
 import pprint
 import sys
 
+from traits import api as t
 
 
 
@@ -19,11 +20,14 @@ class Message(_M):
     An immutable object that is used to send a message among agents.
     """
 
-class Agent(gevent.Greenlet):
+class Agent(gevent.Greenlet, t.HasTraits):
     """
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
+
+
+
     def __init__(self, identifier, address_book):
         """
         Initializes the Agent object setting variables and registering
