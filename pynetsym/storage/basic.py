@@ -128,15 +128,15 @@ class GraphWrapper(object):
         """
         pass
 
-    @abc.abstractmethod
-    def __getitem__(self, identifier):
-        """
-        Get the actual agent object with specified identifier.
-        @param identifier: the identifier
-        @type identifier: int
-        @return: the agent
-        @rtype: pynetsym.core.Agent
-        """
+#     @abc.abstractmethod
+#     def __getitem__(self, identifier):
+#         """
+#         Get the actual agent object with specified identifier.
+#         @param identifier: the identifier
+#         @type identifier: int
+#         @return: the agent
+#         @rtype: pynetsym.core.Agent
+#         """
 
     @abc.abstractmethod
     def neighbors(self, node_identifier):

@@ -28,8 +28,8 @@ else:
             self.graph.vs[largest_index]["agent"] = agent
             self.repeated_nodes.append(identifier)
 
-        def __getitem__(self, identifier):
-            return self.graph.vs[identifier]["agent"]
+        # def __getitem__(self, identifier):
+        #     return self.graph.vs[identifier]["agent"]
 
         def add_edge(self, source, target):
             self.graph.add_edges(((source, target), ))
