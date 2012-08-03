@@ -40,5 +40,6 @@ setup(
         'pytest',
         'gevent',
         'networkx',
+        'jsonpickle',
     ],
 )
