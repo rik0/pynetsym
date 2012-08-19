@@ -247,3 +247,29 @@ class Node(Agent):
         """
         self.graph.remove_edge(originating_node, self.id)
         return True
+
+    def run_loop(self):
+        """
+        Agent main run loop.
+
+            1. read a message from the queue
+            2. process the message and elaborate the answer
+            3. if the answer is not None, send it to the original message
+            4. release control
+
+        The format of answer shall be either:
+            1. a string indicating the message name to be send
+            2. a tuple where the first element is the name of the
+                message to be sent and the second element is a
+                dictionary of additional parameters that will be
+                passed along.
+
+        @attention: checks regarding message_processor and similar
+            are not made
+        """
+        while 1:
+            message, result = self.read()
+            self.process(message, result)
+            del message, result
+            self.cooperate()
+
