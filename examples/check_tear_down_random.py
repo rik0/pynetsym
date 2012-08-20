@@ -1,6 +1,5 @@
 import random
 import networkx as nx
-from matplotlib import pyplot as plt
 
 from pynetsym import core
 from pynetsym import simulation
@@ -14,23 +13,14 @@ class Node(core.Node):
         super(Node, self).__init__(identifier, address_book, graph)
         self.starting_network_size = starting_network_size
         self.all_nodes = range(self.starting_network_size)
-        self.activated = False
 
     def activate(self):
-        if not self.activated:
-            for node, _attrs in self.graph.nodes():
-                if node != self.id:
-                    self.link_to(node)
-            self.activated = True
-        else:
-            candidates = self.graph.neighbors(self.id)
-            dropped = random.sample(
-                candidates,
-                random.randrange(1 if len(candidates) else 0, len(candidates)))
-            for node in dropped:
-                self.unlink_from(node)
-
-
+        nodes = random.sample(
+            self.all_nodes,
+            random.randrange(0, self.starting_network_size)
+        )
+        for node in nodes:
+            self.link_to(node)
 
 class Activator(simulation.Activator):
     #DEBUG_SEND = True
@@ -42,19 +32,8 @@ class Activator(simulation.Activator):
         self.next_node = 0
 
     def nodes_to_activate(self):
-        node = self.next_node
-        cycle = node / self.starting_network_size
-        self.next_node += 1
-
-        if cycle == 0:
-            return [node]
-        elif cycle == 1:
-            return []
-        elif cycle == 2:
-            return [node % self.starting_network_size]
-        else:
-            return []
-
+        node = random.choice(range(self.starting_network_size))
+        return [node]
 
 
 class Sim(simulation.Simulation):
@@ -76,14 +55,5 @@ if __name__ == '__main__':
     graph = sim.graph.handle
     assert isinstance(graph, nx.Graph)
 
-    #nx.draw(graph)
-    #plt.show()
-
     sim.run()
 
-    print nx.is_isomorphic(
-        nx.complete_graph(len(graph)),
-        graph)
-
-    #nx.draw(graph)
-    #plt.show()

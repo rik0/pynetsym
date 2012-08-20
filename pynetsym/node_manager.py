@@ -3,6 +3,8 @@ import sys
 
 from pynetsym import core, util, metautil, argutils, geventutil
 
+import jsonpickle
+
 
 class IdManager(object):
     """
@@ -110,7 +112,9 @@ class NodeManager(core.Agent):
         @type node: Node
 
         """
-        pass
+
+        #json_repr = jsonpickle.encode(node)
+        print 'Collected: %s' % (node, )
 
 
 class Configurator(core.Agent):
