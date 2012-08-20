@@ -74,11 +74,13 @@ class Agent(gevent.Greenlet):
         @return: (Message, event.AsyncResult)
         """
         entry = self._default_queue.get()
-        #self.log_received(entry[0])
+        if getattr(self, 'DEBUG_RECEIVE', False):
+            self.log_received(entry[0])
         return entry
 
     def log_received(self, msg):
-        print self.id, ': got', msg.payload, 'from', msg.sender
+        gl = gevent.getcurrent()
+        print '[', gl, ']', self.id, ': got', msg.payload, 'from', msg.sender
 
     ## TODO: absolutely change the name
     @property
@@ -108,13 +110,15 @@ class Agent(gevent.Greenlet):
         """
         receiver = self._address_book.resolve(receiver_id)
         message = Message(self.id, message_name, additional_parameters)
-        # self.log_message(message_name, receiver)
+        if getattr(self, 'DEBUG_SEND', False):
+            self.log_message(message_name, receiver)
         result = event.AsyncResult()
         receiver.deliver(message, result)
         return result
 
     def log_message(self, payload, receiver):
-        print 'Sending', payload, 'from', self.id, 'to', receiver.id
+        gl = gevent.getcurrent()
+        print '[', gl, '] Sending', payload, 'from', self.id, 'to', receiver.id
 
     def process(self, message, result):
         """
@@ -171,7 +175,7 @@ class Agent(gevent.Greenlet):
             (self, name, additional_parameters))
 
     def __str__(self):
-        return '%s(%s)' % (type(self), self.id)
+        return '%s(%s)' % (self.__class__.__name__, self.id)
 
 
 class Node(Agent):
@@ -192,6 +196,9 @@ class Node(Agent):
         """
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
+
+    def __str__(self):
+        return 'Node-%s' % (self.id, )
 
     def link_to(self, criterion_or_node):
         """
@@ -272,4 +279,3 @@ class Node(Agent):
             self.process(message, result)
             del message, result
             self.cooperate()
-
