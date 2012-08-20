@@ -176,7 +176,7 @@ class BasicConfigurator(Configurator):
 
     @metautil.classproperty
     def node_options(self):
-        pass
+        return set()
 
     def setup(self):
         self.node_arguments = argutils.extract_options(
