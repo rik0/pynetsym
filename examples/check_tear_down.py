@@ -6,6 +6,9 @@ from pynetsym import simulation
 from pynetsym import node_manager
 
 class Node(core.Node):
+    DEBUG_SEND = True
+    DEBUG_RECEIVE = True
+
     def __init__(self, identifier, address_book, graph):
         super(Node, self).__init__(identifier, address_book, graph)
 

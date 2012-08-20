@@ -9,8 +9,6 @@ import pprint
 import sys
 
 
-
-
 _M = collections.namedtuple('Message', 'sender payload parameters')
 
 
@@ -19,11 +17,17 @@ class Message(_M):
     An immutable object that is used to send a message among agents.
     """
 
+
+class NoMessage(gevent.queue.Empty):
+    pass
+
+
 class Agent(gevent.Greenlet):
     """
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
+
     def __init__(self, identifier, address_book):
         """
         Initializes the Agent object setting variables and registering
@@ -65,18 +69,25 @@ class Agent(gevent.Greenlet):
         gevent.sleep(seconds)
 
     def _run(self):
-        self.run_loop()
+        return self.run_loop()
 
-    def read(self):
+    def read(self, timeout=None):
         """
         Reads the next message that was sent to this agent.
-        @attention: It is not really meant to be called directly.
+
+        @param timeout: can specify a timeout
+        @attention: It is not really meant to be called directly unless you are building a runloop.
+            Strictly speaking it is not non public, though.
         @return: (Message, event.AsyncResult)
+        @raise: NoMessage if no message arrives after timeout
         """
-        entry = self._default_queue.get()
-        if getattr(self, 'DEBUG_RECEIVE', False):
-            self.log_received(entry[0])
-        return entry
+        try:
+            entry = self._default_queue.get(timeout=timeout)
+            if getattr(self, 'DEBUG_RECEIVE', False):
+                self.log_received(entry[0])
+            return entry
+        except queue.Empty, e:
+            raise NoMessage(e)
 
     def log_received(self, msg):
         gl = gevent.getcurrent()
@@ -171,7 +182,7 @@ class Agent(gevent.Greenlet):
         """
         print (
             ('%s received "%s" message with parameters %s: '
-                'could not process.') %
+             'could not process.') %
             (self, name, additional_parameters))
 
     def __str__(self):
@@ -216,7 +227,7 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         return self.send(target_node, 'accept_link',
-                originating_node=self.id)
+                         originating_node=self.id)
 
     def unlink_from(self, criterion_or_node):
         """
@@ -233,7 +244,7 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         self.send(target_node, 'drop_link',
-                originating_node=self.id)
+                  originating_node=self.id)
 
     def accept_link(self, originating_node):
         """
@@ -255,27 +266,19 @@ class Node(Agent):
         self.graph.remove_edge(originating_node, self.id)
         return True
 
+    def can_be_collected(self):
+        """
+        Override this if the Agent should not be collected
+        """
+        return True
+
     def run_loop(self):
-        """
-        Agent main run loop.
-
-            1. read a message from the queue
-            2. process the message and elaborate the answer
-            3. if the answer is not None, send it to the original message
-            4. release control
-
-        The format of answer shall be either:
-            1. a string indicating the message name to be send
-            2. a tuple where the first element is the name of the
-                message to be sent and the second element is a
-                dictionary of additional parameters that will be
-                passed along.
-
-        @attention: checks regarding message_processor and similar
-            are not made
-        """
         while 1:
-            message, result = self.read()
-            self.process(message, result)
-            del message, result
-            self.cooperate()
+            try:
+                message, result = self.read(timeout=0.01)
+                self.process(message, result)
+                del message, result
+                self.cooperate()
+            except NoMessage:
+                if self.can_be_collected():
+                    return
