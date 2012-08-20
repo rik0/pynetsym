@@ -78,7 +78,8 @@ class Agent(gevent.Greenlet):
         return entry
 
     def log_received(self, msg):
-        print self.id, ': got', msg.payload, 'from', msg.sender
+        gl = gevent.getcurrent()
+        print '[', gl, ']', self.id, ': got', msg.payload, 'from', msg.sender
 
     ## TODO: absolutely change the name
     @property
@@ -114,7 +115,8 @@ class Agent(gevent.Greenlet):
         return result
 
     def log_message(self, payload, receiver):
-        print 'Sending', payload, 'from', self.id, 'to', receiver.id
+        gl = gevent.getcurrent()
+        print '[', gl, '] Sending', payload, 'from', self.id, 'to', receiver.id
 
     def process(self, message, result):
         """
