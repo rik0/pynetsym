@@ -26,8 +26,6 @@ class Agent(gevent.Greenlet, t.HasTraits):
     asynchronously with themselves.
     """
 
-
-
     def __init__(self, identifier, address_book):
         """
         Initializes the Agent object setting variables and registering
@@ -69,20 +67,29 @@ class Agent(gevent.Greenlet, t.HasTraits):
         gevent.sleep(seconds)
 
     def _run(self):
-        self.run_loop()
+        return self.run_loop()
 
-    def read(self):
+    def read(self, timeout=None):
         """
         Reads the next message that was sent to this agent.
-        @attention: It is not really meant to be called directly.
+
+        @param timeout: can specify a timeout
+        @attention: It is not really meant to be called directly unless you are building a runloop.
+            Strictly speaking it is not non public, though.
         @return: (Message, event.AsyncResult)
+        @raise: NoMessage if no message arrives after timeout
         """
-        entry = self._default_queue.get()
-        #self.log_received(entry[0])
-        return entry
+        try:
+            entry = self._default_queue.get(timeout=timeout)
+            if getattr(self, 'DEBUG_RECEIVE', False):
+                self.log_received(entry[0])
+            return entry
+        except queue.Empty, e:
+            raise NoMessage(e)
 
     def log_received(self, msg):
-        print self.id, ': got', msg.payload, 'from', msg.sender
+        gl = gevent.getcurrent()
+        print '[', gl, ']', self.id, ': got', msg.payload, 'from', msg.sender
 
     ## TODO: absolutely change the name
     @property
@@ -112,13 +119,15 @@ class Agent(gevent.Greenlet, t.HasTraits):
         """
         receiver = self._address_book.resolve(receiver_id)
         message = Message(self.id, message_name, additional_parameters)
-        # self.log_message(message_name, receiver)
+        if getattr(self, 'DEBUG_SEND', False):
+            self.log_message(message_name, receiver)
         result = event.AsyncResult()
         receiver.deliver(message, result)
         return result
 
     def log_message(self, payload, receiver):
-        print 'Sending', payload, 'from', self.id, 'to', receiver.id
+        gl = gevent.getcurrent()
+        print '[', gl, '] Sending', payload, 'from', self.id, 'to', receiver.id
 
     def process(self, message, result):
         """
@@ -171,11 +180,11 @@ class Agent(gevent.Greenlet, t.HasTraits):
         """
         print (
             ('%s received "%s" message with parameters %s: '
-                'could not process.') %
+             'could not process.') %
             (self, name, additional_parameters))
 
     def __str__(self):
-        return '%s(%s)' % (type(self), self.id)
+        return '%s(%s)' % (self.__class__.__name__, self.id)
 
 
 class Node(Agent):
@@ -197,6 +206,9 @@ class Node(Agent):
         super(Node, self).__init__(identifier, address_book)
         self.graph = graph
 
+    def __str__(self):
+        return 'Node-%s' % (self.id, )
+
     def link_to(self, criterion_or_node):
         """
         Sends an 'accept_link' message to the specified node.
@@ -213,7 +225,7 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         return self.send(target_node, 'accept_link',
-                originating_node=self.id)
+                         originating_node=self.id)
 
     def unlink_from(self, criterion_or_node):
         """
@@ -230,7 +242,7 @@ class Node(Agent):
         else:
             target_node = criterion_or_node
         self.send(target_node, 'drop_link',
-                originating_node=self.id)
+                  originating_node=self.id)
 
     def accept_link(self, originating_node):
         """
@@ -251,3 +263,20 @@ class Node(Agent):
         """
         self.graph.remove_edge(originating_node, self.id)
         return True
+
+    def can_be_collected(self):
+        """
+        Override this if the Agent should not be collected
+        """
+        return True
+
+    def run_loop(self):
+        while 1:
+            try:
+                message, result = self.read(timeout=0.01)
+                self.process(message, result)
+                del message, result
+                self.cooperate()
+            except NoMessage:
+                if self.can_be_collected():
+                    return

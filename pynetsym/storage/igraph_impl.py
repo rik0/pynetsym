@@ -1,10 +1,10 @@
 import random
-import types
 from pynetsym.storage.basic import GraphError, GraphWrapper
 
 try:
     import igraph
 except ImportError, igraph_import_exception:
+    import types
     igraph = types.ModuleType('igraph', 'Fake module')
 
     class IGraphWrapper(GraphWrapper):
@@ -21,15 +21,11 @@ else:
             self.graph = graph
             self.repeated_nodes = []
 
-        def add_node(self, identifier, agent):
+        def add_node(self, identifier):
             self.graph.add_vertices(1)
             largest_index = len(self.graph.vs) - 1
             self.graph.vs[largest_index]["identifier"] = identifier
-            self.graph.vs[largest_index]["agent"] = agent
             self.repeated_nodes.append(identifier)
-
-        def __getitem__(self, identifier):
-            return self.graph.vs[identifier]["agent"]
 
         def add_edge(self, source, target):
             self.graph.add_edges(((source, target), ))

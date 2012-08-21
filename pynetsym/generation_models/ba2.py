@@ -44,7 +44,7 @@ class BA(simulation.Simulation):
 #    graph_type = storage.IGraphWrapper
 #    graph_options = dict(graph=igraph.Graph(0))
 
-    class configurator_type(node_manager.SingleNodeConfigurator):
+    class configurator_type(node_manager.BasicConfigurator):
         node_cls = Node
         node_options = {'starting_edges'}
 

@@ -1,5 +1,5 @@
 from pynetsym import core, configurators, simulation
-from pynetsym.configurators.misc import either_p
+from pynetsym.configurators.misc import Either
 from scipy import stats
 import numpy as np
 import collections
@@ -268,7 +268,7 @@ class Simulation(simulation.Simulation):
 
     class configurator_type(configurators.StartingNXGraphConfigurator):
         initialize = True
-        node_cls = either_p(Node, BittorrentNode, 0.77)
+        node_cls = Either(Node, BittorrentNode, 0.77)
         node_options = {}
 
 

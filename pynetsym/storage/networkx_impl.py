@@ -1,13 +1,14 @@
-from pynetsym.storage.basic import GraphError, GraphWrapper
-import itertools as it
 import pynetsym.rndutil
 import random
-import types
 import logging
+
+from pynetsym.storage.basic import GraphError
+from pynetsym.storage.basic import GraphWrapper
 
 try:
     import networkx as nx
 except ImportError, nx_import_exception:
+    import types
     nx = types.ModuleType('networkx', 'Fake module')
 
     class NXGraphWrapper(GraphWrapper):
@@ -98,9 +99,8 @@ else:
                 raise GraphError(
                         "Extracting edge from graph with no edges")
 
-        def add_node(self, identifier, agent):
-            self.graph.add_node(identifier, agent=agent)
-            assert identifier == agent.id
+        def add_node(self, identifier):
+            self.graph.add_node(identifier)
             self.repeated_nodes.append(identifier)
 
         def remove_node(self, identifier):
@@ -109,12 +109,6 @@ else:
 
         def __contains__(self, identifier):
             return identifier in self.graph
-
-        def __getitem__(self, identifier):
-            try:
-                return self.graph.node[identifier]['agent']
-            except (IndexError, KeyError):
-                raise GraphError("Cannot find node %s." % identifier)
 
         def neighbors(self, node_identifier):
             return self.graph.neighbors(node_identifier)

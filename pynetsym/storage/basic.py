@@ -6,7 +6,6 @@ from pynetsym.notifyutil import notifier, notifies
 class GraphError(RuntimeError):
     pass
 
-
 class GraphWrapper(object):
     __metaclass__ = abc.ABCMeta
 
@@ -20,12 +19,11 @@ class GraphWrapper(object):
         pass
 
     @abc.abstractmethod
-    def add_node(self, identifier, agent):
+    def add_node(self, identifier):
         """
         Add specified node to the graph.
         @param identifier: the identifier of the node
         @type identifier: int
-        @param agent: the agent
         """
 
     @abc.abstractmethod
@@ -99,24 +97,6 @@ class GraphWrapper(object):
         """
         pass
 
-    def switch_node(self, identifier, node, keep_contacts=False):
-        """
-        Rebinds a node in the graph.
-
-        @param identifier: the identifier to rebind the graph to
-        @type identifier: int
-        @param node: the new node
-        @type pynetsym.core.Node
-        @param keep_contacts: whether to remove or to update all the
-            contacts that where associated with the old node.
-        @warning: Currently keep_contacts is not supported
-        """
-        if keep_contacts:
-            raise NotImplementedError()
-        else:
-            self.remove_node(identifier)
-            self.add_node(identifier=identifier, agent=node)
-
     @abc.abstractmethod
     def __contains__(self, identifier):
         """
@@ -127,16 +107,6 @@ class GraphWrapper(object):
         @rtype: bool
         """
         pass
-
-    @abc.abstractmethod
-    def __getitem__(self, identifier):
-        """
-        Get the actual agent object with specified identifier.
-        @param identifier: the identifier
-        @type identifier: int
-        @return: the agent
-        @rtype: pynetsym.core.Agent
-        """
 
     @abc.abstractmethod
     def neighbors(self, node_identifier):
@@ -195,9 +165,4 @@ class NotifyingGraphWrapper(GraphWrapper):
     @notifies(REMOVE, NODE)
     @delegate
     def remove_node(self, identifier):
-        pass
-
-    @notifies(MODIFY, NODE)
-    @delegate
-    def switch_node(self, identifier, node, keep_contacts=False):
         pass

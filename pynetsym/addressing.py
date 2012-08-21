@@ -85,7 +85,7 @@ class FlatAddressBook(AddressBook):
             del self.name_registry[identifier]
         except KeyError:
             raise AddressingError(
-                    "Could not remove unregistered identifier %r" % (
+                    "Could not remove not registered identifier %r" % (
                     identifier))
 
     def resolve(self, identifier):
@@ -172,7 +172,7 @@ class AutoResolvingAddressBook(NamespacedAddressBook):
         address_book = self.resolve_identifier(identifier)
         address_book.register(agent, identifier)
 
-    def unregister(self, namespace, *rest):
+    def unregister(self, identifier):
         address_book = self.resolve_identifier(identifier)
         address_book.unregister(identifier)
 

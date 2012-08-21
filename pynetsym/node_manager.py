@@ -3,6 +3,8 @@ import sys
 
 from pynetsym import core, util, metautil, argutils, geventutil
 
+import jsonpickle
+
 
 class IdManager(object):
     """
@@ -75,7 +77,7 @@ class NodeManager(core.Agent):
         try:
             node = cls(identifier, self._address_book,
                        self.graph, **parameters)
-            self.graph.add_node(identifier, node)
+            self.graph.add_node(identifier)
         except Exception as e:
             self.id_manager.free_identifier(identifier)
             # if the node was added to the network, it shall be removed
@@ -88,6 +90,7 @@ class NodeManager(core.Agent):
             node.link_value(self.node_terminated_hook)
             node.link_exception(self.node_failed_hook)
             node.start()
+            del node
             return identifier
 
     def node_failed_hook(self, node):
@@ -110,7 +113,7 @@ class NodeManager(core.Agent):
         @type node: Node
 
         """
-        pass
+        self._address_book.unregister(node.id)
 
 
 class Configurator(core.Agent):
@@ -176,7 +179,7 @@ class BasicConfigurator(Configurator):
 
     @metautil.classproperty
     def node_options(self):
-        pass
+        return set()
 
     def setup(self):
         self.node_arguments = argutils.extract_options(

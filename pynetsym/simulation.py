@@ -53,7 +53,7 @@ class Simulation(object):
             class activator_type(Activator):
                 # ...
 
-            class configurator_type(generation.SingleNodeConfigurator):
+            class configurator_type(generation.BasicConfigurator):
                 node_cls = Node
                 node_options = {...}
                 activator_options = {...}
