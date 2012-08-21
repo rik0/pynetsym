@@ -90,6 +90,7 @@ class NodeManager(core.Agent):
             node.link_value(self.node_terminated_hook)
             node.link_exception(self.node_failed_hook)
             node.start()
+            del node
             return identifier
 
     def node_failed_hook(self, node):
@@ -112,9 +113,22 @@ class NodeManager(core.Agent):
         @type node: Node
 
         """
-
+#        import gc
+#        self._address_book.unregister(node.id)
+#        print 'Referrents list for', node, hex(id(node))
+#        for obj in gc.get_referrers(node):
+#            print obj
+#
+#            for sub_obj in gc.get_referents(obj):
+#                if (hasattr(sub_obj, '__contains__') and
+#                    ('__builtins__' in sub_obj or
+#                    'copyright' in sub_obj)):
+#                    pass
+#                else:
+#                    print '\t', sub_obj
         #json_repr = jsonpickle.encode(node)
         print 'Collected: %s' % (node, )
+        del node
 
 
 class Configurator(core.Agent):
