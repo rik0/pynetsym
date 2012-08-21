@@ -87,33 +87,5 @@ if __name__ == '__main__':
     #nx.draw(graph)
     #plt.show()
 
-    import gc
-    all_objects = gc.get_objects()
-    all_nodes = filter(lambda o: isinstance(o, Node), all_objects)
-    del all_objects
 
-    import objgraph
-
-
-
-    objgraph.show_backrefs(all_nodes, filename='refs.png')
-#
-#    print len(all_nodes)
-#    for index in range(len(all_nodes)):
-#        if all_nodes[index].ready():
-#            print all_nodes[index]
-#            referrers = gc.get_referrers(all_nodes[index])
-#            referrers.remove(all_nodes)
-#
-#            for referrer in referrers:
-#                print '\t', referrer
-#                for key, value in referrer.iteritems():
-#                    if value is all_nodes[index]:
-#                        print '\t\t', key
-#                    super_referrers = gc.get_referrers(referrer)
-#                    for sref in super_referrers:
-#                        print '\t\t\t', type(sref)
-#
-#
-#            del referrers
-#            del referrer
+#    objgraph.show_backrefs(all_nodes, filename='refs.png')

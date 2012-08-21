@@ -282,6 +282,3 @@ class Node(Agent):
             except NoMessage:
                 if self.can_be_collected():
                     return
-
-    def __del__(self):
-        print 'gone'
