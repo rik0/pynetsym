@@ -1,7 +1,5 @@
-import abc
 
 from pynetsym import metautil
-from pygments.lexers._vimbuiltins import auto
 
 class AddressingError(Exception):
     """
@@ -22,9 +20,7 @@ class AddressBook(object):
 
     An agent that is not in the AddressBook is virtually unreachable.
     """
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
     def register(self, agent, identifier):
         """
         Binds the identifier with the agent
@@ -39,7 +35,6 @@ class AddressBook(object):
         """
         pass
 
-    @abc.abstractmethod
     def resolve(self, identifier):
         """
         Resolves :param: identifier to the actual agent.

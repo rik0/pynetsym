@@ -1,30 +1,31 @@
-from pynetsym import geventutil
+from pynetsym import geventutil, addressing
 import collections
-import copy
 import gevent
 import gevent.event as event
 import gevent.queue as queue
-import numbers
-import pprint
-import sys
 
 from traits import api as t
 
-
+class NoMessage(queue.Empty):
+    pass
 
 _M = collections.namedtuple('Message', 'sender payload parameters')
-
 
 class Message(_M):
     """
     An immutable object that is used to send a message among agents.
     """
 
-class Agent(gevent.Greenlet, t.HasTraits):
+class Agent(t.HasTraits):
     """
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
+
+    _address_book = t.Trait(addressing.AddressBook, transient=True)
+    _default_queue = t.Trait(queue.Queue, transient=True)
+
+    id = t.PythonValue
 
     def __init__(self, identifier, address_book):
         """
@@ -40,12 +41,11 @@ class Agent(gevent.Greenlet, t.HasTraits):
         @type error_level: int (IGNORE|LOG_ERROR|EXCEPTION)
         @return: the Agent
         """
-        super(Agent, self).__init__()
-        self._id = identifier
+        self.id = identifier
         self._address_book = address_book
         self._address_book.register(self, identifier)
         self._default_queue = queue.Queue()
-        self._queue = self._default_queue
+        self._greenlet = gevent.Greenlet(self._start)
 
     def deliver(self, message, result):
         """
@@ -63,11 +63,32 @@ class Agent(gevent.Greenlet, t.HasTraits):
         """
         gevent.sleep()
 
+    def join(self):
+        return self._greenlet.join()
+
+    def link_value(self, *args):
+        return self._greenlet.link_value(*args)
+
+    def link_exception(self, *args):
+        return self._greenlet.link_exception(*args)
+
+    def link(self, *args):
+        return self._greenlet.link(*args)
+
+    def unlink(self, *args):
+        return self._greenlet.unlink(*args)
+
     def sleep(self, seconds):
         gevent.sleep(seconds)
 
-    def _run(self):
+    def _start(self):
         return self.run_loop()
+
+    def start(self):
+        self._greenlet.start()
+
+    def kill(self):
+        return self._greenlet.kill()
 
     def read(self, timeout=None):
         """
@@ -90,16 +111,6 @@ class Agent(gevent.Greenlet, t.HasTraits):
     def log_received(self, msg):
         gl = gevent.getcurrent()
         print '[', gl, ']', self.id, ': got', msg.payload, 'from', msg.sender
-
-    ## TODO: absolutely change the name
-    @property
-    def id(self):
-        """
-        The node identifier.
-        @rtype: int
-        @attention: In fact, the only requirement is that it is hashable
-        """
-        return self._id
 
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
@@ -173,6 +184,7 @@ class Agent(gevent.Greenlet, t.HasTraits):
             self.process(message, result)
             del message, result
             self.cooperate()
+        return self
 
     def unsupported_message(self, name, **additional_parameters):
         """
@@ -268,15 +280,16 @@ class Node(Agent):
         """
         Override this if the Agent should not be collected
         """
-        return True
+        return False
 
     def run_loop(self):
         while 1:
             try:
-                message, result = self.read(timeout=0.01)
+                message, result = self.read()
                 self.process(message, result)
                 del message, result
                 self.cooperate()
             except NoMessage:
                 if self.can_be_collected():
-                    return
+                    return self
+        return self

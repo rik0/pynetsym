@@ -1,4 +1,3 @@
-import abc
 import sys
 
 from pynetsym import core, util, metautil, argutils, geventutil
@@ -105,7 +104,7 @@ class NodeManager(core.Agent):
                 node, node.exception)
         self.failures.append(node)
 
-    def node_terminated_hook(self, node):
+    def node_terminated_hook(self, greenlet):
         """
         Hooks a node termination. Usually nothing has to be done.
 
@@ -113,11 +112,11 @@ class NodeManager(core.Agent):
         @type node: Node
 
         """
+        node = greenlet.get()
         self._address_book.unregister(node.id)
 
 
 class Configurator(core.Agent):
-    __metaclass__ = abc.ABCMeta
     name = 'configurator'
 
     initialize = False
@@ -148,7 +147,6 @@ class Configurator(core.Agent):
         self.additional_arguments = additional_arguments
         self.nodes = []
 
-    @abc.abstractmethod
     def setup(self):
         pass
 
@@ -157,7 +155,7 @@ class Configurator(core.Agent):
             for identifier in self.nodes:
                 self.send(identifier, 'initialize')
 
-    def _run(self):
+    def _start(self):
         self.setup()
         self.run_loop()
 
@@ -173,11 +171,9 @@ class BasicConfigurator(Configurator):
     """
     configurator_options = {"starting_network_size"}
 
-    @metautil.classproperty
     def node_cls(self):
         pass
 
-    @metautil.classproperty
     def node_options(self):
         return set()
 
