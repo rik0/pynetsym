@@ -2,9 +2,6 @@ import sys
 
 from pynetsym import core, util, metautil, argutils, geventutil
 
-import jsonpickle
-
-
 class IdManager(object):
     """
     The IdManager is responsible to provide valid identifiers for Nodes.
@@ -41,7 +38,7 @@ class NodeManager(core.Agent):
     the registered name in the L{address book<AddressBook>}
     """
 
-    def __init__(self, graph, address_book, id_manager):
+    def __init__(self, graph, address_book, id_manager, node_db):
         """
         Creates a new node_manager
         @param graph: the graph to pass to the agents
@@ -55,7 +52,31 @@ class NodeManager(core.Agent):
         super(NodeManager, self).__init__(NodeManager.name, address_book)
         self.graph = graph
         self.id_manager = id_manager
+        self.node_db = node_db
         self.failures = []
+
+    def _remove_node_suppressing(self, identifier):
+        try:
+            self.graph.remove_node(identifier)
+        except Exception:
+            pass
+
+    def _allocate_new_node(self, cls, parameters):
+        identifier = self.id_manager.get_identifier()
+        try:
+            node = cls(identifier, self._address_book,
+                       self.graph, **parameters)
+            self.graph.add_node(identifier)
+            return identifier, node
+        except Exception:
+            self.id_manager.free_identifier(identifier)
+            self._remove_node_suppressing(identifier)
+            raise
+
+    def _start_node(self, node):
+        node.link_value(self.node_terminated_hook)
+        node.link_exception(self.node_failed_hook)
+        node.start()
 
     def create_node(self, cls, parameters):
         """
@@ -72,27 +93,29 @@ class NodeManager(core.Agent):
         @return: the actual identifier
         @rtype: int | str
         """
-        identifier = self.id_manager.get_identifier()
         try:
-            node = cls(identifier, self._address_book,
-                       self.graph, **parameters)
-            self.graph.add_node(identifier)
+            identifier, node = self._allocate_new_node(cls, parameters)
         except Exception as e:
-            self.id_manager.free_identifier(identifier)
-            # if the node was added to the network, it shall be removed
-            try:
-                self.graph.remove_node(identifier)
-            except Exception:
-                pass
             return e
         else:
-            node.link_value(self.node_terminated_hook)
-            node.link_exception(self.node_failed_hook)
-            node.start()
-            del node
+            self._start_node(node)
             return identifier
 
-    def node_failed_hook(self, node):
+    def rebuild_node(self, identifier):
+        try:
+            node = self.node_db.recover(identifier)
+            node.establish_agent(self._address_book)
+            node.graph = self.graph
+            self._start_node(node)
+            return node
+        except Exception as e:
+            return e
+
+
+    def node_from_greenlet(self, greenlet):
+        return greenlet.get()
+
+    def node_failed_hook(self, greenlet):
         """
         Hooks an exception in the node. This implementation only
         prints stuff.
@@ -100,8 +123,9 @@ class NodeManager(core.Agent):
         @param node: the node that failed.
         @type node: Node
         """
+        node = self.node_from_greenlet(greenlet)
         print >> sys.stderr, "Node failed: {}\n{}".format(
-                node, node.exception)
+                node, greenlet.exception)
         self.failures.append(node)
 
     def node_terminated_hook(self, greenlet):
@@ -112,8 +136,9 @@ class NodeManager(core.Agent):
         @type node: Node
 
         """
-        node = greenlet.get()
-        self._address_book.unregister(node.id)
+        node = self.node_from_greenlet(greenlet)
+        node.free_agent()
+        self.node_db.store(node)
 
 
 class Configurator(core.Agent):

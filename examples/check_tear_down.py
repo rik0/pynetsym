@@ -1,6 +1,8 @@
 import random
 import networkx as nx
 
+import traits.api as t
+
 from pynetsym import core
 from pynetsym import simulation
 from pynetsym import node_manager
@@ -12,7 +14,6 @@ class Node(core.Node):
     def __init__(self, identifier, address_book, graph, starting_network_size):
         super(Node, self).__init__(identifier, address_book, graph)
         self.starting_network_size = starting_network_size
-        self.all_nodes = range(self.starting_network_size)
         self.activated = False
 
     def activate(self):

@@ -1,4 +1,4 @@
-from pynetsym import geventutil, addressing
+from pynetsym import geventutil, addressing, storage
 import collections
 import gevent
 import gevent.event as event
@@ -16,6 +16,7 @@ class Message(_M):
     An immutable object that is used to send a message among agents.
     """
 
+
 class Agent(t.HasTraits):
     """
     An Agent is the basic class of the simulation. Agents communicate
@@ -24,8 +25,30 @@ class Agent(t.HasTraits):
 
     _address_book = t.Trait(addressing.AddressBook, transient=True)
     _default_queue = t.Trait(queue.Queue, transient=True)
+    _greenlet = t.Trait(gevent.Greenlet, transient=True)
+
+    __ = t.PythonValue(transient=True)
 
     id = t.PythonValue
+
+    def establish_agent(self, address_book):
+        self._address_book = address_book
+        self._address_book.register(self, self.id)
+        self._default_queue = queue.Queue()
+        self._greenlet = gevent.Greenlet(self._start)
+
+    def free_agent(self):
+        self._address_book.unregister(self.id)
+        del self._address_book
+        del self._default_queue
+        del self._greenlet
+
+    @classmethod
+    def create_agent(cls, class_=None, **kwargs):
+        class_ = cls if class_ is None else class_
+        agent = class_(**kwargs)
+        return agent
+
 
     def __init__(self, identifier, address_book):
         """
@@ -42,10 +65,7 @@ class Agent(t.HasTraits):
         @return: the Agent
         """
         self.id = identifier
-        self._address_book = address_book
-        self._address_book.register(self, identifier)
-        self._default_queue = queue.Queue()
-        self._greenlet = gevent.Greenlet(self._start)
+        self.establish_agent(address_book)
 
     def deliver(self, message, result):
         """
@@ -115,7 +135,7 @@ class Agent(t.HasTraits):
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
             [self.send(receiver_id, message, **additional_parameters)
-            for receiver_id in receivers])
+             for receiver_id in receivers])
 
     def send(self, receiver_id, message_name, **additional_parameters):
         """
@@ -151,7 +171,7 @@ class Agent(t.HasTraits):
             bound_method = getattr(self, action_name)
         except AttributeError:
             value = self.unsupported_message(
-                    action_name, **message.parameters)
+                action_name, **message.parameters)
         else:
             value = bound_method(**message.parameters)
             del bound_method
@@ -203,6 +223,10 @@ class Node(Agent):
     """
     A Node in the social network.
     """
+
+    graph = t.Trait(storage.GraphWrapper, transient=True)
+    #_ = t.Disallow()
+
 
     def __init__(self, identifier, address_book, graph):
         """
@@ -280,12 +304,12 @@ class Node(Agent):
         """
         Override this if the Agent should not be collected
         """
-        return False
+        return True
 
     def run_loop(self):
         while 1:
             try:
-                message, result = self.read()
+                message, result = self.read(timeout=0.01)
                 self.process(message, result)
                 del message, result
                 self.cooperate()
