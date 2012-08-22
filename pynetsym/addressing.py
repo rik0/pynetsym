@@ -1,5 +1,5 @@
 
-from pynetsym import metautil
+from pynetsym import metautil, node_db
 
 class AddressingError(Exception):
     """
@@ -95,6 +95,21 @@ class FlatAddressBook(AddressBook):
 
     def list(self):
         return self.name_registry.viewkeys()
+
+class ResumingAddressBook(FlatAddressBook):
+    def __init__(self, node_manager):
+        super(ResumingAddressBook, self).__init__()
+        self.node_manager = node_manager
+
+    def resolve(self, identifier):
+        try:
+            return self.name_registry[identifier]
+        except KeyError:
+            try:
+                return self.node_manager.rebuild_node(identifier)
+            except node_db.MissingNode:
+                raise AddressingError(
+                    "Could not find node with address %r." % identifier)
 
 class NamespacedAddressBook(AddressBook):
     def __init__(self, E={}, **F):

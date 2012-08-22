@@ -1,4 +1,5 @@
 from pynetsym import geventutil, addressing, storage
+
 import collections
 import gevent
 import gevent.event as event
@@ -226,7 +227,6 @@ class Node(Agent):
 
     graph = t.Trait(storage.GraphWrapper, transient=True)
     #_ = t.Disallow()
-
 
     def __init__(self, identifier, address_book, graph):
         """

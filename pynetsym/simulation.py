@@ -179,7 +179,7 @@ class Simulation(object):
 
 
     def create_address_book(self):
-        node_address_book = addressing.FlatAddressBook()
+        node_address_book = addressing.ResumingAddressBook(self.node_db)
         main_address_book = addressing.FlatAddressBook()
         self.address_book = addressing.AutoResolvingAddressBook(main=main_address_book, node=node_address_book)
         self.address_book.add_resolver('node', operator.isNumberType)

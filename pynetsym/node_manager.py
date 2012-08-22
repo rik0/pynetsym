@@ -102,15 +102,11 @@ class NodeManager(core.Agent):
             return identifier
 
     def rebuild_node(self, identifier):
-        try:
-            node = self.node_db.recover(identifier)
-            node.establish_agent(self._address_book)
-            node.graph = self.graph
-            self._start_node(node)
-            return node
-        except Exception as e:
-            return e
-
+        node = self.node_db.recover(identifier)
+        node.establish_agent(self._address_book)
+        node.graph = self.graph
+        self._start_node(node)
+        return node
 
     def node_from_greenlet(self, greenlet):
         return greenlet.get()
