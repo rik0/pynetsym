@@ -8,6 +8,7 @@ from networkx.generators.random_graphs import _random_subset
 from pynetsym import core
 from pynetsym import simulation
 from pynetsym import node_manager
+from pynetsym.nodes import Node
 
 
 def barabasi_albert_stepper(n, m, seed=None):
@@ -41,7 +42,7 @@ def barabasi_albert_stepper(n, m, seed=None):
         source += 1
 
 
-class Node(core.Node):
+class Node(Node):
     def __init__(self, identifier, address_book,
                  graph, stepper):
         super(Node, self).__init__(identifier, address_book, graph)

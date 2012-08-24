@@ -97,16 +97,18 @@ class FlatAddressBook(AddressBook):
         return self.name_registry.viewkeys()
 
 class ResumingAddressBook(FlatAddressBook):
-    def __init__(self, node_manager):
+    def __init__(self, node_db):
         super(ResumingAddressBook, self).__init__()
-        self.node_manager = node_manager
+        self.node_db = node_db
 
     def resolve(self, identifier):
         try:
             return self.name_registry[identifier]
         except KeyError:
             try:
-                return self.node_manager.rebuild_node(identifier)
+                node = self.node_db.recover(identifier)
+                node.establish_agent()
+
             except node_db.MissingNode:
                 raise AddressingError(
                     "Could not find node with address %r." % identifier)

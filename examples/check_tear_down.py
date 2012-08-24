@@ -6,8 +6,9 @@ import traits.api as t
 from pynetsym import core
 from pynetsym import simulation
 from pynetsym import node_manager
+from pynetsym.nodes import Node
 
-class Node(core.Node):
+class Node(Node):
     #DEBUG_SEND = True
     #DEBUG_RECEIVE = True
 

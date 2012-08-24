@@ -5,6 +5,7 @@ import pynetsym
 from pynetsym import simulation
 from pynetsym import core
 from pynetsym.node_manager import NodeManager
+from pynetsym.nodes import Node
 
 
 def distribution(s):
@@ -17,7 +18,7 @@ def distribution(s):
         return tuple(float(f) for f in parts)
 
 
-class Node(core.Node):
+class Node(Node):
     def __init__(self, identifier, address_book, graph,
                  gamma, probability, strategy=None):
         """

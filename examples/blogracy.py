@@ -7,6 +7,7 @@ import functools
 import itertools
 import networkx as nx
 import pprint
+from pynetsym.nodes import Node
 
 
 UPDATE_PARAM = 1. / 48
@@ -144,7 +145,7 @@ class OnlineState(State):
         return new_contents
 
 
-class Node(core.Node):
+class Node(Node):
     def initialize(self):
         self.online_state = OnlineState(self)
         self.offline_state = OfflineState(self)

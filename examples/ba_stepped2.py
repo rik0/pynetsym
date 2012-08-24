@@ -6,7 +6,7 @@ from pynetsym import simulation
 import networkx as nx
 import operator
 import random
-
+from pynetsym.nodes import Node
 
 
 class ba_stepper(object):
@@ -47,7 +47,7 @@ class ba_stepper(object):
             source += 1
 
 
-class Node(core.Node):
+class Node(Node):
     def __init__(self, identifier, address_book, graph, stepper):
         super(Node, self).__init__(identifier, address_book, graph)
         self.stepper = stepper

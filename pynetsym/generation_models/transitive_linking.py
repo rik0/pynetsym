@@ -2,9 +2,10 @@ from pynetsym import core
 from pynetsym import node_manager
 from pynetsym import simulation
 import random
+from pynetsym.nodes import Node
 
 
-class Node(core.Node):
+class Node(Node):
     MAX_TRIALS = 10
 
     def __init__(self, identifier, address_book,

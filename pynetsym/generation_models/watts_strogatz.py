@@ -3,9 +3,10 @@ import random
 from pynetsym import simulation
 from pynetsym import node_manager
 from pynetsym import core
+from pynetsym.nodes import Node
 
 
-class Node(core.Node):
+class Node(Node):
     def __init__(self, identifier, address_book,
                  graph, rewiring_probability,
                  lattice_connections, starting_network_size):

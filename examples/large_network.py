@@ -8,9 +8,11 @@ from pympler import muppy
 
 
 # trck = ClassTracker()
+from pynetsym.nodes import Node
+
 st = tracker.SummaryTracker()
 
-class Node(core.Node):
+class Node(Node):
     def activate(self):
         pass
 

@@ -1,9 +1,10 @@
 from pynetsym import core
 from pynetsym import node_manager
 from pynetsym import simulation
+from pynetsym.nodes import Node
 
 
-class Node(core.Node):
+class Node(Node):
     def __init__(self, identifier, address_book,
                  graph, starting_edges):
         super(Node, self).__init__(identifier, address_book, graph)

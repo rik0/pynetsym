@@ -10,9 +10,10 @@ from pynetsym import simulation
 import pytest
 
 import networkx as nx
+from pynetsym.nodes import Node
 
 
-class Node(core.Node):
+class Node(Node):
     def activate(self):
         pass
 
