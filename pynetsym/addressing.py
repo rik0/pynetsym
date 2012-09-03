@@ -107,7 +107,7 @@ class ResumingAddressBook(FlatAddressBook):
         except KeyError:
             try:
                 node = self.node_db.recover(identifier)
-                node.establish_agent()
+                node._establish_agent()
 
             except node_db.MissingNode:
                 raise AddressingError(

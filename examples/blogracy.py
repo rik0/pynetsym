@@ -169,6 +169,10 @@ class Node(Node):
         contents = self._state.send_me_new_content(since, from_)
         self.send(to, 'receive_contents', contents=contents)
 
+    def send_me_new_content(self, since, to):
+        contents = self.load_contents(since=last_download, kind='news')
+        self.send(to, 'receive_contents', contents=contents)
+
     def go_offline(self):
         self._state = self.offline_state
 
@@ -259,15 +263,17 @@ class Activator(simulation.Activator):
 class Simulation(simulation.Simulation):
     command_line_options = (
         ('--generation-probability',
-            dict(type=probability, default=CREATE_CONTENT_PARAM)),
+            {'type': probability,
+             'default': CREATE_CONTENT_PARAM}),
         ('--update-probability',
-            dict(type=probability, default=UPDATE_PARAM)),
+            {'type': probability,
+             'default': UPDATE_PARAM}),
     )
 
     activator_type = Activator
-    graph_options = dict(graph=nx.DiGraph())
+    graph_options = {'graph': nx.DiGraph}
 
-    class configurator_type(configurators.StartingNXGraphConfigurator):
+    class configurator_type(configurators.FromFile):
         initialize = True
         node_cls = Either(Node, BittorrentNode, 0.77)
         node_options = {}

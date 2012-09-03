@@ -73,10 +73,10 @@ class NodeManager(core.Agent):
             self._remove_node_suppressing(identifier)
             raise
 
-    def _start_node(self, node):
-        node.link_value(self.node_terminated_hook)
-        node.link_exception(self.node_failed_hook)
-        node.start()
+#    def _start_node(self, node):
+#        node.link_value(self.node_terminated_hook)
+#        node.link_exception(self.node_failed_hook)
+#        node.start()
 
     def create_node(self, cls, parameters):
         """
@@ -98,12 +98,12 @@ class NodeManager(core.Agent):
         except Exception as e:
             return e
         else:
-            self._start_node(node)
+            node.start()
             return identifier
 
     def rebuild_node(self, identifier):
         node = self.node_db.recover(identifier)
-        node.establish_agent(self._address_book)
+        node._establish_agent(self._address_book)
         node.graph = self.graph
         self._start_node(node)
         return node
@@ -111,30 +111,30 @@ class NodeManager(core.Agent):
     def node_from_greenlet(self, greenlet):
         return greenlet.get()
 
-    def node_failed_hook(self, greenlet):
-        """
-        Hooks an exception in the node. This implementation only
-        prints stuff.
-
-        @param node: the node that failed.
-        @type node: Node
-        """
-        node = self.node_from_greenlet(greenlet)
-        print >> sys.stderr, "Node failed: {}\n{}".format(
-                node, greenlet.exception)
-        self.failures.append(node)
-
-    def node_terminated_hook(self, greenlet):
-        """
-        Hooks a node termination. Usually nothing has to be done.
-
-        @param node: the node that terminated.
-        @type node: Node
-
-        """
-        node = self.node_from_greenlet(greenlet)
-        node.free_agent()
-        self.node_db.store(node)
+#    def node_failed_hook(self, greenlet):
+#        """
+#        Hooks an exception in the node. This implementation only
+#        prints stuff.
+#
+#        @param node: the node that failed.
+#        @type node: Node
+#        """
+#        node = self.node_from_greenlet(greenlet)
+#        print >> sys.stderr, "Node failed: {}\n{}".format(
+#                node, greenlet.exception)
+#        self.failures.append(node)
+#
+#    def node_terminated_hook(self, greenlet):
+#        """
+#        Hooks a node termination. Usually nothing has to be done.
+#
+#        @param node: the node that terminated.
+#        @type node: Node
+#
+#        """
+#        node = self.node_from_greenlet(greenlet)
+#        node._free_agent()
+#        self.node_db.store(node)
 
 
 class Configurator(core.Agent):

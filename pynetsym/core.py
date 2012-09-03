@@ -1,4 +1,4 @@
-from pynetsym import geventutil, addressing
+from pynetsym import geventutil, addressing, node_db
 
 import collections
 import gevent
@@ -8,6 +8,7 @@ import gevent.queue as queue
 import greenlet
 
 from traits import api as t
+import pynetsym
 
 class NoMessage(queue.Empty):
     pass
@@ -29,18 +30,21 @@ class Agent(t.HasTraits):
     _address_book = t.Trait(addressing.AddressBook, transient=True)
     _default_queue = t.Trait(queue.Queue, transient=True)
     _greenlet = t.Trait(gevent.Greenlet, transient=True)
+    _node_db = t.Trait(node_db.NodeDB, transient=True)
+
+    id = t.Either(t.Int, t.Str)
 
     __ = t.PythonValue(transient=True)
 
-    id = t.PythonValue
-
-    def establish_agent(self, address_book):
+    def _establish_agent(self, address_book, node_db):
         self._address_book = address_book
         self._address_book.register(self, self.id)
         self._default_queue = queue.Queue()
         self._greenlet = gevent.Greenlet(self._start)
+        self._node_db = node_db
 
-    def free_agent(self):
+
+    def _free_agent(self):
         self._address_book.unregister(self.id)
         del self._address_book
         del self._default_queue
@@ -52,8 +56,15 @@ class Agent(t.HasTraits):
         agent = class_(**kwargs)
         return agent
 
+    def _awaken_agent(self, identifier):
+        node = self._node_db.recover(identifier)
+        node._establish_agent(self._address_book, self._node_db)
+        return node
 
-    def __init__(self, identifier, address_book):
+    def _store(self):
+        self._node_db.store(self)
+
+    def __init__(self, identifier, address_book, node_db):
         """
         Initializes the Agent object setting variables and registering
         the agent in the address book.
@@ -68,7 +79,7 @@ class Agent(t.HasTraits):
         @return: the Agent
         """
         self.id = identifier
-        self.establish_agent(address_book)
+        self._establish_agent(address_book, node_db)
 
     def deliver(self, message, result):
         """
@@ -88,18 +99,6 @@ class Agent(t.HasTraits):
 
     def join(self):
         return self._greenlet.join()
-
-    def link_value(self, *args):
-        return self._greenlet.link_value(*args)
-
-    def link_exception(self, *args):
-        return self._greenlet.link_exception(*args)
-
-    def link(self, *args):
-        return self._greenlet.link(*args)
-
-    def unlink(self, *args):
-        return self._greenlet.unlink(*args)
 
     def sleep(self, seconds):
         gevent.sleep(seconds)
@@ -140,6 +139,16 @@ class Agent(t.HasTraits):
             [self.send(receiver_id, message, **additional_parameters)
              for receiver_id in receivers])
 
+    def _resolve(self, identifier):
+        try:
+            receiver = self._address_book.resolve(identifier)
+        except addressing.AddressingError, e:
+            try:
+                receiver = self._awaken_agent(identifier)
+            except node_db.MissingNode:
+                raise e
+        return receiver
+
     def send(self, receiver_id, message_name, **additional_parameters):
         """
         Send a message to the specified agent.
@@ -151,7 +160,7 @@ class Agent(t.HasTraits):
         @param additional_parameters: additional parameters to be passed
             to the function
         """
-        receiver = self._address_book.resolve(receiver_id)
+        receiver = self._resolve(receiver_id)
         message = Message(self.id, message_name, additional_parameters)
         if getattr(self, 'DEBUG_SEND', False):
             self.log_message(message_name, receiver)

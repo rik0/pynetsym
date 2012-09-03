@@ -13,7 +13,6 @@ class Node(core.Agent):
     """
 
     graph = t.Trait(storage.GraphWrapper, transient=True)
-    _node_manager = t.Trait(NodeManager, transient=True)
 
     #_ = t.Disallow()
 
@@ -36,12 +35,12 @@ class Node(core.Agent):
         self.link_value(self._node_manager.node_terminated_hook)
         self.link_exception(self._node_manager.node_failed_hook)
 
-    def establish_agent(self, address_book):
-        super(Node, self).establish_agent(address_book)
+    def _establish_agent(self, address_book):
+        super(Node, self)._establish_agent(address_book)
         self._link_to_node_manager()
 
-    def free_agent(self):
-        super(Node, self).free_agent()
+    def _free_agent(self):
+        super(Node, self)._free_agent()
         self.unlink(self._node_manager._greenlet)
 
     def __str__(self):
