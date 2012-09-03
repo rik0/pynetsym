@@ -2,6 +2,8 @@ import sys
 
 from pynetsym import core, util, metautil, argutils, geventutil
 
+import traits.api as t
+
 class IdManager(object):
     """
     The IdManager is responsible to provide valid identifiers for Nodes.
@@ -49,7 +51,8 @@ class NodeManager(core.Agent):
         @type id_manager: IdManager
         @param configurator: the configurator
         """
-        super(NodeManager, self).__init__(NodeManager.name, address_book)
+        super(NodeManager, self).__init__(
+            NodeManager.name, address_book, node_db)
         self.graph = graph
         self.id_manager = id_manager
         self.node_db = node_db
@@ -65,12 +68,16 @@ class NodeManager(core.Agent):
         identifier = self.id_manager.get_identifier()
         try:
             node = cls(identifier, self._address_book,
-                       self.graph, **parameters)
+                       self.node_db,
+                       self.graph,
+                       **parameters)
             self.graph.add_node(identifier)
             return identifier, node
         except Exception:
             self.id_manager.free_identifier(identifier)
             self._remove_node_suppressing(identifier)
+            if identifier in self.graph:
+                self.graph.remove_node(identifier)
             raise
 
 #    def _start_node(self, node):
@@ -111,30 +118,19 @@ class NodeManager(core.Agent):
     def node_from_greenlet(self, greenlet):
         return greenlet.get()
 
-#    def node_failed_hook(self, greenlet):
-#        """
-#        Hooks an exception in the node. This implementation only
-#        prints stuff.
-#
-#        @param node: the node that failed.
-#        @type node: Node
-#        """
-#        node = self.node_from_greenlet(greenlet)
-#        print >> sys.stderr, "Node failed: {}\n{}".format(
-#                node, greenlet.exception)
-#        self.failures.append(node)
-#
-#    def node_terminated_hook(self, greenlet):
-#        """
-#        Hooks a node termination. Usually nothing has to be done.
-#
-#        @param node: the node that terminated.
-#        @type node: Node
-#
-#        """
-#        node = self.node_from_greenlet(greenlet)
-#        node._free_agent()
-#        self.node_db.store(node)
+    def node_failed_hook(self, greenlet):
+        """
+        Hooks an exception in the node. This implementation only
+        prints stuff.
+
+        @param node: the node that failed.
+        @type node: Node
+        """
+        node = self.node_from_greenlet(greenlet)
+        print >> sys.stderr, "Node failed: {}\n{}".format(
+                node, greenlet.exception)
+        self.failures.append(node)
+
 
 
 class Configurator(core.Agent):
@@ -157,9 +153,9 @@ class Configurator(core.Agent):
     Options are accumulated along the inheritance path
     """
 
-    def __init__(self, address_book, **additional_arguments):
+    def __init__(self, address_book, node_db, **additional_arguments):
         super(Configurator, self).__init__(
-                self.name, address_book)
+                self.name, address_book, node_db)
         full_options = metautil.gather_from_ancestors(
                 self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
@@ -191,6 +187,7 @@ class BasicConfigurator(Configurator):
     from additional_arguments specified in node_options.
     """
     configurator_options = {"starting_network_size"}
+    starting_network_size = t.Int
 
     def node_cls(self):
         pass

@@ -12,8 +12,8 @@ class Node(Node):
     #DEBUG_SEND = True
     #DEBUG_RECEIVE = True
 
-    def __init__(self, identifier, address_book, graph, starting_network_size):
-        super(Node, self).__init__(identifier, address_book, graph)
+    def __init__(self, identifier, address_book, node_db, graph, starting_network_size):
+        super(Node, self).__init__(identifier, address_book, node_db, graph)
         self.starting_network_size = starting_network_size
         self.activated = False
 

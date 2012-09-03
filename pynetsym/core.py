@@ -8,7 +8,6 @@ import gevent.queue as queue
 import greenlet
 
 from traits import api as t
-import pynetsym
 
 class NoMessage(queue.Empty):
     pass
@@ -20,29 +19,35 @@ class Message(_M):
     An immutable object that is used to send a message among agents.
     """
 
-
 class Agent(t.HasTraits):
     """
     An Agent is the basic class of the simulation. Agents communicate
     asynchronously with themselves.
     """
 
-    _address_book = t.Trait(addressing.AddressBook, transient=True)
-    _default_queue = t.Trait(queue.Queue, transient=True)
-    _greenlet = t.Trait(gevent.Greenlet, transient=True)
-    _node_db = t.Trait(node_db.NodeDB, transient=True)
+    _address_book = t.Instance(
+        addressing.AddressBook, transient=True, allow_none=False)
+    _default_queue = t.Instance(
+        queue.Queue, transient=True, allow_none=False)
+    _greenlet = t.Instance(
+        gevent.Greenlet, transient=True, allow_none=False)
+    _node_db = t.Instance(
+        node_db.NodeDB, transient=True, allow_none=False)
 
     id = t.Either(t.Int, t.Str)
 
     __ = t.PythonValue(transient=True)
 
     def _establish_agent(self, address_book, node_db):
-        self._address_book = address_book
         self._address_book.register(self, self.id)
         self._default_queue = queue.Queue()
         self._greenlet = gevent.Greenlet(self._start)
         self._node_db = node_db
-
+        def pg(g):
+            import jsonpickle
+            print g.get()
+            print jsonpickle.encode(g)
+        self._greenlet.link_value(pg)
 
     def _free_agent(self):
         self._address_book.unregister(self.id)
@@ -61,8 +66,6 @@ class Agent(t.HasTraits):
         node._establish_agent(self._address_book, self._node_db)
         return node
 
-    def _store(self):
-        self._node_db.store(self)
 
     def __init__(self, identifier, address_book, node_db):
         """
@@ -72,13 +75,12 @@ class Agent(t.HasTraits):
         @param identifier: the identifier the agent has in the system
         @type identifier: int|str
         @param address_book: the address book where we want to register
-        @type address_book: AddressBook
-        @param error_level: describe what should happen when a message
-            cannot be delivered
-        @type error_level: int (IGNORE|LOG_ERROR|EXCEPTION)
+        @type address_book: AddressBookx
         @return: the Agent
         """
         self.id = identifier
+        self._address_book = address_book
+
         self._establish_agent(address_book, node_db)
 
     def deliver(self, message, result):
@@ -192,6 +194,15 @@ class Agent(t.HasTraits):
         else:
             result.set(value)
 
+    def can_be_collected(self):
+        """
+        Override this if the Agent should not be collected
+        """
+        return False
+
+    def on_error(self, exception):
+        raise exception
+
     def run_loop(self):
         """
         Agent main run loop.
@@ -212,10 +223,18 @@ class Agent(t.HasTraits):
             are not made
         """
         while 1:
-            message, result = self.read()
-            self.process(message, result)
-            del message, result
-            self.cooperate()
+            try:
+                message, result = self.read(timeout=0.01)
+                self.process(message, result)
+                del message, result
+                self.cooperate()
+            except NoMessage:
+                if self.can_be_collected():
+                    print 'collecting'
+                    return self
+            except Exception as e:
+                if self.on_error(e):
+                    return self
         return self
 
     def unsupported_message(self, name, **additional_parameters):

@@ -16,7 +16,6 @@ import sys
 import operator
 
 
-
 class Simulation(object):
     """
     A subclass of Simulation describes a specific kind of simulation.
@@ -65,7 +64,7 @@ class Simulation(object):
 
     command_line_options = (
         ("-s", "--steps", dict(default=100, type=int)),
-    )
+        )
     """
     Each option line is in the form:
         1. (short_option_name, long_option_name, parameters)
@@ -181,18 +180,24 @@ class Simulation(object):
     def create_address_book(self):
         node_address_book = addressing.ResumingAddressBook(self.node_db)
         main_address_book = addressing.FlatAddressBook()
-        self.address_book = addressing.AutoResolvingAddressBook(main=main_address_book, node=node_address_book)
+        self.address_book = addressing.AutoResolvingAddressBook(
+            main=main_address_book, node=node_address_book)
         self.address_book.add_resolver('node', operator.isNumberType)
-        self.address_book.add_resolver('main', lambda o:isinstance(o, basestring))
+        self.address_book.add_resolver('main',
+                                       lambda o: isinstance(o, basestring))
 
     def create_service_agents(self):
         self.create_node_db()
         self.create_address_book()
-        self.termination_checker = \
-                termination.TerminationChecker(self.graph,
-            self.address_book, termination.count_down(self.steps))
+        self.termination_checker =\
+        termination.TerminationChecker(self.graph,
+                                       self.address_book,
+                                       self.node_db,
+                                       termination.count_down(self.steps))
         self.configurator_type = self.configurator_type(
-            self.address_book, **self._simulation_parameters)
+            self.address_book,
+            self.node_db,
+            **self._simulation_parameters)
         self.node_manager = NodeManager(
             self.graph, self.address_book,
             self.id_manager, self.node_db)
@@ -205,11 +210,12 @@ class Simulation(object):
 
     def create_simulation_agents(self):
         self.activator = self.activator_type(
-                self.graph, self.address_book,
-                **self._simulation_parameters)
+            self.graph, self.address_book,
+            self.node_db,
+            **self._simulation_parameters)
         self.activator.setup()
         self.activator.start()
-        self.clock = self.clock_type(self.address_book)
+        self.clock = self.clock_type(self.address_book, self.node_db)
 
     def start_simulation(self):
         self.clock.start()
@@ -281,8 +287,8 @@ class Activator(core.Agent):
     name = 'activator'
     activator_options = {}
 
-    def __init__(self, graph, address_book, **additional_arguments):
-        super(Activator, self).__init__(self.name, address_book)
+    def __init__(self, graph, address_book, node_db, **additional_arguments):
+        super(Activator, self).__init__(self.name, address_book, node_db)
         activator_options = metautil.gather_from_ancestors(
             self, 'activator_options')
         activator_arguments = argutils.extract_options(
@@ -336,8 +342,8 @@ class BaseClock(core.Agent):
     name = 'clock'
     activator_can_terminate = False
 
-    def __init__(self, address_book):
-        super(BaseClock, self).__init__(self.name, address_book)
+    def __init__(self, address_book, node_db):
+        super(BaseClock, self).__init__(self.name, address_book, node_db)
         self.activator_type = address_book.resolve(Activator.name)
         self.active = True
         self.observers = []

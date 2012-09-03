@@ -16,7 +16,7 @@ class Node(core.Agent):
 
     #_ = t.Disallow()
 
-    def __init__(self, identifier, address_book, graph):
+    def __init__(self, identifier, address_book, node_db, graph, **attributes):
         """
         Create a Node in the network.
         @param identifier: the identifier to bind the Node to
@@ -27,21 +27,21 @@ class Node(core.Agent):
         @type graph: storage.GraphWrapper
         @return: the Node
         """
-        super(Node, self).__init__(identifier, address_book)
+        super(Node, self).__init__(identifier, address_book, node_db)
         self.graph = graph
+        self.set(**attributes)
 
     def _link_to_node_manager(self):
-        self._node_manager = self._address_book.resolve(NodeManager.name)
-        self.link_value(self._node_manager.node_terminated_hook)
-        self.link_exception(self._node_manager.node_failed_hook)
+        node_manager = self._address_book.resolve(NodeManager.name)
+        self._greenlet.link_exception(node_manager.node_failed_hook)
 
-    def _establish_agent(self, address_book):
-        super(Node, self)._establish_agent(address_book)
+    def _establish_agent(self, address_book, node_db):
+        super(Node, self)._establish_agent(address_book, node_db)
         self._link_to_node_manager()
 
     def _free_agent(self):
         super(Node, self)._free_agent()
-        self.unlink(self._node_manager._greenlet)
+        #self.unlink(self._node_manager._greenlet)
 
     def __str__(self):
         return 'Node-%s' % (self.id, )
@@ -102,19 +102,4 @@ class Node(core.Agent):
         return True
 
     def can_be_collected(self):
-        """
-        Override this if the Agent should not be collected
-        """
-        return True
-
-    def run_loop(self):
-        while 1:
-            try:
-                message, result = self.read(timeout=0.01)
-                self.process(message, result)
-                del message, result
-                self.cooperate()
-            except core.NoMessage:
-                if self.can_be_collected():
-                    return self
-        return self
+        return False
