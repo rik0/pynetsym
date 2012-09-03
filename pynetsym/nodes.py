@@ -16,32 +16,21 @@ class Node(core.Agent):
 
     #_ = t.Disallow()
 
-    def __init__(self, identifier, address_book, node_db, graph, **attributes):
+    def __init__(self, graph, **attributes):
         """
         Create a Node in the network.
         @param identifier: the identifier to bind the Node to
-        @type identifier: int|str
-        @param address_book: the address book where we want to register
-        @type address_book: AddressBook
         @param graph: the graph backing the social network
         @type graph: storage.GraphWrapper
         @return: the Node
         """
-        super(Node, self).__init__(identifier, address_book, node_db)
         self.graph = graph
         self.set(**attributes)
 
-    def _link_to_node_manager(self):
-        node_manager = self._address_book.resolve(NodeManager.name)
-        self._greenlet.link_exception(node_manager.node_failed_hook)
-
-    def _establish_agent(self, address_book, node_db):
-        super(Node, self)._establish_agent(address_book, node_db)
-        self._link_to_node_manager()
-
-    def _free_agent(self):
-        super(Node, self)._free_agent()
-        #self.unlink(self._node_manager._greenlet)
+    def start(self, address_book, node_db, identifier):
+        ret = super(Node, self).start(address_book, node_db, identifier)
+        self.graph.add_node(identifier)
+        return ret
 
     def __str__(self):
         return 'Node-%s' % (self.id, )

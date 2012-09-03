@@ -9,20 +9,17 @@ from pynetsym import node_manager
 from pynetsym.nodes import Node
 
 class Node(Node):
-    #DEBUG_SEND = True
-    #DEBUG_RECEIVE = True
+    DEBUG_SEND = True
+    DEBUG_RECEIVE = True
 
-    def __init__(self, identifier, address_book, node_db, graph, starting_network_size):
-        super(Node, self).__init__(identifier, address_book, node_db, graph)
-        self.starting_network_size = starting_network_size
-        self.activated = False
+    _activated = t.false
 
     def activate(self):
-        if not self.activated:
+        if not self._activated:
             for node, _attrs in self.graph.nodes():
                 if node != self.id:
                     self.link_to(node)
-            self.activated = True
+            self._activated = True
         else:
             candidates = self.graph.neighbors(self.id)
             dropped = random.sample(
@@ -34,8 +31,8 @@ class Node(Node):
 
 
 class Activator(simulation.Activator):
-    #DEBUG_SEND = True
-    #DEBUG_RECEIVE = True
+    DEBUG_SEND = True
+    DEBUG_RECEIVE = True
 
     activator_options = {'starting_network_size'}
 

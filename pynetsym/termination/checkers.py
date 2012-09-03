@@ -4,8 +4,7 @@ from pynetsym import core
 class TerminationChecker(core.Agent):
     name = 'termination_checker'
 
-    def __init__(self, graph, address_book, node_db, *conditions):
-        super(TerminationChecker, self).__init__(self.name, address_book, node_db)
+    def __init__(self, graph, *conditions):
         self.graph = graph
         self.conditions = list(conditions)
         self.active = True
@@ -24,6 +23,7 @@ class TerminationChecker(core.Agent):
             return False
 
     def _start(self):
+        self.setup()
         while self.active:
             message, result = self.read()
             self.process(message, result)

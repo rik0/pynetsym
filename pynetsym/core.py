@@ -34,54 +34,22 @@ class Agent(t.HasTraits):
     _node_db = t.Instance(
         node_db.NodeDB, transient=True, allow_none=False)
 
+    initialize = t.false(transient=True) # check me!
+
     id = t.Either(t.Int, t.Str)
 
     __ = t.PythonValue(transient=True)
 
-    def _establish_agent(self, address_book, node_db):
-        self._address_book.register(self, self.id)
-        self._default_queue = queue.Queue()
-        self._greenlet = gevent.Greenlet(self._start)
-        self._node_db = node_db
-        def pg(g):
-            import jsonpickle
-            print g.get()
-            print jsonpickle.encode(g)
-        self._greenlet.link_value(pg)
-
-    def _free_agent(self):
-        self._address_book.unregister(self.id)
-        del self._address_book
-        del self._default_queue
-        del self._greenlet
-
-    @classmethod
-    def create_agent(cls, class_=None, **kwargs):
-        class_ = cls if class_ is None else class_
-        agent = class_(**kwargs)
-        return agent
+#    @classmethod
+#    def create_agent(cls, class_=None, **kwargs):
+#        class_ = cls if class_ is None else class_
+#        agent = class_(**kwargs)
+#        return agent
 
     def _awaken_agent(self, identifier):
         node = self._node_db.recover(identifier)
         node._establish_agent(self._address_book, self._node_db)
         return node
-
-
-    def __init__(self, identifier, address_book, node_db):
-        """
-        Initializes the Agent object setting variables and registering
-        the agent in the address book.
-
-        @param identifier: the identifier the agent has in the system
-        @type identifier: int|str
-        @param address_book: the address book where we want to register
-        @type address_book: AddressBookx
-        @return: the Agent
-        """
-        self.id = identifier
-        self._address_book = address_book
-
-        self._establish_agent(address_book, node_db)
 
     def deliver(self, message, result):
         """
@@ -105,11 +73,41 @@ class Agent(t.HasTraits):
     def sleep(self, seconds):
         gevent.sleep(seconds)
 
+    def setup(self):
+        """
+        Additional initialization before the run loop goes here.
+        """
+
     def _start(self):
+        """
+        Override to customize the agent's behavior.
+        """
+        self.setup()
         return self.run_loop()
 
-    def start(self):
+    def _free_agent(self):
+        self._address_book.unregister(self.id)
+        del self._address_book
+        del self._default_queue
+        del self._greenlet
+
+    def start(self, address_book, node_db, identifier=None):
+        if identifier is None and hasattr(self, 'name'):
+            self.id = self.name
+        else:
+            self.id = identifier
+        self._address_book = address_book
+        self._address_book.register(self, self.id)
+        self._default_queue = queue.Queue()
+        self._node_db = node_db
+        self._greenlet = gevent.Greenlet(self._start)
+        self._greenlet.link_exception(self.boo)
+
         self._greenlet.start()
+
+    def boo(self, what):
+        print self
+        print what
 
     def kill(self):
         return self._greenlet.kill()
@@ -190,6 +188,7 @@ class Agent(t.HasTraits):
             value = bound_method(**message.parameters)
             del bound_method
         if isinstance(value, Exception):
+            raise value
             result.set_exception(value)
         else:
             result.set(value)
@@ -199,9 +198,6 @@ class Agent(t.HasTraits):
         Override this if the Agent should not be collected
         """
         return False
-
-    def on_error(self, exception):
-        raise exception
 
     def run_loop(self):
         """
@@ -231,9 +227,6 @@ class Agent(t.HasTraits):
             except NoMessage:
                 if self.can_be_collected():
                     print 'collecting'
-                    return self
-            except Exception as e:
-                if self.on_error(e):
                     return self
         return self
 

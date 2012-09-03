@@ -9,7 +9,12 @@ class SequenceAsyncResult(object):
         return all(value.ready() for value in self.seq)
 
     def get(self):
-        return [value.get() for value in self.seq]
+        try:
+            return [value.get() for value in self.seq]
+        except Exception as e:
+            import gevent
+            print "xxx", gevent.getcurrent()
+            raise e
 
     def flatten(self):
         items = self.get()

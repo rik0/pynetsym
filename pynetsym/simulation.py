@@ -10,10 +10,13 @@ from pynetsym import termination
 from pynetsym import timing
 from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
+
 import copy
 import gevent
 import sys
 import operator
+
+import traits.api as t
 
 
 class Simulation(object):
@@ -191,34 +194,30 @@ class Simulation(object):
         self.create_address_book()
         self.termination_checker =\
         termination.TerminationChecker(self.graph,
-                                       self.address_book,
-                                       self.node_db,
-                                       termination.count_down(self.steps))
+                                       termination.count_down(self.steps)
+        )
         self.configurator_type = self.configurator_type(
-            self.address_book,
-            self.node_db,
             **self._simulation_parameters)
         self.node_manager = NodeManager(
-            self.graph, self.address_book,
-            self.id_manager, self.node_db)
+            self.id_manager,
+            self.graph
+        )
 
     def pre_configure_network(self):
-        self.termination_checker.start()
-        self.node_manager.start()
-        self.configurator_type.start()
+        self.termination_checker.start(self.address_book, self.node_db)
+        self.node_manager.start(self.address_book, self.node_db)
+        self.configurator_type.start(self.address_book, self.node_db)
         self.configurator_type.join()
 
     def create_simulation_agents(self):
         self.activator = self.activator_type(
-            self.graph, self.address_book,
-            self.node_db,
+            self.graph,
             **self._simulation_parameters)
-        self.activator.setup()
-        self.activator.start()
-        self.clock = self.clock_type(self.address_book, self.node_db)
+        self.activator.start(self.address_book, self.node_db)
+        self.clock = self.clock_type()
 
     def start_simulation(self):
-        self.clock.start()
+        self.clock.start(self.address_book, self.node_db)
 
     def run(self, args=None, force_cli=False, **kwargs):
         """
@@ -287,8 +286,7 @@ class Activator(core.Agent):
     name = 'activator'
     activator_options = {}
 
-    def __init__(self, graph, address_book, node_db, **additional_arguments):
-        super(Activator, self).__init__(self.name, address_book, node_db)
+    def __init__(self, graph, **additional_arguments):
         activator_options = metautil.gather_from_ancestors(
             self, 'activator_options')
         activator_arguments = argutils.extract_options(
@@ -296,9 +294,6 @@ class Activator(core.Agent):
             activator_options)
         self.graph = graph
         vars(self).update(activator_arguments)
-
-    def setup(self):
-        pass
 
     def activate_nodes(self):
         node_ids = self.nodes_to_activate()
@@ -342,11 +337,12 @@ class BaseClock(core.Agent):
     name = 'clock'
     activator_can_terminate = False
 
-    def __init__(self, address_book, node_db):
-        super(BaseClock, self).__init__(self.name, address_book, node_db)
-        self.activator_type = address_book.resolve(Activator.name)
-        self.active = True
-        self.observers = []
+    active = t.true(transient=True)
+    observers = t.List
+
+    def setup(self):
+        super(BaseClock, self).setup()
+        self.activator_type = self._address_book.resolve(Activator.name)
 
     def register_observer(self, name):
         self.observers.append(name)
@@ -367,7 +363,7 @@ class BaseClock(core.Agent):
 
 class AsyncClock(BaseClock):
     def _start(self):
-        gevent.spawn(self.run_loop)
+        gevent.spawn(self._start)
         while self.active:
             self.send_tick()
             for observer in self.observers:
@@ -379,7 +375,7 @@ class AsyncClock(BaseClock):
 
 class Clock(BaseClock):
     def _start(self):
-        gevent.spawn(self.run_loop)
+        gevent.spawn(self._start)
         while self.active:
             done = self.send_tick()
             for observer in self.observers:

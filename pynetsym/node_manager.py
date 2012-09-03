@@ -40,45 +40,18 @@ class NodeManager(core.Agent):
     the registered name in the L{address book<AddressBook>}
     """
 
-    def __init__(self, graph, address_book, id_manager, node_db):
+    def __init__(self, id_manager, graph):
         """
         Creates a new node_manager
-        @param graph: the graph to pass to the agents
-        @type graph: storage.GraphWrapper
-        @param address_book: the address book to pass to the agents
-        @type address_book: core.AddressBook
+
         @param id_manager: the source for nodes id
         @type id_manager: IdManager
-        @param configurator: the configurator
+        @param graph: the graph to pass to the agents
+        @type graph: storage.GraphWrapper
         """
-        super(NodeManager, self).__init__(
-            NodeManager.name, address_book, node_db)
         self.graph = graph
         self.id_manager = id_manager
-        self.node_db = node_db
         self.failures = []
-
-    def _remove_node_suppressing(self, identifier):
-        try:
-            self.graph.remove_node(identifier)
-        except Exception:
-            pass
-
-    def _allocate_new_node(self, cls, parameters):
-        identifier = self.id_manager.get_identifier()
-        try:
-            node = cls(identifier, self._address_book,
-                       self.node_db,
-                       self.graph,
-                       **parameters)
-            self.graph.add_node(identifier)
-            return identifier, node
-        except Exception:
-            self.id_manager.free_identifier(identifier)
-            self._remove_node_suppressing(identifier)
-            if identifier in self.graph:
-                self.graph.remove_node(identifier)
-            raise
 
 #    def _start_node(self, node):
 #        node.link_value(self.node_terminated_hook)
@@ -92,8 +65,6 @@ class NodeManager(core.Agent):
         @param cls: the factory creating the new node.
             Usually the node class.
         @type cls: callable
-        @param identifier_hint: the identifier to bind the new node to
-        @type identifier_hint: int
         @param parameters: the parameters that are forwarded to the node for
             creation
         @type parameters: dict
@@ -101,18 +72,20 @@ class NodeManager(core.Agent):
         @rtype: int | str
         """
         try:
-            identifier, node = self._allocate_new_node(cls, parameters)
+            node = cls(self.graph, **parameters)
+            identifier = self.id_manager.get_identifier()
+            node.start(self._address_book, self._node_db, identifier)
+            # FIXME
+            node._greenlet.link_exception(self.node_failed_hook)
         except Exception as e:
-            return e
+            raise
         else:
-            node.start()
             return identifier
 
     def rebuild_node(self, identifier):
-        node = self.node_db.recover(identifier)
-        node._establish_agent(self._address_book)
+        node = self._node_db.recover(identifier)
         node.graph = self.graph
-        self._start_node(node)
+
         return node
 
     def node_from_greenlet(self, greenlet):
@@ -153,9 +126,8 @@ class Configurator(core.Agent):
     Options are accumulated along the inheritance path
     """
 
-    def __init__(self, address_book, node_db, **additional_arguments):
-        super(Configurator, self).__init__(
-                self.name, address_book, node_db)
+    def __init__(self, **additional_arguments):
+        super(Configurator, self).__init__()
         full_options = metautil.gather_from_ancestors(
                 self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
@@ -196,6 +168,7 @@ class BasicConfigurator(Configurator):
         return set()
 
     def setup(self):
+        super(BasicConfigurator, self).setup()
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
         node_ids = geventutil.SequenceAsyncResult(
