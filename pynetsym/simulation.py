@@ -363,7 +363,8 @@ class BaseClock(core.Agent):
 
 class AsyncClock(BaseClock):
     def _start(self):
-        gevent.spawn(self._start)
+        self.setup()
+        gevent.spawn(self.run_loop)
         while self.active:
             self.send_tick()
             for observer in self.observers:
@@ -375,7 +376,8 @@ class AsyncClock(BaseClock):
 
 class Clock(BaseClock):
     def _start(self):
-        gevent.spawn(self._start)
+        self.setup()
+        gevent.spawn(self.run_loop)
         while self.active:
             done = self.send_tick()
             for observer in self.observers:

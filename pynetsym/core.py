@@ -85,12 +85,6 @@ class Agent(t.HasTraits):
         self.setup()
         return self.run_loop()
 
-    def _free_agent(self):
-        self._address_book.unregister(self.id)
-        del self._address_book
-        del self._default_queue
-        del self._greenlet
-
     def start(self, address_book, node_db, identifier=None):
         if identifier is None and hasattr(self, 'name'):
             self.id = self.name
@@ -187,11 +181,7 @@ class Agent(t.HasTraits):
         else:
             value = bound_method(**message.parameters)
             del bound_method
-        if isinstance(value, Exception):
-            raise value
-            result.set_exception(value)
-        else:
-            result.set(value)
+        result.set(value)
 
     def can_be_collected(self):
         """
