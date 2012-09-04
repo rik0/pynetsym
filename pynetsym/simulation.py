@@ -1,5 +1,6 @@
 import cPickle
-from pynetsym import addressing, node_db
+from pynetsym import addressing
+from pynetsym import node_db
 from pynetsym import argutils
 from pynetsym import configuration
 from pynetsym import core
@@ -8,6 +9,7 @@ from pynetsym import metautil
 from pynetsym import storage
 from pynetsym import termination
 from pynetsym import timing
+
 from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
 
@@ -189,9 +191,14 @@ class Simulation(object):
         self.address_book.add_resolver('main',
                                        lambda o: isinstance(o, basestring))
 
+    def create_logger(self):
+        self.logger = core.get_logger(
+            self.address_book, self.node_db, sys.stderr)
+
     def create_service_agents(self):
         self.create_node_db()
         self.create_address_book()
+        self.create_logger()
         self.termination_checker =\
         termination.TerminationChecker(self.graph,
                                        termination.count_down(self.steps)

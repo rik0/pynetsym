@@ -1,16 +1,20 @@
-from pynetsym import geventutil, addressing, node_db
+from pynetsym import geventutil
+from pynetsym import addressing
+from pynetsym import node_db
 
+import time
+import sys
 import collections
 
 import gevent
 import gevent.event as event
 import gevent.queue as queue
-from gevent.greenlet import SpawnedLink
 
 from traits import api as t
 
 class NoMessage(queue.Empty):
     pass
+
 
 class AgentError(Exception):
     pass
@@ -21,6 +25,7 @@ class Message(_M):
     """
     An immutable object that is used to send a message among agents.
     """
+
 
 class Agent(t.HasTraits):
     """
@@ -43,11 +48,11 @@ class Agent(t.HasTraits):
 
     __ = t.PythonValue(transient=True)
 
-#    @classmethod
-#    def create_agent(cls, class_=None, **kwargs):
-#        class_ = cls if class_ is None else class_
-#        agent = class_(**kwargs)
-#        return agent
+    #    @classmethod
+    #    def create_agent(cls, class_=None, **kwargs):
+    #        class_ = cls if class_ is None else class_
+    #        agent = class_(**kwargs)
+    #        return agent
 
     def _awaken_agent(self, identifier):
         node = self._node_db.recover(identifier)
@@ -55,7 +60,7 @@ class Agent(t.HasTraits):
         return node
 
     def _store_agent(self):
-       self._node_db.store(self)
+        self._node_db.store(self)
         # FIXME: delete stuff
 
     def deliver(self, message, result):
@@ -115,6 +120,12 @@ class Agent(t.HasTraits):
 
         self._greenlet.start()
 
+    @property
+    def started(self):
+        return ((self.id is not None) and
+                (self._address_book is not None) and
+                (self._greenlet is not None))
+
     def _unstart(self, source):
         print 'Removing stuff', self
         self._address_book.unregister(self.id)
@@ -123,8 +134,10 @@ class Agent(t.HasTraits):
         del self._node_db
         del self._greenlet
 
+
     def on_completion(self, source):
         pass
+
 
     def on_error(self, source):
         from cStringIO import StringIO
@@ -139,8 +152,10 @@ class Agent(t.HasTraits):
         print >> ss, 'exception:', source.exception
         print ss.getvalue()
 
+
     def kill(self):
         return self._greenlet.kill()
+
 
     def read(self, timeout=None):
         """
@@ -160,14 +175,17 @@ class Agent(t.HasTraits):
         except queue.Empty, e:
             raise NoMessage(e)
 
+
     def log_received(self, msg):
         gl = gevent.getcurrent()
         print '[', gl, ']', self.id, ': got', msg.payload, 'from', msg.sender
+
 
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
             [self.send(receiver_id, message, **additional_parameters)
              for receiver_id in receivers])
+
 
     def _resolve(self, identifier):
         try:
@@ -178,6 +196,7 @@ class Agent(t.HasTraits):
             except node_db.MissingNode:
                 raise e
         return receiver
+
 
     def send(self, receiver_id, message_name, **additional_parameters):
         """
@@ -190,18 +209,28 @@ class Agent(t.HasTraits):
         @param additional_parameters: additional parameters to be passed
             to the function
         """
-        receiver = self._resolve(receiver_id)
-        # FIXME: no true message passing semantics!
-        message = Message(self.id, message_name, additional_parameters)
-        if getattr(self, 'DEBUG_SEND', False):
-            self.log_message(message_name, receiver)
-        result = event.AsyncResult()
-        receiver.deliver(message, result)
-        return result
+        try:
+            receiver = self._resolve(receiver_id)
+        except addressing.AddressingError as e:
+            logger = get_logger(self._add_class_trait, self._node_db)
+            logger.put_log(self, e.message)
+            result = event.AsyncResult()
+            result.set_exception(e)
+            return result
+        else:
+            # FIXME: no true message passing semantics!
+            message = Message(self.id, message_name, additional_parameters)
+            if getattr(self, 'DEBUG_SEND', False):
+                self.log_message(message_name, receiver)
+            result = event.AsyncResult()
+            receiver.deliver(message, result)
+            return result
+
 
     def log_message(self, payload, receiver):
         gl = gevent.getcurrent()
         print '[', gl, '] Sending', payload, 'from', self.id, 'to', receiver.id
+
 
     def process(self, message, result):
         """
@@ -220,11 +249,13 @@ class Agent(t.HasTraits):
             del bound_method
         result.set(value)
 
+
     def can_be_collected(self):
         """
         Override this if the Agent should not be collected
         """
         return False
+
 
     def run_loop(self):
         """
@@ -257,6 +288,7 @@ class Agent(t.HasTraits):
                     return self
         return self
 
+
     def unsupported_message(self, name, **additional_parameters):
         """
         Prints out something if we received a message we could not process.
@@ -266,8 +298,37 @@ class Agent(t.HasTraits):
              'could not process.') %
             (self, name, additional_parameters))
 
+
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__, self.id)
 
     __repr__ = __str__
 
+
+class Logger(Agent, t.SingletonHasTraits):
+    name = 'logger'
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def log(self, sender, message, when=None):
+        if when is None:
+            full_line = '[%s: r%s] %s\n' % (sender, time.clock(), message)
+        else:
+            full_line = '[%s: s%s] %s\n' % (sender, when, message)
+        self.stream.write(full_line)
+
+    def put_log(self, sender, message):
+        result = event.AsyncResult()
+        message = Message(sender.id,
+                          'log',
+                          dict(sender=sender.id, message=message,
+                               when=time.clock()))
+        self.deliver(message, result)
+
+
+def get_logger(address_book, node_db, stream=sys.stderr):
+    logger = Logger(stream)
+    if not logger.started:
+        logger.start(address_book, node_db)
+    return logger
