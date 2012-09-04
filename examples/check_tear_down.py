@@ -1,4 +1,6 @@
+import greenlet
 import random
+import gevent
 import networkx as nx
 
 import traits.api as t
@@ -29,7 +31,7 @@ class Node(Node):
             for node in dropped:
                 self.unlink_from(node)
             if random.random() < 0.1:
-                raise Exception()
+                raise gevent.GreenletExit()
 
 
 
@@ -82,6 +84,8 @@ if __name__ == '__main__':
     print nx.is_isomorphic(
         nx.complete_graph(len(graph)),
         graph)
+
+    print graph.nodes()
 
     #nx.draw(graph)
     #plt.show()

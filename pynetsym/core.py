@@ -127,7 +127,6 @@ class Agent(t.HasTraits):
                 (self._greenlet is not None))
 
     def _unstart(self, source):
-        print 'Removing stuff', self
         self._address_book.unregister(self.id)
         del self._address_book
         del self._default_queue
@@ -136,7 +135,18 @@ class Agent(t.HasTraits):
 
 
     def on_completion(self, source):
-        pass
+        from cStringIO import StringIO
+
+        ss = StringIO()
+
+        print >> ss, '=' * 80
+        print >> ss, self
+        print >> ss, source
+        print >> ss, 'succesful:', source.successful()
+        print >> ss, 'value:', source.value, type(source.value)
+        print >> ss, 'exception:', source.exception, type(source.exception)
+        print ss.getvalue()
+
 
 
     def on_error(self, source):

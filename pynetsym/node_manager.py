@@ -69,7 +69,6 @@ class NodeManager(core.Agent):
         node = cls(self.graph, **parameters)
         identifier = self.id_manager.get_identifier()
         node.start(self._address_book, self._node_db, identifier)
-        # FIXME
         return identifier
 
 
@@ -106,18 +105,10 @@ class Configurator(core.Agent):
         self.additional_arguments = additional_arguments
         self.nodes = []
 
-    def setup(self):
-        pass
-
     def initialize_nodes(self):
         if self.initialize:
             for identifier in self.nodes:
                 self.send(identifier, 'initialize')
-
-    def _start(self):
-        self.setup()
-        self.run_loop()
-
 
 class BasicConfigurator(Configurator):
     """

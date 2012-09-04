@@ -32,6 +32,10 @@ class Node(core.Agent):
         self.graph.add_node(identifier)
         return ret
 
+#    def _unstart(self, source):
+#        super(Node, self)._unstart(source)
+#        self.graph.remove_node(identifier)
+
     def __str__(self):
         return 'Node-%s' % (self.id, )
 
