@@ -48,16 +48,10 @@ class Agent(t.HasTraits):
 
     __ = t.PythonValue(transient=True)
 
-    #    @classmethod
-    #    def create_agent(cls, class_=None, **kwargs):
-    #        class_ = cls if class_ is None else class_
-    #        agent = class_(**kwargs)
-    #        return agent
-
     def _awaken_agent(self, identifier):
-        node = self._node_db.recover(identifier)
-        node.start(self._address_book, self._node_db, identifier)
-        return node
+        agent = self._node_db.recover(identifier)
+        agent.start(self._address_book, self._node_db, identifier)
+        return agent
 
     def _store_agent(self):
         self._node_db.store(self)
@@ -115,10 +109,12 @@ class Agent(t.HasTraits):
         self._greenlet = gevent.Greenlet(self._start)
 
         self._greenlet.link_exception(self.on_error)
-        self._greenlet.link_value(self.on_completion)
+        if hasattr(self, 'on_completion'):
+            self._greenlet.link_value(self.on_completion)
         self._greenlet.link(self._unstart)
 
         self._greenlet.start()
+        return self
 
     @property
     def started(self):
@@ -132,22 +128,6 @@ class Agent(t.HasTraits):
         del self._default_queue
         del self._node_db
         del self._greenlet
-
-
-    def on_completion(self, source):
-        from cStringIO import StringIO
-
-        ss = StringIO()
-
-        print >> ss, '=' * 80
-        print >> ss, self
-        print >> ss, source
-        print >> ss, 'succesful:', source.successful()
-        print >> ss, 'value:', source.value, type(source.value)
-        print >> ss, 'exception:', source.exception, type(source.exception)
-        print ss.getvalue()
-
-
 
     def on_error(self, source):
         from cStringIO import StringIO
@@ -185,11 +165,23 @@ class Agent(t.HasTraits):
         except queue.Empty, e:
             raise NoMessage(e)
 
+    def _get_logger(self, stream=sys.stderr):
+        return get_logger(self._address_book, self._node_db, stream)
+
+    def log_sent(self, payload, receiver):
+        logger = self._get_logger(sys.stdout)
+        gl = gevent.getcurrent()
+        message =  "[%s] Sending %s from %s to %s" % (
+            gl, payload, self.id, receiver.id
+        )
+        logger.put_log(self, message)
 
     def log_received(self, msg):
+        logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
-        print '[', gl, ']', self.id, ': got', msg.payload, 'from', msg.sender
-
+        message =  "[%s] %s: got %s from %s" % (
+           gl, self.id, msg.payload, msg.sender)
+        logger.put_log(self.id, message)
 
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
@@ -222,7 +214,7 @@ class Agent(t.HasTraits):
         try:
             receiver = self._resolve(receiver_id)
         except addressing.AddressingError as e:
-            logger = get_logger(self._add_class_trait, self._node_db)
+            logger = self._get_logger()
             logger.put_log(self, e.message)
             result = event.AsyncResult()
             result.set_exception(e)
@@ -231,16 +223,10 @@ class Agent(t.HasTraits):
             # FIXME: no true message passing semantics!
             message = Message(self.id, message_name, additional_parameters)
             if getattr(self, 'DEBUG_SEND', False):
-                self.log_message(message_name, receiver)
+                self.log_sent(message_name, receiver)
             result = event.AsyncResult()
             receiver.deliver(message, result)
             return result
-
-
-    def log_message(self, payload, receiver):
-        gl = gevent.getcurrent()
-        print '[', gl, '] Sending', payload, 'from', self.id, 'to', receiver.id
-
 
     def process(self, message, result):
         """

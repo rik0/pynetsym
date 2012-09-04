@@ -15,6 +15,9 @@ import sys
 #sys.stderr =x open('/dev/null', 'w')
 
 class Node(Node):
+    DEBUG_SENT = True
+    DEBUG_RECEIVED = True
+
     _activated = t.false
 
     def activate(self):
@@ -36,6 +39,10 @@ class Node(Node):
 
 
 class Activator(simulation.Activator):
+
+    DEBUG_SENT = True
+    DEBUG_RECEIVED = True
+
     activator_options = {'starting_network_size'}
 
     def setup(self):
@@ -86,6 +93,7 @@ if __name__ == '__main__':
         graph)
 
     print graph.nodes()
+    print graph.number_of_edges()
 
     #nx.draw(graph)
     #plt.show()

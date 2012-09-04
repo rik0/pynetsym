@@ -6,8 +6,6 @@ import pynetsym.storage as storage
 
 from pynetsym.node_manager import NodeManager
 
-__author__ = 'enrico'
-
 class Node(core.Agent):
     """
     A Node in the social network.
@@ -20,7 +18,6 @@ class Node(core.Agent):
     def __init__(self, graph, **attributes):
         """
         Create a Node in the network.
-        @param identifier: the identifier to bind the Node to
         @param graph: the graph backing the social network
         @type graph: storage.GraphWrapper
         @return: the Node
@@ -29,17 +26,19 @@ class Node(core.Agent):
         self.set(**attributes)
 
     def _remove_from_network(self, source):
-        print 'hooo'
         if isinstance(source.value, core.GreenletExit):
             #self.graph.remove_node(self.id)
             print 'Removing', self
             pass
 
     def start(self, address_book, node_db, identifier):
-        ret = super(Node, self).start(address_book, node_db, identifier)
+        super(Node, self).start(address_book, node_db, identifier)
+        if self.graph is None:
+            node_manager = self._resolve(NodeManager.name)
+            self.graph = node_manager.graph
         self.graph.add_node(identifier)
         self._greenlet.link_value(self._remove_from_network)
-        return ret
+        return self
 
     def __str__(self):
         return 'Node-%s' % (self.id, )
