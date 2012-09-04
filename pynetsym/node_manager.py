@@ -70,7 +70,6 @@ class NodeManager(core.Agent):
         identifier = self.id_manager.get_identifier()
         node.start(self._address_book, self._node_db, identifier)
         # FIXME
-        node._greenlet.link_exception(self.node_failed_hook)
         return identifier
 
 

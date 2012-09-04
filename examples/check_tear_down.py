@@ -10,7 +10,7 @@ from pynetsym.nodes import Node
 
 import sys
 
-sys.stderr = open('/dev/null', 'w')
+#sys.stderr =x open('/dev/null', 'w')
 
 class Node(Node):
     _activated = t.false

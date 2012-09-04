@@ -111,8 +111,17 @@ class Agent(t.HasTraits):
 
         self._greenlet.link_exception(self.on_error)
         self._greenlet.link_value(self.on_completion)
+        self._greenlet.link(self._unstart)
 
         self._greenlet.start()
+
+    def _unstart(self, source):
+        print 'Removing stuff', self
+        self._address_book.unregister(self.id)
+        del self._address_book
+        del self._default_queue
+        del self._node_db
+        del self._greenlet
 
     def on_completion(self, source):
         pass
@@ -260,5 +269,5 @@ class Agent(t.HasTraits):
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__, self.id)
 
-
+    __repr__ = __str__
 
