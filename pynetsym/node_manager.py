@@ -53,11 +53,6 @@ class NodeManager(core.Agent):
         self.id_manager = id_manager
         self.failures = []
 
-#    def _start_node(self, node):
-#        node.link_value(self.node_terminated_hook)
-#        node.link_exception(self.node_failed_hook)
-#        node.start()
-
     def create_node(self, cls, parameters):
         """
         Creates a new node.
@@ -71,38 +66,14 @@ class NodeManager(core.Agent):
         @return: the actual identifier
         @rtype: int | str
         """
-        try:
-            node = cls(self.graph, **parameters)
-            identifier = self.id_manager.get_identifier()
-            node.start(self._address_book, self._node_db, identifier)
-            # FIXME
-            node._greenlet.link_exception(self.node_failed_hook)
-        except Exception as e:
-            raise
-        else:
-            return identifier
+        node = cls(self.graph, **parameters)
+        identifier = self.id_manager.get_identifier()
+        node.start(self._address_book, self._node_db, identifier)
+        # FIXME
+        node._greenlet.link_exception(self.node_failed_hook)
+        return identifier
 
-    def rebuild_node(self, identifier):
-        node = self._node_db.recover(identifier)
-        node.graph = self.graph
 
-        return node
-
-    def node_from_greenlet(self, greenlet):
-        return greenlet.get()
-
-    def node_failed_hook(self, greenlet):
-        """
-        Hooks an exception in the node. This implementation only
-        prints stuff.
-
-        @param node: the node that failed.
-        @type node: Node
-        """
-        node = self.node_from_greenlet(greenlet)
-        print >> sys.stderr, "Node failed: {}\n{}".format(
-                node, greenlet.exception)
-        self.failures.append(node)
 
 
 

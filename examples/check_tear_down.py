@@ -8,10 +8,11 @@ from pynetsym import simulation
 from pynetsym import node_manager
 from pynetsym.nodes import Node
 
-class Node(Node):
-    DEBUG_SEND = True
-    DEBUG_RECEIVE = True
+import sys
 
+sys.stderr = open('/dev/null', 'w')
+
+class Node(Node):
     _activated = t.false
 
     def activate(self):
@@ -27,13 +28,12 @@ class Node(Node):
                 random.randrange(1 if len(candidates) else 0, len(candidates)))
             for node in dropped:
                 self.unlink_from(node)
+            if random.random() < 0.1:
+                raise Exception()
 
 
 
 class Activator(simulation.Activator):
-    DEBUG_SEND = True
-    DEBUG_RECEIVE = True
-
     activator_options = {'starting_network_size'}
 
     def setup(self):

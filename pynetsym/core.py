@@ -1,15 +1,18 @@
 from pynetsym import geventutil, addressing, node_db
 
 import collections
+
 import gevent
 import gevent.event as event
 import gevent.queue as queue
-
-import greenlet
+from gevent.greenlet import SpawnedLink
 
 from traits import api as t
 
 class NoMessage(queue.Empty):
+    pass
+
+class AgentError(Exception):
     pass
 
 _M = collections.namedtuple('Message', 'sender payload parameters')
@@ -48,8 +51,12 @@ class Agent(t.HasTraits):
 
     def _awaken_agent(self, identifier):
         node = self._node_db.recover(identifier)
-        node._establish_agent(self._address_book, self._node_db)
+        node.start(self._address_book, self._node_db, identifier)
         return node
+
+    def _store_agent(self):
+       self._node_db.store(self)
+        # FIXME: delete stuff
 
     def deliver(self, message, result):
         """
@@ -85,23 +92,43 @@ class Agent(t.HasTraits):
         self.setup()
         return self.run_loop()
 
-    def start(self, address_book, node_db, identifier=None):
-        if identifier is None and hasattr(self, 'name'):
-            self.id = self.name
+    def _compute_identifier(self, identifier):
+        if identifier is None:
+            try:
+                self.id = self.name
+            except Exception:
+                raise AgentError("%r is not a valid Agent Id." % identifier)
         else:
             self.id = identifier
+
+    def start(self, address_book, node_db, identifier=None):
+        self._compute_identifier(identifier)
         self._address_book = address_book
         self._address_book.register(self, self.id)
         self._default_queue = queue.Queue()
         self._node_db = node_db
         self._greenlet = gevent.Greenlet(self._start)
-        self._greenlet.link_exception(self.boo)
+
+        self._greenlet.link_exception(self.on_error)
+        self._greenlet.link_value(self.on_completion)
 
         self._greenlet.start()
 
-    def boo(self, what):
-        print self
-        print what
+    def on_completion(self, source):
+        pass
+
+    def on_error(self, source):
+        from cStringIO import StringIO
+
+        ss = StringIO()
+
+        print >> ss, '=' * 80
+        print >> ss, self
+        print >> ss, source
+        print >> ss, 'succesful:', source.successful()
+        print >> ss, 'value:', source.value
+        print >> ss, 'exception:', source.exception
+        print ss.getvalue()
 
     def kill(self):
         return self._greenlet.kill()
@@ -155,6 +182,7 @@ class Agent(t.HasTraits):
             to the function
         """
         receiver = self._resolve(receiver_id)
+        # FIXME: no true message passing semantics!
         message = Message(self.id, message_name, additional_parameters)
         if getattr(self, 'DEBUG_SEND', False):
             self.log_message(message_name, receiver)
@@ -216,7 +244,7 @@ class Agent(t.HasTraits):
                 self.cooperate()
             except NoMessage:
                 if self.can_be_collected():
-                    print 'collecting'
+                    self._store_agent()
                     return self
         return self
 
@@ -231,5 +259,6 @@ class Agent(t.HasTraits):
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__, self.id)
+
 
 
