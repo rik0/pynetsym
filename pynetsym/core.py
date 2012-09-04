@@ -342,3 +342,6 @@ def get_logger(address_book, node_db, stream=sys.stderr):
     if not logger.started:
         logger.start(address_book, node_db)
     return logger
+
+
+GreenletExit = gevent.GreenletExit

@@ -1,3 +1,4 @@
+import gevent
 import traits.api as t
 
 import pynetsym.core as core
@@ -27,14 +28,18 @@ class Node(core.Agent):
         self.graph = graph
         self.set(**attributes)
 
+    def _remove_from_network(self, source):
+        print 'hooo'
+        if isinstance(source.value, core.GreenletExit):
+            #self.graph.remove_node(self.id)
+            print 'Removing', self
+            pass
+
     def start(self, address_book, node_db, identifier):
         ret = super(Node, self).start(address_book, node_db, identifier)
         self.graph.add_node(identifier)
+        self._greenlet.link_value(self._remove_from_network)
         return ret
-
-#    def _unstart(self, source):
-#        super(Node, self)._unstart(source)
-#        self.graph.remove_node(identifier)
 
     def __str__(self):
         return 'Node-%s' % (self.id, )
@@ -95,4 +100,4 @@ class Node(core.Agent):
         return True
 
     def can_be_collected(self):
-        return False
+        return True

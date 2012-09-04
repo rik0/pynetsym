@@ -96,23 +96,6 @@ class FlatAddressBook(AddressBook):
     def list(self):
         return self.name_registry.viewkeys()
 
-class ResumingAddressBook(FlatAddressBook):
-    def __init__(self, node_db):
-        super(ResumingAddressBook, self).__init__()
-        self.node_db = node_db
-
-    def resolve(self, identifier):
-        try:
-            return self.name_registry[identifier]
-        except KeyError:
-            try:
-                node = self.node_db.recover(identifier)
-                node._establish_agent()
-
-            except node_db.MissingNode:
-                raise AddressingError(
-                    "Could not find node with address %r." % identifier)
-
 class NamespacedAddressBook(AddressBook):
     def __init__(self, E={}, **F):
         self.namespaces = {}
