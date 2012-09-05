@@ -11,6 +11,12 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
 
     configurator_options = {'starting_graph'}
 
+    def node_cls(self):
+        pass
+
+    def node_options(self):
+        return set()
+
     def create_edges(self):
         graph = self.starting_graph
         for u, v in graph.edges_iter():
