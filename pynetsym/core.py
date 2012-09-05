@@ -329,5 +329,29 @@ def get_logger(address_book, node_db, stream=sys.stderr):
         logger.start(address_book, node_db)
     return logger
 
+class MinimalAgentRuntime(object):
+    """
+    Use this to establish a minimal agent runtime.
+
+    If a more elaborate runtime is being used, this is not needed.
+    """
+
+    def __init__(self, address_book_factory=addressing.FlatAddressBook,
+                 node_db_factory=lambda: node_db.NodeDB(
+                     node_db.PythonPickler(), dict())):
+        self.address_book = address_book_factory()
+        self.node_db = node_db_factory()
+        self.logger = self.create_agent(Logger, stream=sys.stdout)
+
+    def create_agent(self, cls, **more_stuff):
+        return cls(**more_stuff)
+
+    def spawn_agent(self, cls, identifier=None, **more_stuff):
+        agent = self.create_agent(cls, **more_stuff)
+        self.start_agent(agent, identifier)
+        return agent
+
+    def start_agent(self, agent, identifier=None):
+        agent.start(self.address_book, self.node_db, identifier)
 
 GreenletExit = gevent.GreenletExit

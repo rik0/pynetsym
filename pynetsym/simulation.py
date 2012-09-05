@@ -1,4 +1,3 @@
-import cPickle
 from pynetsym import addressing
 from pynetsym import node_db
 from pynetsym import argutils
@@ -9,12 +8,12 @@ from pynetsym import metautil
 from pynetsym import storage
 from pynetsym import termination
 from pynetsym import timing
+from pynetsym.node_db import PythonPickler
 
 from pynetsym.node_manager import NodeManager, IdManager
 from pynetsym.storage.basic import NotifyingGraphWrapper
 
 import copy
-import gevent
 import sys
 import operator
 
@@ -179,7 +178,7 @@ class Simulation(object):
         pass
 
     def create_node_db(self):
-        self.node_db = node_db.NodeDB(cPickle, dict())
+        self.node_db = node_db.NodeDB(PythonPickler(), dict())
 
 
     def create_address_book(self):
