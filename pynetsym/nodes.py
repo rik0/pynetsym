@@ -27,7 +27,7 @@ class Node(core.Agent):
 
     def _remove_from_network(self, source):
         if isinstance(source.value, core.GreenletExit):
-            #self.graph.remove_node(self.id)
+            self.graph.remove_node(self.id)
             print 'Removing', self
             pass
 

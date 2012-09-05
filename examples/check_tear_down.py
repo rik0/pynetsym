@@ -5,7 +5,6 @@ import networkx as nx
 
 import traits.api as t
 
-from pynetsym import core
 from pynetsym import simulation
 from pynetsym import node_manager
 from pynetsym.nodes import Node
@@ -94,6 +93,8 @@ if __name__ == '__main__':
 
     print graph.nodes()
     print graph.number_of_edges()
+
+    print sim.id_manager.get_identifier()
 
     #nx.draw(graph)
     #plt.show()
