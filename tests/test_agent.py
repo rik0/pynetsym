@@ -1,12 +1,10 @@
 from unittest import TestCase
 from pynetsym import core
-from pynetsym import addressing
 
+import traits.api as t
 
 class Agent(core.Agent):
-    def __init__(self, identifier, address_book, value=0):
-        super(Agent, self).__init__(identifier, address_book)
-        self.val = value
+    val = t.Int(0)
 
     def answer(self):
         self.val = 42
@@ -18,13 +16,11 @@ class Agent(core.Agent):
 
 class TestAgent(TestCase):
     def setUp(self):
-        address_book = addressing.FlatAddressBook()
+        self.runtime = core.MinimalAgentRuntime()
         self.agent_a_id = 'a'
-        self.agent_a = Agent(self.agent_a_id, address_book)
         self.agent_b_id = 'b'
-        self.agent_b = Agent(self.agent_b_id, address_book)
-        self.agent_a.start()
-        self.agent_b.start()
+        self.agent_a = self.runtime.spawn_agent(Agent, self.agent_a_id)
+        self.agent_b = self.runtime.spawn_agent(Agent, self.agent_b_id)
 
     def test_id(self):
         self.assertEqual(self.agent_a_id, self.agent_a.id)
