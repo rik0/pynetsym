@@ -1,19 +1,15 @@
 import random
+from traits.trait_types import Range, Int
 
 from pynetsym import simulation
 from pynetsym import node_manager
-from pynetsym import core
 from pynetsym.nodes import Node
 
 
 class Node(Node):
-    def __init__(self, identifier, address_book,
-                 graph, rewiring_probability,
-                 lattice_connections, starting_network_size):
-        self.rewiring_probability = rewiring_probability
-        self.lattice_connections = lattice_connections
-        self.starting_network_size = starting_network_size
-        super(Node, self).__init__(identifier, address_book, graph)
+    rewiring_probability = Range(low=0.0, high=1.0)
+    lattice_connections = Int
+    starting_network_size = Int
 
     def activate(self):
         for index in self.lattice_cw_neighbors():

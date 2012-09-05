@@ -1,4 +1,5 @@
 import igraph
+from traits.trait_types import Float, Function
 import pynetsym
 import random
 
@@ -10,27 +11,25 @@ from pynetsym.nodes import Node
 
 
 class Node(Node):
+    """
+    Constructs a new node
+    @param identifier: the node identifier
+    @type identifier: int
+    @param address_book: the usual address book
+    @param graph: the network representation
+    @type graph: igraph.Graph
+    @param death_probability: the probability that a node dies and is
+        substituted with a new one
+    @param death_probability: float
+    @param criterion: the criterion used to chose nodes in case that
+        we do not have two friends that are not acquainted
+    @type criterion: callable
+    """
+
     MAX_TRIALS = 10
 
-    def __init__(self, identifier, address_book,
-                 graph, death_probability, criterion):
-        """
-        Constructs a new node
-        @param identifier: the node identifier
-        @type identifier: int
-        @param address_book: the usual address book
-        @param graph: the network representation
-        @type graph: igraph.Graph
-        @param death_probability: the probability that a node dies and is
-            substituted with a new one
-        @param death_probability: float
-        @param criterion: the criterion used to chose nodes in case that
-            we do not have two friends that are not acquainted
-        @type criterion: callable
-        """
-        self.death_probability = death_probability
-        self.criterion = criterion
-        super(Node, self).__init__(identifier, address_book, graph)
+    death_probability = Float
+    criterion = Function
 
     def introduction(self):
         graph = self.graph.handle

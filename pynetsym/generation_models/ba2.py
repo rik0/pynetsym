@@ -1,14 +1,11 @@
-from pynetsym import core
+from traits.trait_types import Int
 from pynetsym import node_manager
 from pynetsym import simulation
 from pynetsym.nodes import Node
 
 
 class Node(Node):
-    def __init__(self, identifier, address_book,
-                 graph, starting_edges):
-        super(Node, self).__init__(identifier, address_book, graph)
-        self.starting_edges = starting_edges
+    starting_edges = Int
 
     def activate(self):
         forbidden = set()

@@ -1,9 +1,9 @@
 import fractions
 import random
+from traits.trait_types import Float, Tuple, Method
 
 import pynetsym
 from pynetsym import simulation
-from pynetsym import core
 from pynetsym.node_manager import NodeManager
 from pynetsym.nodes import Node
 
@@ -19,39 +19,35 @@ def distribution(s):
 
 
 class Node(Node):
-    def __init__(self, identifier, address_book, graph,
-                 gamma, probability, strategy=None):
-        """
-        Create a BPA node.
+    """
+    A BPA node.
 
-        If a strategy is specified, probability is ignored and strategy
-        is simply selected.
+    If a strategy is specified, probability is ignored and strategy
+    is simply selected.
 
-        @param identifier: the node id
-        @param identifier: int
-        @param address_book: the address book
-        @param graph: the graph
-        @type graph: backend.GraphWrapper
-        @param gamma: the bias to select linkers
-        @param probability: the probability distribution of the nodes
-            behavior
-        @param strategy: the "forced" starting strategy
-        """
-        super(Node, self).__init__(identifier, address_book, graph)
-        self.gamma = gamma
-        self.p = probability
-        self.strategy = strategy
-        if strategy is None:
-            self.strategy = self._select_strategy()
+    @param identifier: the node id
+    @param identifier: int
+    @param address_book: the address book
+    @param graph: the graph
+    @type graph: backend.GraphWrapper
+    @param gamma: the bias to select linkers
+    @param probability: the probability distribution of the nodes
+        behavior
+    @param strategy: the "forced" starting strategy
+    """
 
-    def _select_strategy(self):
+    gamma = Float
+    probability = Tuple(Float, Float, Float)
+    strategy = Method
+
+    def _strategy_default(self):
         random_value = random.random()
-        if random_value < self.p[0]:
-            return Node.linker_strategy
-        elif random_value < self.p[0] + self.p[1]:
-            return Node.inviter_strategy
+        if random_value < self.probability[0]:
+            return self.linker_strategy
+        elif random_value < self.probability[0] + self.probability[1]:
+            return self.inviter_strategy
         else:
-            return Node.passive_strategy
+            return self.passive_strategy
 
     def activate(self):
         self.strategy(self)
@@ -66,7 +62,7 @@ class Node(Node):
         self.send(
             NodeManager.name, 'create_node', cls=Node,
             parameters=dict(
-                gamma=self.gamma, probability=self.p,
+                gamma=self.gamma, probability=self.probability,
                 strategy=Node.passive_strategy))
 
     def created_node(self, identifier):

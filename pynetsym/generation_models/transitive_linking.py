@@ -1,4 +1,4 @@
-from pynetsym import core
+from traits.trait_types import Float, Function
 from pynetsym import node_manager
 from pynetsym import simulation
 import random
@@ -8,11 +8,8 @@ from pynetsym.nodes import Node
 class Node(Node):
     MAX_TRIALS = 10
 
-    def __init__(self, identifier, address_book,
-                 graph, death_probability, criterion):
-        self.death_probability = death_probability
-        self.criterion = criterion
-        super(Node, self).__init__(identifier, address_book, graph)
+    death_probability = Float
+    criterion = Function
 
     def introduction(self):
         graph = self.graph.handle
