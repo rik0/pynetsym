@@ -42,8 +42,6 @@ class Agent(t.HasTraits):
     _node_db = t.Instance(
         node_db.NodeDB, transient=True, allow_none=False)
 
-    initialize = t.false(transient=True) # check me!
-
     id = t.Either(t.Int, t.Str)
 
     __ = t.PythonValue(transient=True)

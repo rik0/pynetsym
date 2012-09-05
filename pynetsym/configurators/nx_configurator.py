@@ -11,7 +11,14 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
 
     configurator_options = {'starting_graph'}
 
-    def setup(self):
+    def create_edges(self):
+        graph = self.starting_graph
+        for u, v in graph.edges_iter():
+            u1 = self.node_map[u]
+            v1 = self.node_map[v]
+            self.send(v1, 'accept_link', originating_node=u1)
+
+    def create_nodes(self):
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
         node_manager_id = node_manager.NodeManager.name
@@ -27,11 +34,5 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
         self.node_map = {node: identifier for node, identifier
             in itertools.izip(nit_2,
                 geventutil.SequenceAsyncResult(answers).get())}
-        for u, v in graph.edges_iter():
-            u1 = self.node_map[u]
-            v1 = self.node_map[v]
-            self.send(v1, 'accept_link', originating_node=u1)
-        self.nodes = self.node_map.viewvalues()
-        self.initialize_nodes()
-        self.kill()
+        self.node_identifiers = self.node_map.viewvalues()
 

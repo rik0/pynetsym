@@ -1,4 +1,6 @@
 import sys
+from traits.has_traits import Interface, implements
+from traits.trait_types import List, Dict, Str
 
 from pynetsym import core, util, metautil, argutils, geventutil
 
@@ -73,14 +75,28 @@ class NodeManager(core.Agent):
 
 
 
+class IConfigurator(Interface):
+    def create_nodes(self):
+        pass
 
+    def create_edges(self):
+        pass
+
+    def do_initialize_nodes(self):
+        pass
+
+    @property
+    def initialize_nodez(self):
+        pass
 
 class Configurator(core.Agent):
+    implements(IConfigurator)
+
     name = 'configurator'
 
-    initialize = False
+    initialize_nodes = False
     """
-    When all the nodes are created, if the initialize attribute
+    When all the nodes are created, if the initialize_nodes attribute
     is set to true, all the nodes are sent an initialize message.
     Such attribute can be both set as a configurator_option
     or directly in the class like::
@@ -95,20 +111,32 @@ class Configurator(core.Agent):
     Options are accumulated along the inheritance path
     """
 
+    node_identifiers = List([])
+    additional_arguments = Dict(key_trait=Str)
+
     def __init__(self, **additional_arguments):
-        super(Configurator, self).__init__()
         full_options = metautil.gather_from_ancestors(
                 self, 'configurator_options')
         configurator_arguments = argutils.extract_options(
                 additional_arguments, full_options)
-        vars(self).update(configurator_arguments)
-        self.additional_arguments = additional_arguments
-        self.nodes = []
+        self.set(**configurator_arguments)
+        self.set(additional_arguments=additional_arguments)
 
-    def initialize_nodes(self):
-        if self.initialize:
-            for identifier in self.nodes:
-                self.send(identifier, 'initialize')
+    def _start(self):
+        self.create_nodes()
+        self.create_edges()
+        if self.initialize_nodes:
+           self.do_initialization()
+
+    def create_nodes(self):
+        raise NotImplementedError()
+
+    def create_edges(self):
+        raise NotImplementedError()
+
+    def do_initialization(self):
+        for identifier in self.node_identifiers:
+            self.send(identifier, 'initialize')
 
 class BasicConfigurator(Configurator):
     """
@@ -120,7 +148,7 @@ class BasicConfigurator(Configurator):
     from additional_arguments specified in node_options.
     """
     configurator_options = {"starting_network_size"}
-    starting_network_size = t.Int
+    starting_network_size = t.Int(1000)
 
     def node_cls(self):
         pass
@@ -128,16 +156,13 @@ class BasicConfigurator(Configurator):
     def node_options(self):
         return set()
 
-    def setup(self):
-        super(BasicConfigurator, self).setup()
+    def create_nodes(self):
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)
         node_ids = geventutil.SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',
                        cls=self.node_cls, parameters=self.node_arguments)
             for _r in xrange(self.starting_network_size)])
-        self.nodes = node_ids.get()
-        self.initialize_nodes()
-        self.kill()
+        self.node_identifiers = node_ids.get()
 
 
