@@ -1,21 +1,19 @@
+from traits.trait_types import Instance, Class
 from pynetsym import argutils
 from pynetsym import node_manager
 from pynetsym import geventutil
 
 import itertools
 import networkx as nx
+from pynetsym.storage import GraphWrapper
 
 
 class StartingNXGraphConfigurator(node_manager.Configurator):
-    # starting_graph
-
     configurator_options = {'starting_graph'}
 
-    def node_cls(self):
-        pass
-
-    def node_options(self):
-        return set()
+    starting_graph = Instance(GraphWrapper)
+    node_cls = Class
+    node_options = Instance(set)
 
     def create_edges(self):
         graph = self.starting_graph
