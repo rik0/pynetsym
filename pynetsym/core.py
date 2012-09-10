@@ -178,16 +178,25 @@ class Agent(t.HasTraits):
     def log_sent(self, payload, receiver):
         logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
-        message =  "[%s] Sending %s from %s to %s" % (
-            gl, payload, self.id, receiver.id
-        )
-        logger.put_log(self, message)
+        if gl is not self._greenlet:
+            message =  "{%s} Sending %s from %s to %s" % (
+                gl, payload, self.id, receiver.id
+            )
+        else:
+            message =  "Sending %s from %s to %s" % (
+                payload, self.id, receiver.id
+            )
+        logger.put_log(self.id, message)
 
     def log_received(self, msg):
         logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
-        message =  "[%s] %s: got %s from %s" % (
-           gl, self.id, msg.payload, msg.sender)
+        if gl is not self._greenlet:
+            message =  "{%s} %s: got %s from %s" % (
+               gl, self.id, msg.payload, msg.sender)
+        else:
+            message =  "%s: got %s from %s" % (
+               self.id, msg.payload, msg.sender)
         logger.put_log(self.id, message)
 
     def send_all(self, receivers, message, **additional_parameters):
@@ -323,9 +332,9 @@ class Logger(Agent, t.SingletonHasTraits):
 
     def put_log(self, sender, message):
         result = event.AsyncResult()
-        message = Message(sender.id,
+        message = Message(sender,
                           'log',
-                          dict(sender=sender.id, message=message,
+                          dict(sender=sender, message=message,
                                when=time.clock()))
         self.deliver(message, result)
 
