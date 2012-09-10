@@ -1,8 +1,8 @@
 from traits.trait_types import Float, Function
-from pynetsym import node_manager
-from pynetsym import simulation
+
 import random
-from pynetsym.nodes import Node
+
+from pynetsym import Node, Activator, Simulation, BasicConfigurator
 
 
 class Node(Node):
@@ -10,6 +10,9 @@ class Node(Node):
 
     death_probability = Float
     criterion = Function
+
+    def can_be_collected(self):
+        return False
 
     def introduction(self):
         graph = self.graph.handle
@@ -40,7 +43,7 @@ class Node(Node):
         self.link_to(target_node)
 
 
-class TL(simulation.Simulation):
+class TL(Simulation):
     command_line_options = (
         ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('--death-probability', dict(default=0.01, type=float)),
@@ -49,7 +52,7 @@ class TL(simulation.Simulation):
             const=lambda graph: graph.preferential_attachment_node(),
             default=lambda graph: graph.random_node())))
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
 

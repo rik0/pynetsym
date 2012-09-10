@@ -2,8 +2,7 @@ import random
 import itertools as it
 
 from pynetsym.generation_models import transitive_linking
-from pynetsym import simulation
-from pynetsym import node_manager
+from pynetsym import Node, Activator, Simulation, BasicConfigurator
 
 
 class Node(transitive_linking.Node):
@@ -24,7 +23,7 @@ class Node(transitive_linking.Node):
             self.link_to(self.criterion)
 
 
-class TL(simulation.Simulation):
+class TL(Simulation):
     command_line_options = (
         ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('--death-probability', dict(default=0.01, type=float)),
@@ -33,7 +32,7 @@ class TL(simulation.Simulation):
             const=lambda graph: graph.preferential_attachment_node(),
             default=lambda graph: graph.random_node())))
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
 

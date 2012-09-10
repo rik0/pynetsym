@@ -1,7 +1,6 @@
 from traits.trait_types import Int
-from pynetsym import node_manager
-from pynetsym import simulation
-from pynetsym.nodes import Node
+
+from pynetsym import Node, Activator, Simulation, BasicConfigurator
 
 
 class Node(Node):
@@ -19,7 +18,7 @@ class Node(Node):
                 self.starting_edges -= 1
 
 
-class Activator(simulation.Activator):
+class Activator(Activator):
     activator_options = {'starting_edges'}
 
     def nodes_to_activate(self):
@@ -29,7 +28,7 @@ class Activator(simulation.Activator):
         return [(Node, dict(starting_edges=self.starting_edges))]
 
 
-class BA(simulation.Simulation):
+class BA(Simulation):
     default_starting_network_size = 5
     command_line_options = (
         ('-n', '--starting-network-size',
@@ -42,7 +41,7 @@ class BA(simulation.Simulation):
 #    graph_type = storage.IGraphWrapper
 #    graph_options = dict(graph=igraph.Graph(0))
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {'starting_edges'}
 

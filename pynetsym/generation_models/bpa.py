@@ -2,10 +2,7 @@ import fractions
 import random
 from traits.trait_types import Float, Tuple, Method
 
-import pynetsym
-from pynetsym import simulation
-from pynetsym.node_manager import NodeManager
-from pynetsym.nodes import Node
+from pynetsym import Node, Activator, Simulation, BasicConfigurator, NodeManager
 
 
 def distribution(s):
@@ -40,6 +37,9 @@ class Node(Node):
     probability = Tuple(Float, Float, Float)
     strategy = Method
 
+    def can_be_collected(self):
+        return False
+
     def _strategy_default(self):
         random_value = random.random()
         if random_value < self.probability[0]:
@@ -50,7 +50,7 @@ class Node(Node):
             return self.passive_strategy
 
     def activate(self):
-        self.strategy(self)
+        self.strategy()
         return self.id
 
     def passive_strategy(self):
@@ -63,7 +63,7 @@ class Node(Node):
             NodeManager.name, 'create_node', cls=Node,
             parameters=dict(
                 gamma=self.gamma, probability=self.probability,
-                strategy=Node.passive_strategy))
+                strategy=self.passive_strategy))
 
     def created_node(self, identifier):
         self.send(identifier, 'accept_link', originating_node=self.id)
@@ -72,8 +72,8 @@ class Node(Node):
         pass
 
 
-class BPA(simulation.Simulation):
-    class configurator_type(pynetsym.node_manager.BasicConfigurator):
+class BPA(Simulation):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {'probability', 'gamma'}
 

@@ -163,6 +163,9 @@ class BasicConfigurator(Configurator):
     def node_options(self):
         return set()
 
+    def create_edges(self):
+        pass
+
     def create_nodes(self):
         self.node_arguments = argutils.extract_options(
                 self.additional_arguments, self.node_options)

@@ -1,12 +1,13 @@
 import random
 from traits.trait_types import Range, Int
 
-from pynetsym import simulation
-from pynetsym import node_manager
-from pynetsym.nodes import Node
+from pynetsym import Node, Activator, Simulation, BasicConfigurator
+
 
 
 class Node(Node):
+    DEBUG_RECEIVE = True
+
     rewiring_probability = Range(low=0.0, high=1.0)
     lattice_connections = Int
     starting_network_size = Int
@@ -32,10 +33,14 @@ class Node(Node):
             self.link_to(index % self.starting_network_size)
 
 
-class Activator(simulation.Activator):
+class Activator(Activator):
+    DEBUG_RECEIVE = True
+    DEBUG_SEND = True
+
+    to_choose = Int(0, allow_none=False)
+
     def __init__(self, *arguments, **kw):
         super(Activator, self).__init__(*arguments, **kw)
-        self.to_choose = 0
 
     def nodes_to_activate(self):
         node = self.to_choose
@@ -43,7 +48,7 @@ class Activator(simulation.Activator):
         return [node]
 
 
-class WS(simulation.Simulation):
+class WS(Simulation):
     command_line_options = (
         ('-n', '--starting-network-size', dict(default=100, type=int)),
         ('-k', '--lattice-connections', dict(default=2, type=int)),
@@ -51,7 +56,10 @@ class WS(simulation.Simulation):
 
     activator_type = Activator
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
+        DEBUG_RECEIVE = True
+        DEBUG_SEND = True
+
         initialize = True
         node_cls = Node
         node_options = {
@@ -63,3 +71,7 @@ class WS(simulation.Simulation):
 if __name__ == '__main__':
     sim = WS()
     sim.run()
+
+    graph = sim.graph.handle
+    print graph.number_of_nodes()
+    print graph.number_of_edges()

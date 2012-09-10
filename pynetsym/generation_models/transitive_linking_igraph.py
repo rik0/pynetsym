@@ -1,13 +1,9 @@
 import igraph
 from traits.trait_types import Float, Function
-import pynetsym
 import random
 
-from pynetsym import core
-from pynetsym import node_manager
-from pynetsym import simulation
+from pynetsym import Node, Activator, Simulation, BasicConfigurator
 from pynetsym import storage
-from pynetsym.nodes import Node
 
 
 class Node(Node):
@@ -63,7 +59,7 @@ class Node(Node):
         self.link_to(target_node)
 
 
-class TL(simulation.Simulation):
+class TL(Simulation):
     graph_type = storage.IGraphWrapper
     graph_options = dict(graph=igraph.Graph(0))
 
@@ -75,7 +71,7 @@ class TL(simulation.Simulation):
             const=lambda graph: graph.preferential_attachment_node(),
             default=lambda graph: graph.random_node())))
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
 
