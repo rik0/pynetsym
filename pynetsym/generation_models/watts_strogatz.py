@@ -34,13 +34,10 @@ class Node(Node):
 
 
 class Activator(Activator):
-    DEBUG_RECEIVE = True
     DEBUG_SEND = True
+    DEBUG_RECEIVE = True
 
     to_choose = Int(0, allow_none=False)
-
-    def __init__(self, *arguments, **kw):
-        super(Activator, self).__init__(*arguments, **kw)
 
     def nodes_to_activate(self):
         node = self.to_choose
@@ -57,10 +54,7 @@ class WS(Simulation):
     activator_type = Activator
 
     class configurator_type(BasicConfigurator):
-        DEBUG_RECEIVE = True
-        DEBUG_SEND = True
-
-        initialize = True
+        initialize_nodes = True
         node_cls = Node
         node_options = {
                 "rewiring_probability",

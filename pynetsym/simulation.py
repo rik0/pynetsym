@@ -347,6 +347,8 @@ class Activator(core.Agent):
 
 
 class BaseClock(core.Agent):
+    DEBUG_SEND = True
+
     name = 'clock'
     activator_can_terminate = False
 
@@ -355,7 +357,6 @@ class BaseClock(core.Agent):
 
     def setup(self):
         super(BaseClock, self).setup()
-        self.activator_type = self._address_book.resolve(Activator.name)
 
     def register_observer(self, name):
         self.observers.append(name)
