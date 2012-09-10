@@ -1,0 +1,2 @@
+class PyNetSymError(Exception):
+    pass

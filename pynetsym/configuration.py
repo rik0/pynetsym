@@ -1,9 +1,10 @@
 import collections
 import argparse
 import sys
+from pynetsym.error import PyNetSymError
 
 
-class ConfigurationError(RuntimeError):
+class ConfigurationError(PyNetSymError):
     pass
 
 

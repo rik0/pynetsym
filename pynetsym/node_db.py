@@ -1,8 +1,9 @@
 from traits.api import Interface, HasTraits, SingletonHasStrictTraits
 from traits.api import Instance, Module, Dict, Either, Int, Str
 from traits.api import implements
+from pynetsym.error import PyNetSymError
 
-class MissingNode(Exception):
+class MissingNode(PyNetSymError):
     pass
 
 

@@ -11,12 +11,13 @@ import gevent.event as event
 import gevent.queue as queue
 
 from traits import api as t
+from pynetsym.error import PyNetSymError
 
-class NoMessage(queue.Empty):
+class NoMessage(queue.Empty, PyNetSymError):
     pass
 
 
-class AgentError(Exception):
+class AgentError(PyNetSymError):
     pass
 
 _M = collections.namedtuple('Message', 'sender payload parameters')

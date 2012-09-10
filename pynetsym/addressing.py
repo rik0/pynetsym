@@ -1,7 +1,10 @@
+import itertools
+import operator
 
 from pynetsym import metautil, node_db
+from pynetsym.error import PyNetSymError
 
-class AddressingError(Exception):
+class AddressingError(PyNetSymError):
     """
     Error signaling that something with the addressing of
     a message went wrong.
