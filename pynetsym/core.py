@@ -13,6 +13,14 @@ import gevent.queue as queue
 from traits import api as t
 from pynetsym.error import PyNetSymError
 
+__all__ = [
+    'Agent',
+    'Logger',
+    'MinimalAgentRuntime',
+    'get_logger',
+    'Logger'
+]
+
 class NoMessage(queue.Empty, PyNetSymError):
     pass
 

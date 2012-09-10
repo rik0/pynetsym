@@ -19,6 +19,13 @@ import operator
 
 import traits.api as t
 
+__all__ = [
+    'Simulation',
+    'Activator',
+    'AsyncClock',
+    'Clock'
+]
+
 
 class Simulation(object):
     """

@@ -1,10 +1,13 @@
-import gevent
 import traits.api as t
 
 import pynetsym.core as core
 import pynetsym.storage as storage
 
 from pynetsym.node_manager import NodeManager
+
+__all__ = [
+    'Node'
+]
 
 class Node(core.Agent):
     """

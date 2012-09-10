@@ -6,6 +6,13 @@ from pynetsym import core, util, metautil, argutils, geventutil
 
 import traits.api as t
 
+__all__ = [
+    'NodeManager',
+    'Configurator',
+    'IConfigurator',
+    'BasicConfigurator'
+]
+
 class IdManager(object):
     """
     The IdManager is responsible to provide valid identifiers for Nodes.
