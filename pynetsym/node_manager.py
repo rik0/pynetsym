@@ -1,4 +1,5 @@
 import sys
+from gevent.pool import Group
 from traits.has_traits import Interface, implements
 from traits.trait_types import List, Dict, Str
 
@@ -61,6 +62,7 @@ class NodeManager(core.Agent):
         self.graph = graph
         self.id_manager = id_manager
         self.failures = []
+        self.group = Group()
 
     def create_node(self, cls, parameters):
         """
@@ -78,10 +80,11 @@ class NodeManager(core.Agent):
         node = cls(self.graph, **parameters)
         identifier = self.id_manager.get_identifier()
         node.start(self._address_book, self._node_db, identifier)
+        self.group.add(node._greenlet)
         return identifier
 
     def simulation_ended(self):
-        pass
+        self.group.join()
 
 
 class IConfigurator(Interface):
