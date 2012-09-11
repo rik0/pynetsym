@@ -95,7 +95,7 @@ class IConfigurator(Interface):
         pass
 
     @property
-    def initialize_nodez(self):
+    def initialize_node(self):
         pass
 
 class Configurator(core.Agent):
