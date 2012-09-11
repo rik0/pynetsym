@@ -80,6 +80,8 @@ class NodeManager(core.Agent):
         node.start(self._address_book, self._node_db, identifier)
         return identifier
 
+    def simulation_ended(self):
+        pass
 
 
 class IConfigurator(Interface):

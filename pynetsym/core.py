@@ -91,13 +91,6 @@ class Agent(t.HasTraits):
         Additional initialization before the run loop goes here.
         """
 
-    def _start(self):
-        """
-        Override to customize the agent's behavior.
-        """
-        self.setup()
-        return self.run_loop()
-
     def _compute_identifier(self, identifier):
         if identifier is None:
             try:
@@ -268,6 +261,13 @@ class Agent(t.HasTraits):
         """
         return False
 
+
+    def _start(self):
+        """
+        Override to customize the agent's behavior.
+        """
+        self.setup()
+        return self.run_loop()
 
     def run_loop(self):
         """

@@ -327,6 +327,9 @@ class Activator(core.Agent):
              for node_class, node_parameters in to_create])
         self.fresh_nodes = node_ids.get()
 
+    def simulation_ended(self):
+        return self.send(NodeManager.name, 'simulation_ended').get()
+
     def tick(self):
         self.destroy_nodes()
         self.create_nodes()
@@ -350,7 +353,7 @@ class BaseClock(core.Agent):
     DEBUG_SEND = True
 
     name = 'clock'
-    activator_can_terminate = False
+    activator_can_terminate = t.false()
 
     active = t.true(transient=True)
     observers = t.List
@@ -367,8 +370,12 @@ class BaseClock(core.Agent):
     def send_tick(self):
         return self.send(Activator.name, 'tick')
 
+    def send_simulation_ended(self):
+        return self.send(Activator.name, 'simulation_ended')
+
     def simulation_end(self):
         self.active = False
+        self.send_simulation_ended().get()
 
     def ask_to_terminate(self):
         return self.send(
@@ -378,7 +385,6 @@ class BaseClock(core.Agent):
 class AsyncClock(BaseClock):
     def _start(self):
         self.setup()
-        #gevent.spawn(self.run_loop)
         while self.active:
             self.send_tick()
             for observer in self.observers:
@@ -391,7 +397,6 @@ class AsyncClock(BaseClock):
 class Clock(BaseClock):
     def _start(self):
         self.setup()
-        #gevent.spawn(self.run_loop)
         while self.active:
             done = self.send_tick()
             for observer in self.observers:
