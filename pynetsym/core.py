@@ -34,7 +34,10 @@ class Message(_M):
     """
     An immutable object that is used to send a message among agents.
     """
+    def __repr__(self):
+        return '%s:%s%s' % (self.sender, self.payload, self.parameters)
 
+    __str__ = __repr__
 
 class Agent(t.HasTraits):
     """
@@ -43,6 +46,7 @@ class Agent(t.HasTraits):
     """
 
     DEBUG_RECEIVE = True
+    DEBUG_SEND = True
 
     _address_book = t.Instance(
         addressing.AddressBook, transient=True, allow_none=False)
@@ -165,12 +169,12 @@ class Agent(t.HasTraits):
         logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
-            message =  "{%s} Sending %s from %s to %s" % (
-                gl, payload, self.id, receiver.id
+            message =  "{%s} Sending %s to %s" % (
+                gl, payload, receiver.id
             )
         else:
-            message =  "Sending %s from %s to %s" % (
-                payload, self.id, receiver.id
+            message =  "Sending %s to %s" % (
+                payload, receiver.id
             )
         logger.put_log(self.id, message)
 
@@ -178,11 +182,9 @@ class Agent(t.HasTraits):
         logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
-            message =  "{%s} %s: got %s from %s" % (
-               gl, self.id, msg.payload, msg.sender)
+            message =  "{%s} %s" % (gl, msg)
         else:
-            message =  "%s: got %s from %s" % (
-               self.id, msg.payload, msg.sender)
+            message =  str(msg)
         logger.put_log(self.id, message)
 
     def send_all(self, receivers, message, **additional_parameters):
@@ -233,7 +235,7 @@ class Agent(t.HasTraits):
             # FIXME: no true message passing semantics!
             message = Message(self.id, message_name, additional_parameters)
             if getattr(self, 'DEBUG_SEND', False):
-                self.log_sent(message_name, receiver)
+                self.log_sent(str(message), receiver)
             result = event.AsyncResult()
             receiver.deliver(message, result)
             return result
