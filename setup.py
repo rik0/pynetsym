@@ -42,5 +42,6 @@ setup(
         'networkx',
         'jsonpickle',
         'traits',
+        'ParamUnittest',
     ],
 )
