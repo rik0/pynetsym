@@ -6,8 +6,6 @@ from pynetsym import Node, Activator, Simulation, BasicConfigurator
 
 
 class Node(Node):
-    DEBUG_RECEIVE = True
-
     rewiring_probability = Range(low=0.0, high=1.0)
     lattice_connections = Int
     starting_network_size = Int
@@ -34,9 +32,6 @@ class Node(Node):
 
 
 class Activator(Activator):
-    DEBUG_SEND = True
-    DEBUG_RECEIVE = True
-
     to_choose = Int(0, allow_none=False)
 
     def nodes_to_activate(self):

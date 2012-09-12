@@ -269,7 +269,7 @@ class Simulation(object):
         with timing.Timer(self.callback):
             self.start_simulation()
 
-            self.termination_checker.join()
+            self.clock.join()
             if self.node_manager.failures:
                 sys.exit(1)
             return self
@@ -350,8 +350,6 @@ class Activator(core.Agent):
 
 
 class BaseClock(core.Agent):
-    DEBUG_SEND = True
-
     name = 'clock'
     activator_can_terminate = t.false()
 
