@@ -1,6 +1,6 @@
 import unittest
 from pynetsym.generation_models import watts_strogatz
-
+import networkx as nx
 
 class TestWS(unittest.TestCase):
     def testRun(self):
@@ -21,3 +21,6 @@ class TestWS(unittest.TestCase):
         self.assertEqual(
                 starting_network_size * lattice_connections,
                 graph.number_of_edges())
+        self.assertLess(nx.diameter(graph),
+                        starting_network_size / (lattice_connections * 2))
+        self.assertLessEqual(nx.average_shortest_path_length(graph), 7)
