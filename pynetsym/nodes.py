@@ -14,18 +14,18 @@ class Node(core.Agent):
     A Node in the social network.
     """
 
-    graph = t.Trait(storage.GraphWrapper, transient=True)
+    graph = t.Trait(storage.GraphWrapper, transient=True, allow_none=False)
+    _node_manager = t.Trait(NodeManager, transient=True, allow_none=False)
 
     #_ = t.Disallow()
 
-    def __init__(self, graph, **attributes):
+    def __init__(self, **attributes):
         """
         Create a Node in the network.
         @param graph: the graph backing the social network
         @type graph: storage.GraphWrapper
         @return: the Node
         """
-        self.graph = graph
         self.set(**attributes)
 
     def _remove_from_network(self, source):
@@ -34,13 +34,10 @@ class Node(core.Agent):
             print 'Removing', self
             pass
 
-    def start(self, address_book, node_db, identifier):
+    def start(self, address_book, node_db, identifier=None):
         super(Node, self).start(address_book, node_db, identifier)
-        if self.graph is None:
-            node_manager = self._resolve(NodeManager.name)
-            self.graph = node_manager.graph
-        self.graph.add_node(identifier)
-        self._greenlet.link_value(self._remove_from_network)
+        self._node_manager =  self._resolve(NodeManager.name)
+        self._node_manager.fill_node(self)
         return self
 
     def __str__(self):

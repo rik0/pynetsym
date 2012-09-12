@@ -64,6 +64,12 @@ class NodeManager(core.Agent):
         self.failures = []
         self.group = Group()
 
+    def fill_node(self, node):
+        self.graph.add_node(node.id)
+        node._greenlet.link_value(node._remove_from_network)
+        node.graph = self.graph
+        self.group.add(node._greenlet)
+
     def create_node(self, cls, parameters):
         """
         Creates a new node.
@@ -77,13 +83,14 @@ class NodeManager(core.Agent):
         @return: the actual identifier
         @rtype: int | str
         """
-        node = cls(self.graph, **parameters)
+        node = cls(**parameters)
         identifier = self.id_manager.get_identifier()
         node.start(self._address_book, self._node_db, identifier)
-        self.group.add(node._greenlet)
         return identifier
 
     def simulation_ended(self):
+        print 'simulation ended'
+        print len(self.group)
         self.group.join()
 
 

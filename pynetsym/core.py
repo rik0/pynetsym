@@ -42,6 +42,8 @@ class Agent(t.HasTraits):
     asynchronously with themselves.
     """
 
+    DEBUG_RECEIVE = True
+
     _address_book = t.Instance(
         addressing.AddressBook, transient=True, allow_none=False)
     _default_queue = t.Instance(
@@ -54,15 +56,6 @@ class Agent(t.HasTraits):
     id = t.Either(t.Int, t.Str)
 
     __ = t.PythonValue(transient=True)
-
-    def _awaken_agent(self, identifier):
-        agent = self._node_db.recover(identifier)
-        agent.start(self._address_book, self._node_db, identifier)
-        return agent
-
-    def _store_agent(self):
-        self._node_db.store(self)
-        # FIXME: delete stuff
 
     def deliver(self, message, result):
         """
@@ -197,6 +190,14 @@ class Agent(t.HasTraits):
             [self.send(receiver_id, message, **additional_parameters)
              for receiver_id in receivers])
 
+    def _awaken_agent(self, identifier):
+        agent = self._node_db.recover(identifier)
+        agent.start(self._address_book, self._node_db, identifier)
+        return agent
+
+    def _store_agent(self):
+        self._node_db.store(self)
+        # FIXME: delete stuff
 
     def _resolve(self, identifier):
         try:
@@ -317,7 +318,12 @@ class Agent(t.HasTraits):
     __repr__ = __str__
 
 
+
+
 class Logger(Agent, t.SingletonHasTraits):
+    DEBUG_RECEIVE = False
+    DEBUG_SEND = False
+
     name = 'logger'
 
     def __init__(self, stream):
