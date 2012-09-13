@@ -20,7 +20,7 @@ class Node(Node):
                     random_node = self.graph.random_node()
                 self.graph.remove_edge(self.id, index)
                 self.graph.add_edge(self.id, random_node)
-            self.cooperate()
+            #self.cooperate()
 
     def lattice_cw_neighbors(self):
         return range(self.id + 1,
@@ -32,10 +32,12 @@ class Node(Node):
 
 
 class Activator(Activator):
+    activator_options = {'starting_network_size'}
+
     to_choose = Int(0, allow_none=False)
 
     def nodes_to_activate(self):
-        node = self.to_choose
+        node = self.to_choose % self.starting_network_size
         self.to_choose += 1
         return [node]
 

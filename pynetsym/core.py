@@ -45,8 +45,8 @@ class Agent(t.HasTraits):
     asynchronously with themselves.
     """
 
-    DEBUG_RECEIVE = True
-    DEBUG_SEND = True
+    #DEBUG_RECEIVE = True
+    #DEBUG_SEND = True
 
     _address_book = t.Instance(
         addressing.AddressBook, transient=True, allow_none=False)
@@ -108,8 +108,6 @@ class Agent(t.HasTraits):
         self._greenlet.link_exception(self.on_error)
         if hasattr(self, 'on_completion'):
             self._greenlet.link_value(self.on_completion)
-        self._greenlet.link(self._unstart)
-
         self._greenlet.start()
         return self
 
@@ -137,6 +135,11 @@ class Agent(t.HasTraits):
         print >> ss, 'succesful:', source.successful()
         print >> ss, 'value:', source.value
         print >> ss, 'exception:', source.exception
+        if self._default_queue is not None:
+            print >> ss, 'messages:', self._default_queue.qsize()
+            if self._default_queue.qsize():
+                import pprint
+                pprint.pprint(self._default_queue.queue, stream=ss)
         print ss.getvalue()
 
 
@@ -169,11 +172,11 @@ class Agent(t.HasTraits):
         logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
-            message =  "{%s} Sending %s to %s" % (
+            message =  "{%s} SEND %s to %s" % (
                 gl, payload, receiver.id
             )
         else:
-            message =  "Sending %s to %s" % (
+            message =  "SEND %s to %s" % (
                 payload, receiver.id
             )
         logger.put_log(self.id, message)
@@ -182,9 +185,9 @@ class Agent(t.HasTraits):
         logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
-            message =  "{%s} %s" % (gl, msg)
+            message =  "RECV {%s} %s" % (gl, msg)
         else:
-            message =  str(msg)
+            message =  "RECV %s" % (msg,)
         logger.put_log(self.id, message)
 
     def send_all(self, receivers, message, **additional_parameters):
@@ -199,7 +202,7 @@ class Agent(t.HasTraits):
 
     def _store_agent(self):
         self._node_db.store(self)
-        # FIXME: delete stuff
+        self._unstart(self._greenlet)
 
     def _resolve(self, identifier):
         try:
@@ -301,8 +304,6 @@ class Agent(t.HasTraits):
                 if self.can_be_collected():
                     self._store_agent()
                     return self
-        return self
-
 
     def unsupported_message(self, name, **additional_parameters):
         """
@@ -333,9 +334,9 @@ class Logger(Agent, t.SingletonHasTraits):
 
     def log(self, sender, message, when=None):
         if when is None:
-            full_line = '[%s: r%s] %s\n' % (sender, time.clock(), message)
+            full_line = '[%s: r%.3f] %s\n' % (sender, time.clock(), message)
         else:
-            full_line = '[%s: s%s] %s\n' % (sender, when, message)
+            full_line = '[%s: s%.3f] %s\n' % (sender, when, message)
         self.stream.write(full_line)
 
     def put_log(self, sender, message):
