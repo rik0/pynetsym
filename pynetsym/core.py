@@ -168,8 +168,11 @@ class Agent(t.HasTraits):
     def _get_logger(self, stream=sys.stderr):
         return get_logger(self._address_book, self._node_db, stream)
 
+    def send_log(self, message, stream=sys.stdout):
+        logger = self._get_logger(stream)
+        logger.put_log(self.id, message)
+
     def log_sent(self, payload, receiver):
-        logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
             message =  "{%s} SEND %s to %s" % (
@@ -179,16 +182,15 @@ class Agent(t.HasTraits):
             message =  "SEND %s to %s" % (
                 payload, receiver.id
             )
-        logger.put_log(self.id, message)
+        self.send_log(message)
 
     def log_received(self, msg):
-        logger = self._get_logger(sys.stdout)
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
             message =  "RECV {%s} %s" % (gl, msg)
         else:
             message =  "RECV %s" % (msg,)
-        logger.put_log(self.id, message)
+        self.send_log(message)
 
     def send_all(self, receivers, message, **additional_parameters):
         return geventutil.SequenceAsyncResult(
@@ -332,7 +334,7 @@ class Logger(Agent, t.SingletonHasTraits):
     def __init__(self, stream):
         self.stream = stream
 
-    def log(self, sender, message, when=None):
+    def log_entry(self, sender, message, when=None):
         if when is None:
             full_line = '[%s: r%.3f] %s\n' % (sender, time.clock(), message)
         else:
@@ -342,7 +344,7 @@ class Logger(Agent, t.SingletonHasTraits):
     def put_log(self, sender, message):
         result = event.AsyncResult()
         message = Message(sender,
-                          'log',
+                          'log_entry',
                           dict(sender=sender, message=message,
                                when=time.clock()))
         self.deliver(message, result)

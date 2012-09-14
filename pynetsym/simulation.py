@@ -268,7 +268,6 @@ class Simulation(object):
         self.create_simulation_agents()
         with timing.Timer(self.callback):
             self.start_simulation()
-
             self.clock.join()
             if self.node_manager.failures:
                 sys.exit(1)
