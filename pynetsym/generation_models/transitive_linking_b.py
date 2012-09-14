@@ -2,7 +2,7 @@ import random
 import itertools as it
 
 from pynetsym.generation_models import transitive_linking
-from pynetsym import Node, Activator, Simulation, BasicConfigurator
+from pynetsym import Node, Simulation, BasicConfigurator
 
 
 class Node(transitive_linking.Node):
@@ -20,7 +20,7 @@ class Node(transitive_linking.Node):
             node_a, node_b = random.choice(possible_links)
             self.send(node_a, 'introduce_to', target_node=node_b)
         else:
-            self.link_to(self.criterion)
+            self.link_to(self.criterion_)
 
 
 class TL(Simulation):
@@ -29,8 +29,8 @@ class TL(Simulation):
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',
-            const=lambda graph: graph.preferential_attachment_node(),
-            default=lambda graph: graph.random_node())))
+            const='preferential_attachment',
+            default='uniform')))
 
     class configurator_type(BasicConfigurator):
         node_cls = Node

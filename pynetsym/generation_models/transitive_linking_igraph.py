@@ -1,10 +1,18 @@
 import igraph
-from traits.trait_types import Float, Function
+from traits.trait_types import Float
 import random
+from traits.traits import Trait
 
-from pynetsym import Node, Activator, Simulation, BasicConfigurator
+from pynetsym import Node, Simulation, BasicConfigurator
 from pynetsym import storage
 
+
+
+def select_preferential_attachment(graph):
+    return graph.preferential_attachment_node()
+
+def select_uniform(graph):
+    return graph.random_node()
 
 class Node(Node):
     """
@@ -25,8 +33,9 @@ class Node(Node):
     MAX_TRIALS = 10
 
     death_probability = Float
-    criterion = Function
-
+    criterion = Trait('uniform',
+                      {'uniform': select_uniform,
+                       'preferential_attachment': select_preferential_attachment},)
     def introduction(self):
         graph = self.graph.handle
         neighbors = graph.neighbors(self.id)
@@ -37,9 +46,9 @@ class Node(Node):
                     self.send(node_a, 'introduce_to', target_node=node_b)
                     break
             else:
-                self.link_to(self.criterion)
+                self.link_to(self.criterion_)
         else:
-            self.link_to(self.criterion)
+            self.link_to(self.criterion_)
 
     def activate(self):
         if random.random() < self.death_probability:
@@ -68,8 +77,8 @@ class TL(Simulation):
         ('--death-probability', dict(default=0.01, type=float)),
         ('--preferential-attachment', dict(
             dest='criterion', action='store_const',
-            const=lambda graph: graph.preferential_attachment_node(),
-            default=lambda graph: graph.random_node())))
+            const='preferential_attachment',
+            default='uniform')))
 
     class configurator_type(BasicConfigurator):
         node_cls = Node
