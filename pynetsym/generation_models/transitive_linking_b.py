@@ -23,15 +23,7 @@ class Node(transitive_linking.Node):
             self.link_to(self.criterion_)
 
 
-class TL(Simulation):
-    command_line_options = (
-        ('-n', '--starting-network-size', dict(default=100, type=int)),
-        ('--death-probability', dict(default=0.01, type=float)),
-        ('--preferential-attachment', dict(
-            dest='criterion', action='store_const',
-            const='preferential_attachment',
-            default='uniform')))
-
+class TL(transitive_linking.TL):
     class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {"death_probability", "criterion"}

@@ -2,7 +2,7 @@ from traits.trait_types import Float, Trait
 
 import random
 
-from pynetsym import Node, Activator, Simulation, BasicConfigurator, Clock
+from pynetsym import Node, Simulation, BasicConfigurator
 
 
 def select_preferential_attachment(graph):
@@ -12,9 +12,6 @@ def select_uniform(graph):
     return graph.random_node()
 
 class Node(Node):
-    DEBUG_RECEIVE = True
-    DEBUG_SEND = True
-
     MAX_TRIALS = 10
 
     death_probability = Float
@@ -70,12 +67,12 @@ class TL(Simulation):
         node_cls = Node
         node_options = {"death_probability", "criterion"}
 
-    class clock_type(Clock):
-        DEBUG_SEND = True
-
-    class activator_type(Activator):
-        DEBUG_SEND = True
-        DEBUG_RECEIVE = True
+#    class clock_type(Clock):
+#        DEBUG_SEND = True
+#
+#    class activator_type(Activator):
+#        DEBUG_SEND = True
+#        DEBUG_RECEIVE = True
 
 if __name__ == '__main__':
     sim = TL()
