@@ -4,10 +4,10 @@ Generic utility functions are defined here.
 For example functions to manipulate primitive data types and such.
 """
 
-
 __all__ = [
     'extract_subdictionary',
-    'choice_from_iter'
+    'choice_from_iter',
+    'SequenceAsyncResult'
 ]
 
 try:
@@ -26,6 +26,5 @@ else:
 
 from dictionary import extract_subdictionary
 from rnd import choice_from_iter
-
-
+from concurrency import SequenceAsyncResult
 

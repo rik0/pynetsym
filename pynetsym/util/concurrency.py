@@ -1,6 +1,5 @@
 import itertools
 
-
 class SequenceAsyncResult(object):
     def __init__(self, seq):
         self.seq = seq
