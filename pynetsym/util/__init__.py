@@ -4,10 +4,14 @@ Generic utility functions are defined here.
 For example functions to manipulate primitive data types and such.
 """
 
+__all__ = [
+    'extract_subdictionary',
+]
+
 import itertools as it
 from heapq import heappop, heappush
 from bisect import bisect_left
-
+from dictionary import extract_subdictionary
 
 class IntIdentifierStore(object):
     """
@@ -101,5 +105,3 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 
-def extract_subdictionary(dct, opts):
-    return {k: v for k, v in dct.iteritems() if k in opts}
