@@ -7,7 +7,10 @@ For example functions to manipulate primitive data types and such.
 __all__ = [
     'extract_subdictionary',
     'choice_from_iter',
-    'SequenceAsyncResult'
+    'SequenceAsyncResult',
+    'encapsulate_global',
+    'gather_from_ancestors',
+    'classproperty'
 ]
 
 try:
@@ -27,4 +30,7 @@ else:
 from dictionary import extract_subdictionary
 from rnd import choice_from_iter
 from concurrency import SequenceAsyncResult
+from global_state import encapsulate_global
+from meta import gather_from_ancestors, classproperty
+
 
