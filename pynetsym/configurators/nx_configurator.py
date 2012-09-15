@@ -1,11 +1,10 @@
 from traits.trait_types import Instance, Class
 from pynetsym import node_manager
-from pynetsym import geventutil
 
 import itertools
 import networkx as nx
 from pynetsym.storage import GraphWrapper
-from pynetsym.util import extract_subdictionary
+from pynetsym.util import extract_subdictionary, SequenceAsyncResult
 
 
 class StartingNXGraphConfigurator(node_manager.Configurator):
@@ -37,6 +36,6 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
                        for _node in nit_1]
         self.node_map = {node: identifier for node, identifier
             in itertools.izip(nit_2,
-                geventutil.SequenceAsyncResult(answers).get())}
+                SequenceAsyncResult(answers).get())}
         self.node_identifiers = self.node_map.viewvalues()
 

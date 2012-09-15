@@ -1,4 +1,3 @@
-from pynetsym import geventutil
 from pynetsym import addressing
 from pynetsym import node_db
 
@@ -12,6 +11,7 @@ import gevent.queue as queue
 
 from traits import api as t
 from pynetsym.error import PyNetSymError
+from pynetsym.util import SequenceAsyncResult
 
 __all__ = [
     'Agent',
@@ -193,7 +193,7 @@ class Agent(t.HasTraits):
         self.send_log(message)
 
     def send_all(self, receivers, message, **additional_parameters):
-        return geventutil.SequenceAsyncResult(
+        return SequenceAsyncResult(
             [self.send(receiver_id, message, **additional_parameters)
              for receiver_id in receivers])
 

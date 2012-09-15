@@ -2,7 +2,6 @@ from pynetsym import addressing
 from pynetsym import node_db
 from pynetsym import configuration
 from pynetsym import core
-from pynetsym import geventutil
 from pynetsym import metautil
 from pynetsym import storage
 from pynetsym import termination
@@ -16,7 +15,7 @@ import sys
 import operator
 
 import traits.api as t
-from pynetsym.util import extract_subdictionary
+from pynetsym.util import extract_subdictionary, SequenceAsyncResult
 
 __all__ = [
     'Simulation',
@@ -310,7 +309,7 @@ class Activator(core.Agent):
 
     def create_nodes(self):
         to_create = self.nodes_to_create()
-        node_ids = geventutil.SequenceAsyncResult(
+        node_ids = SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',
                        cls=node_class, parameters=node_parameters)
              for node_class, node_parameters in to_create])
