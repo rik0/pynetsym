@@ -1,6 +1,5 @@
 from pynetsym import addressing
 from pynetsym import node_db
-from pynetsym import argutils
 from pynetsym import configuration
 from pynetsym import core
 from pynetsym import geventutil
@@ -17,7 +16,7 @@ import sys
 import operator
 
 import traits.api as t
-from pynetsym.util import extract_options
+from pynetsym.util import extract_subdictionary
 
 __all__ = [
     'Simulation',
@@ -296,7 +295,7 @@ class Activator(core.Agent):
     def __init__(self, graph, **additional_arguments):
         activator_options = metautil.gather_from_ancestors(
             self, 'activator_options')
-        activator_arguments = extract_options(
+        activator_arguments = extract_subdictionary(
             additional_arguments,
             activator_options)
         self.graph = graph
