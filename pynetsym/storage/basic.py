@@ -133,36 +133,3 @@ class GraphWrapper(object):
     def output_processor(self, processor, *additional_arguments):
         processor(self.handle, *additional_arguments)
 
-
-@notifier
-@delegate_all(GraphWrapper, 'delegate', include_specials=True)
-class NotifyingGraphWrapper(GraphWrapper):
-    ADD = 'add'
-    REMOVE = 'remove'
-    MODIFY = 'modify'
-
-    NODE = 'node'
-    EDGE = 'edge'
-
-    def __init__(self, delegate):
-        self.delegate = delegate
-
-    @notifies(ADD, NODE)
-    @delegate
-    def add_node(self, identifier, agent):
-        pass
-
-    @notifies(ADD, EDGE)
-    @delegate
-    def add_edge(self, source, target):
-        pass
-
-    @notifies(REMOVE, EDGE)
-    @delegate
-    def remove_egde(self, source, target):
-        pass
-
-    @notifies(REMOVE, NODE)
-    @delegate
-    def remove_node(self, identifier):
-        pass
