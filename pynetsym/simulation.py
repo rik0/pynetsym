@@ -2,7 +2,6 @@ from pynetsym import addressing
 from pynetsym import node_db
 from pynetsym import configuration
 from pynetsym import core
-from pynetsym import metautil
 from pynetsym import storage
 from pynetsym import termination
 from pynetsym import timing
@@ -15,7 +14,7 @@ import sys
 import operator
 
 import traits.api as t
-from pynetsym.util import extract_subdictionary, SequenceAsyncResult
+from pynetsym.util import extract_subdictionary, SequenceAsyncResult, gather_from_ancestors, classproperty
 
 __all__ = [
     'Simulation',
@@ -82,7 +81,7 @@ class Simulation(object):
 
     simulation_options = {"steps", "output", "format"}
 
-    @metautil.classproperty
+    @classproperty
     def activator_type(self):
         """
         Factory used to create the Activator.
@@ -90,7 +89,7 @@ class Simulation(object):
         """
         return Activator
 
-    @metautil.classproperty
+    @classproperty
     def graph_type(self):
         """
         Returns the factory used to build the graph.
@@ -98,7 +97,7 @@ class Simulation(object):
         """
         return storage.NXGraphWrapper
 
-    @metautil.classproperty
+    @classproperty
     def clock_type(self):
         """
         Factory used to create the clock_type.
@@ -106,7 +105,7 @@ class Simulation(object):
         """
         return Clock
 
-    @metautil.classproperty
+    @classproperty
     def configurator_type(self):
         """
         Returns the builder of the Configurator to be passed to NodeManager
@@ -163,7 +162,7 @@ class Simulation(object):
 
     @classmethod
     def build_parameters(cls, args, force_cli, kwargs):
-        options = metautil.gather_from_ancestors(
+        options = gather_from_ancestors(
             cls, 'command_line_options', list)
         configuration_manager = configuration.ConfigurationManager(options)
         if (args is None and not kwargs) or force_cli:
@@ -288,7 +287,7 @@ class Activator(core.Agent):
     activator_options = {}
 
     def __init__(self, graph, **additional_arguments):
-        activator_options = metautil.gather_from_ancestors(
+        activator_options = gather_from_ancestors(
             self, 'activator_options')
         activator_arguments = extract_subdictionary(
             additional_arguments,

@@ -3,11 +3,11 @@ from gevent.pool import Group
 from traits.has_traits import Interface, implements
 from traits.trait_types import List, Dict, Str, Instance
 
-from pynetsym import core, metautil
+from pynetsym import core
 
 import traits.api as t
 from pynetsym.identifiers_manager import IntIdentifierStore
-from pynetsym.util import extract_subdictionary, SequenceAsyncResult
+from pynetsym.util import extract_subdictionary, SequenceAsyncResult, gather_from_ancestors
 
 __all__ = [
     'NodeManager',
@@ -112,7 +112,7 @@ class Configurator(core.Agent):
     additional_arguments = Dict(key_trait=Str)
 
     def __init__(self, **additional_arguments):
-        full_options = metautil.gather_from_ancestors(
+        full_options = gather_from_ancestors(
                 self, 'configurator_options')
         configurator_arguments = extract_subdictionary(
                 additional_arguments, full_options)

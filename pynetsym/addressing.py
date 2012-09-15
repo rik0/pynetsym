@@ -1,8 +1,8 @@
 import itertools
 import operator
 
-from pynetsym import metautil, node_db
 from pynetsym.error import PyNetSymError
+from pynetsym.util import encapsulate_global
 
 class AddressingError(PyNetSymError):
     """
@@ -15,7 +15,7 @@ class AddressingError(PyNetSymError):
         super(AddressingError, self).__init__(*args, **kwargs)
 
 get_root_address_book, \
-set_root_address_book = metautil.encapsulate_global('root', {})
+set_root_address_book = encapsulate_global('root', {})
 
 class AddressBook(object):
     """
