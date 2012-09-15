@@ -1,7 +1,5 @@
-from exceptions import RuntimeError, NotImplementedError
+from exceptions import RuntimeError
 import abc
-from pynetsym.metautil import delegate_all, delegate
-from pynetsym.notifyutil import notifier, notifies
 
 class GraphError(RuntimeError):
     pass
