@@ -99,3 +99,7 @@ class IntIdentifierStore(object):
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
+
+
+def extract_options(dct, opts):
+    return {k: v for k, v in dct.iteritems() if k in opts}

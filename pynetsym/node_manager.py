@@ -6,6 +6,7 @@ from traits.trait_types import List, Dict, Str
 from pynetsym import core, util, metautil, argutils, geventutil
 
 import traits.api as t
+from pynetsym.util import extract_options
 
 __all__ = [
     'NodeManager',
@@ -136,7 +137,7 @@ class Configurator(core.Agent):
     def __init__(self, **additional_arguments):
         full_options = metautil.gather_from_ancestors(
                 self, 'configurator_options')
-        configurator_arguments = argutils.extract_options(
+        configurator_arguments = extract_options(
                 additional_arguments, full_options)
         self.set(**configurator_arguments)
         self.set(additional_arguments=additional_arguments)
@@ -179,7 +180,7 @@ class BasicConfigurator(Configurator):
         pass
 
     def create_nodes(self):
-        self.node_arguments = argutils.extract_options(
+        self.node_arguments = extract_options(
                 self.additional_arguments, self.node_options)
         node_ids = geventutil.SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',

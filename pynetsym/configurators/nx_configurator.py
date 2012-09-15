@@ -6,6 +6,7 @@ from pynetsym import geventutil
 import itertools
 import networkx as nx
 from pynetsym.storage import GraphWrapper
+from pynetsym.util import extract_options
 
 
 class StartingNXGraphConfigurator(node_manager.Configurator):
@@ -23,7 +24,7 @@ class StartingNXGraphConfigurator(node_manager.Configurator):
             self.send(v1, 'accept_link', originating_node=u1)
 
     def create_nodes(self):
-        self.node_arguments = argutils.extract_options(
+        self.node_arguments = extract_options(
                 self.additional_arguments, self.node_options)
         node_manager_id = node_manager.NodeManager.name
         graph = self.starting_graph
