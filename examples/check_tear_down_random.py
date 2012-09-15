@@ -1,7 +1,7 @@
 import random
 import networkx as nx
 
-from pynetsym import core
+from pynetsym import core, BasicConfigurator
 from pynetsym import simulation
 from pynetsym import node_manager
 from pynetsym.nodes import Node
@@ -46,7 +46,7 @@ class Sim(simulation.Simulation):
 
     activator_type = Activator
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {'starting_network_size'}
 

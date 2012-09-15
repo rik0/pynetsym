@@ -1,5 +1,5 @@
 from pynetsym import core, configurators, simulation
-from pynetsym.configurators.misc import Either
+from pynetsym.configurators.predicates import Either
 from scipy import stats
 import numpy as np
 import collections

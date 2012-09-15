@@ -5,7 +5,7 @@ import networkx as nx
 from networkx.generators.classic import empty_graph
 from networkx.generators.random_graphs import _random_subset
 
-from pynetsym import core
+from pynetsym import core, BasicConfigurator
 from pynetsym import simulation
 from pynetsym import node_manager
 from pynetsym.nodes import Node
@@ -82,7 +82,7 @@ class BA(simulation.Simulation):
 
     activator_type = Activator
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {'stepper'}
 

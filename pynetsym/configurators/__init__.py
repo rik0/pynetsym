@@ -1,3 +1,23 @@
+__all__ = [
+    'Either',
+    'IConfigurator',
+    'AbstractConfigurator',
+    'BasicConfigurator'
+]
 
-from nx_configurator import StartingNXGraphConfigurator
-from misc import Either
+
+
+from .predicates import Either
+from .interface import IConfigurator
+from .basic import AbstractConfigurator, BasicConfigurator
+
+try:
+    import networkx
+    del networkx
+except ImportError:
+    pass
+else:
+    from nx_configurator import StartingNXGraphConfigurator
+    __all__.append('StartingNXGraphConfigurator')
+
+

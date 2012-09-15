@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from os import path
-from pynetsym import node_manager
+from pynetsym import node_manager, BasicConfigurator
 from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 import networkx as nx
 import os
@@ -63,7 +63,7 @@ class Activator2(Activator):
 class BA2(BA):
     activator_type = Activator2
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node2
         node_options = {'starting_edges'}
 

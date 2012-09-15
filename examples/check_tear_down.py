@@ -5,7 +5,7 @@ import networkx as nx
 
 import traits.api as t
 
-from pynetsym import simulation
+from pynetsym import simulation, BasicConfigurator
 from pynetsym import node_manager
 from pynetsym.nodes import Node
 
@@ -72,7 +72,7 @@ class Sim(simulation.Simulation):
 
     activator_type = Activator
 
-    class configurator_type(node_manager.BasicConfigurator):
+    class configurator_type(BasicConfigurator):
         node_cls = Node
         node_options = {'starting_network_size'}
 
