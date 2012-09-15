@@ -1,5 +1,5 @@
 from unittest import TestCase
-import pynetsym.metautil
+import metautil
 
 
 class BaseClass(object):
@@ -33,7 +33,7 @@ class BaseClass(object):
         self.val = value
 
 
-@pynetsym.metautil.delegate_all(BaseClass)
+@metautil.delegate_all(BaseClass)
 class StandardDelegator(object):
     def __init__(self, delegate):
         self.delegate = delegate
@@ -96,7 +96,7 @@ class TestDelegate_all_To_Delegate_Subclass(TestDelegate_all):
             def __init__(self, val):
                 super(Subclass, self).__init__(val)
 
-        @pynetsym.metautil.delegate_all(Subclass)
+        @metautil.delegate_all(Subclass)
         class SubclassDelegator(object):
             def __init__(self, delegate):
                 self.delegate = delegate
