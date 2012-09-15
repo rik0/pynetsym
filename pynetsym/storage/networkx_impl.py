@@ -4,6 +4,7 @@ import logging
 
 from pynetsym.storage.basic import GraphError
 from pynetsym.storage.basic import GraphWrapper
+from pynetsym.util import choice_from_iter
 
 try:
     import networkx as nx
@@ -55,7 +56,7 @@ else:
                     return chosen_index
                 else:
                     logging.warning("The network is not filled.")
-                    return pynetsym.rndutil.choice_from_iter(
+                    return choice_from_iter(
                         self.graph.nodes_iter(),
                         max_value)
 
@@ -92,7 +93,7 @@ else:
             @warning: this is relatively safe, although horribly slow.
             """
             try:
-                return pynetsym.rndutil.choice_from_iter(
+                return choice_from_iter(
                     self.graph.edges_iter(),
                     self.graph.number_of_edges())
             except ValueError:
