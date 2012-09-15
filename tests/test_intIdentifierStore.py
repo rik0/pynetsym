@@ -1,10 +1,11 @@
 from unittest import TestCase
 from pynetsym import util
+from pynetsym.identifiers_manager import IntIdentifierStore
 
 
 class TestIntIdentifierStore(TestCase):
     def setUp(self):
-        self.store = util.IntIdentifierStore()
+        self.store = IntIdentifierStore()
 
     def perform_actions(self, action_list):
         for action_item in action_list:
