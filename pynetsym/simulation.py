@@ -129,13 +129,8 @@ class Simulation(object):
         ## deepcopy: no object sharing between different simulation
         ## executions!
         graph_options = copy.deepcopy(graph_options)
-        self.graph = NotifyingGraphWrapper(
-            self.graph_type(**graph_options))
+        self.graph = self.graph_type(**graph_options)
         self.id_manager = IdManager()
-#        self.graph.register_observer(
-#            self.id_manager.node_removed,
-#            NotifyingGraphWrapper.REMOVE,
-#            NotifyingGraphWrapper.NODE)
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
