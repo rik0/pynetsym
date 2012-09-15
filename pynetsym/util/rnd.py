@@ -1,3 +1,5 @@
+import random
+
 def choice_from_iter(iterator, max_value):
     if max_value <= 0:
         raise ValueError(

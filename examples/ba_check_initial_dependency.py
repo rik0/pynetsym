@@ -5,9 +5,9 @@ from matplotlib import pyplot as plt
 
 import networkx as nx
 
-from pynetsym.generation_models import barabasi_albert
+from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 #from . import ba_stepped2 as barabasi_albert
-from pynetsym import mathutil
+from pynetsym.util import ccdf, degrees_to_hist
 
 Node = barabasi_albert.Node
 Activator = barabasi_albert.Activator
@@ -58,8 +58,8 @@ if __name__ == '__main__':
 
         del sim
 
-        dst = mathutil.degrees_to_hist(graph.degree())
-        ccdf = mathutil.ccdf(dst)
+        dst = degrees_to_hist(graph.degree())
+        ccdf = ccdf(dst)
 
         if ba_graph is None:
             ba_graph = nx.barabasi_albert_graph(
@@ -71,10 +71,10 @@ if __name__ == '__main__':
             print 'PB:', ba_graph.number_of_nodes(),
             print  ba_graph.number_of_edges()
 
-            ba_dst = mathutil.degrees_to_hist(ba_graph.degree())
+            ba_dst = degrees_to_hist(ba_graph.degree())
             F_pdf.gca().loglog(ba_dst, marker=ba_marker, color=ba_color,
                 linestyle='', label=ba_label)
-            ba_ccdf = mathutil.ccdf(ba_dst)
+            ba_ccdf = ccdf(ba_dst)
             F_ccdf.gca().loglog(ba_ccdf, color=ba_color, label=ba_label)
 
         F_pdf.gca().loglog(dst, marker=marker, color=color,

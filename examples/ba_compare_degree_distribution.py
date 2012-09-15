@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 from os import path
-from pynetsym import mathutil
 from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 import networkx as nx
 import os
@@ -10,11 +9,12 @@ import matplotlib
 import gc
 
 from numpy import arange
+from pynetsym.util import sna
 
 
 def make_distributions(graph):
     bins = np.bincount(graph.degree().values())
-    ccdf = mathutil.ccdf(bins)
+    ccdf = sna.ccdf(bins)
     pdf = np.asfarray(bins) / np.sum(bins)
     return ccdf, pdf
 

@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 from os import path
-from pynetsym import mathutil
 from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 import numpy as np
 import os
@@ -10,6 +9,7 @@ import matplotlib
 
 
 #from . import ba_stepped2 as barabasi_albert
+from pynetsym.util import sna
 
 
 def average_distribution(dst):
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         del sim
 
         bins = np.bincount(graph.degree().values())
-        ccdf = mathutil.ccdf(bins)
+        ccdf = sna.ccdf(bins)
         pdf = np.asfarray(bins) / len(bins)
 
         ba_ccdfs.append(ccdf)

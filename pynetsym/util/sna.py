@@ -1,16 +1,13 @@
 import math
 import random
 import networkx
-
-# TODO: decide what to do with this
 from numpy import cumsum, sum, zeros
-
 
 def ccdf(dist):
     return 1 - (cumsum(dist, dtype=float) / sum(dist))
 
 
-def estimate_s(q, delta, eps):
+def _estimate_s(q, delta, eps):
     delta2 = delta * delta
     delta3 = (1 - delta) * (1 - delta)
     return (2. / (q * q)) * math.log(2. / eps) * delta3 / delta2
@@ -18,7 +15,7 @@ def estimate_s(q, delta, eps):
 
 def approximate_cpl(graph, q=0.5, delta=0.15, eps=0.05):
     assert isinstance(graph, networkx.Graph)
-    s = estimate_s(q, delta, eps)
+    s = _estimate_s(q, delta, eps)
     s = int(math.ceil(s))
     if graph.number_of_nodes() <= s:
         sample = graph.nodes_iter()
