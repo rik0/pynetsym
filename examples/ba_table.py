@@ -6,7 +6,6 @@ import networkx as nx
 import numpy as np
 
 from pynetsym.generation_models import nx_barabasi_albert as ba
-from pynetsym import mathutil
 
 from pynetsym import timing
 
@@ -14,10 +13,11 @@ import gc
 
 #DIMENSIONS = [1000, 5000, 10000, 50000]
 #DIMENSIONS = [10, 50, 100, 500]
-#DIMENSIONS = [5000]
+DIMENSIONS = [5000]
 #INITIAL_EDGES = [5, 8, 11, 20]
 #INITIAL_EDGES = [5, 8]
-#INITIAL_EDGES = [5, ]
+INITIAL_EDGES = [5, ]
+from pynetsym.util import approximate_cpl
 
 
 lines = []
@@ -34,7 +34,7 @@ for n, m in itertools.product(DIMENSIONS, INITIAL_EDGES):
     del sim
     sim_C = nx.average_clustering(sim_graph)
     print '\tComputed clustering'
-    sim_CPL = mathutil.approximate_cpl(sim_graph)
+    sim_CPL = approximate_cpl(sim_graph)
     print '\tComputed CPL'
     sim_alpha, sim_xmin, sim_L = plfit.plfit(sim_graph.degree().values())
     print '\tComputed Alpha'
@@ -46,7 +46,7 @@ for n, m in itertools.product(DIMENSIONS, INITIAL_EDGES):
     print 'Created BA({},{})'.format(n, m)
     nx_C = nx.average_clustering(nx_graph)
     print '\tComputed clustering'
-    nx_CPL = mathutil.approximate_cpl(nx_graph)
+    nx_CPL = approximate_cpl(nx_graph)
     print '\tComputed CPL'
     nx_alpha, nx_xmin, nx_L = plfit.plfit(nx_graph.degree().values())
     print '\tComputed Alpha'

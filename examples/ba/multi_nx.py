@@ -1,7 +1,5 @@
 from matplotlib import pyplot as plt
 from os import path
-from pynetsym import mathutil
-from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 import networkx as nx
 import os
 import time
@@ -9,6 +7,7 @@ import numpy as np
 import itertools as it
 
 #from . import ba_stepped2 as barabasi_albert
+from pynetsym.util import sna
 
 
 def average_distribution(dst):
@@ -18,7 +17,7 @@ def average_distribution(dst):
 
 
 ITERATIONS = 10
-STEPS = 10000
+STEPS = 100
 DPI = 100
 markers = it.cycle(['+', '*', '.'])
 colors = ['blue', 'green', 'cyan', '0.75', 'black', '0.5', '#FF8080',
@@ -53,7 +52,7 @@ if __name__ == '__main__':
         ba_graph = nx.barabasi_albert_graph(STEPS, 5)
 
         bins = np.bincount(ba_graph.degree().values())
-        ccdf = mathutil.ccdf(bins)
+        ccdf = sna.ccdf(bins)
         pdf = np.asfarray(bins) / len(bins)
 
         ba_ccdfs.append(ccdf)

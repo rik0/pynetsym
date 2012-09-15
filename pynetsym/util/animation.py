@@ -3,9 +3,9 @@ from os import path
 
 from pynetsym import core
 from pynetsym import simulation
-from pynetsym import mathutil
 
 from matplotlib import pyplot as plt
+from pynetsym.util import sna, degrees_to_hist
 
 
 class AnimationMaker(core.Agent):
@@ -38,7 +38,7 @@ class DegreeDistributionAnimationMaker(AnimationMaker):
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_subplot(111)
         graph = self.graph.handle
-        dst = mathutil.degrees_to_hist(graph.degree())
-        ccdf = mathutil.ccdf(dst)
+        dst = degrees_to_hist(graph.degree())
+        ccdf = sna.ccdf(dst)
         ax.loglog(ccdf)
         return fig
