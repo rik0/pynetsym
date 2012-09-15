@@ -176,7 +176,7 @@ class Simulation(object):
         pass
 
     def create_node_db(self):
-        self.node_db = agent_db.NodeDB(PythonPickler(), dict())
+        self.node_db = agent_db.AgentDB(PythonPickler(), dict())
 
 
     def create_address_book(self):

@@ -77,7 +77,7 @@ class IAgentStorage(Interface):
         pass
 
 
-class NodeDB(HasTraits):
+class AgentDB(HasTraits):
     implements(IAgentStorage)
 
     pickling_module = Instance(ISerialize, allow_none=False)

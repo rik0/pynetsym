@@ -55,7 +55,7 @@ class Agent(t.HasTraits):
     _greenlet = t.Instance(
         gevent.Greenlet, transient=True, allow_none=False)
     _node_db = t.Instance(
-        agent_db.NodeDB, transient=True, allow_none=False)
+        agent_db.AgentDB, transient=True, allow_none=False)
 
     id = t.Either(t.Int, t.Str)
 
@@ -364,7 +364,7 @@ class MinimalAgentRuntime(object):
     """
 
     def __init__(self, address_book_factory=addressing.FlatAddressBook,
-                 node_db_factory=lambda: agent_db.NodeDB(
+                 node_db_factory=lambda: agent_db.AgentDB(
                      agent_db.PythonPickler(), dict())):
         self.address_book = address_book_factory()
         self.node_db = node_db_factory()

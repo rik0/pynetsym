@@ -5,7 +5,7 @@ __all__ = [
     "get_logger",
     "Logger",
     "MissingNode",
-    "NodeDB",
+    "AgentDB",
     'Simulation',
     'Activator',
     'AsyncClock',
@@ -14,7 +14,7 @@ __all__ = [
 
 from core import Agent, AgentError, MinimalAgentRuntime, Logger, get_logger
 from addressing import AddressingError
-from agent_db import MissingNode, NodeDB
+from agent_db import MissingNode, AgentDB
 from node_manager import NodeManager
 from node_manager import BasicConfigurator, Configurator, IConfigurator
 from nodes import Node
