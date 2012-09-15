@@ -1,10 +1,10 @@
 from unittest import TestCase
-import pynetsym.node_db
+import pynetsym.agent_db
 
 import itertools as it
 
 class TestPythonPickler(TestCase):
-    currentPickler = pynetsym.node_db.PythonPickler
+    currentPickler = pynetsym.agent_db.PythonPickler
 
     def setUp(self):
         self.pickler = self.currentPickler()
@@ -22,7 +22,7 @@ class TestPythonPickler(TestCase):
                                                self.objects])
 
 class TestJSONPickler(TestPythonPickler):
-    currentPickler = pynetsym.node_db.JSONPickle
+    currentPickler = pynetsym.agent_db.JSONPickle
 
     def setUp(self):
         super(TestJSONPickler, self).setUp()

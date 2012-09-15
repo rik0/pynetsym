@@ -1,5 +1,5 @@
 from pynetsym import addressing
-from pynetsym import node_db
+from pynetsym import agent_db
 
 import time
 import sys
@@ -55,7 +55,7 @@ class Agent(t.HasTraits):
     _greenlet = t.Instance(
         gevent.Greenlet, transient=True, allow_none=False)
     _node_db = t.Instance(
-        node_db.NodeDB, transient=True, allow_none=False)
+        agent_db.NodeDB, transient=True, allow_none=False)
 
     id = t.Either(t.Int, t.Str)
 
@@ -212,7 +212,7 @@ class Agent(t.HasTraits):
         except addressing.AddressingError, e:
             try:
                 receiver = self._awaken_agent(identifier)
-            except node_db.MissingNode:
+            except agent_db.MissingNode:
                 raise e
         return receiver
 
@@ -364,8 +364,8 @@ class MinimalAgentRuntime(object):
     """
 
     def __init__(self, address_book_factory=addressing.FlatAddressBook,
-                 node_db_factory=lambda: node_db.NodeDB(
-                     node_db.PythonPickler(), dict())):
+                 node_db_factory=lambda: agent_db.NodeDB(
+                     agent_db.PythonPickler(), dict())):
         self.address_book = address_book_factory()
         self.node_db = node_db_factory()
         self.logger = self.create_agent(Logger, stream=sys.stdout)

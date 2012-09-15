@@ -1,11 +1,11 @@
 from pynetsym import addressing
-from pynetsym import node_db
+from pynetsym import agent_db
 from pynetsym import configuration
 from pynetsym import core
 from pynetsym import storage
 from pynetsym import termination
 from pynetsym import timing
-from pynetsym.node_db import PythonPickler
+from pynetsym.agent_db import PythonPickler
 
 from pynetsym.node_manager import NodeManager
 
@@ -176,7 +176,7 @@ class Simulation(object):
         pass
 
     def create_node_db(self):
-        self.node_db = node_db.NodeDB(PythonPickler(), dict())
+        self.node_db = agent_db.NodeDB(PythonPickler(), dict())
 
 
     def create_address_book(self):
