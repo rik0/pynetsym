@@ -1,6 +1,6 @@
 import abc
 from unittest import TestCase
-from pynetsym import metautil
+from oldutil import metautil
 
 __author__ = 'enrico'
 

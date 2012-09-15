@@ -1,5 +1,5 @@
+from oldutil import metautil
 from pynetsym import configuration
-from pynetsym import metautil
 from pynetsym import simulation
 
 import py

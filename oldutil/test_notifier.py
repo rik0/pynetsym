@@ -1,5 +1,5 @@
 from unittest import TestCase
-from pynetsym.notifyutil import notifier, notifies
+from oldutil.notifications import notifier, notifies
 
 
 @notifier

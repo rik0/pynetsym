@@ -1,6 +1,5 @@
 import unittest
-
-from pynetsym import metautil
+from oldutil import metautil
 
 
 class B(object):
