@@ -17,6 +17,7 @@ import sys
 import operator
 
 import traits.api as t
+from pynetsym.util import extract_options
 
 __all__ = [
     'Simulation',
@@ -295,7 +296,7 @@ class Activator(core.Agent):
     def __init__(self, graph, **additional_arguments):
         activator_options = metautil.gather_from_ancestors(
             self, 'activator_options')
-        activator_arguments = argutils.extract_options(
+        activator_arguments = extract_options(
             additional_arguments,
             activator_options)
         self.graph = graph
