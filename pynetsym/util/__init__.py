@@ -101,5 +101,5 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 
-def extract_options(dct, opts):
+def extract_subdictionary(dct, opts):
     return {k: v for k, v in dct.iteritems() if k in opts}
