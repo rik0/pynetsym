@@ -11,7 +11,6 @@ from pynetsym import timing
 from pynetsym.node_db import PythonPickler
 
 from pynetsym.node_manager import NodeManager, IdManager
-from pynetsym.storage.basic import NotifyingGraphWrapper
 
 import copy
 import sys
