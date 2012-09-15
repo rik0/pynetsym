@@ -1,6 +1,6 @@
-from oldutil import metautil
 from pynetsym import configuration
 from pynetsym import simulation
+from pynetsym import util
 
 import py
 import unittest
@@ -21,7 +21,7 @@ class DummySimulationLong(simulation.Simulation):
 ])
 def test_duplicated_options(cls):
     empty_arguments = []
-    options = metautil.gather_from_ancestors(cls, 'command_line_options', list)
+    options = util.gather_from_ancestors(cls, 'command_line_options', list)
 
     py.test.raises(configuration.ConfigurationError,
         configuration.ConfigurationManager, options)
