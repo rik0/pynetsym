@@ -9,7 +9,7 @@ from pynetsym import termination
 from pynetsym import timing
 from pynetsym.node_db import PythonPickler
 
-from pynetsym.node_manager import NodeManager, IdManager
+from pynetsym.node_manager import NodeManager
 
 import copy
 import sys
@@ -129,7 +129,6 @@ class Simulation(object):
         ## executions!
         graph_options = copy.deepcopy(graph_options)
         self.graph = self.graph_type(**graph_options)
-        self.id_manager = IdManager()
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
@@ -205,10 +204,7 @@ class Simulation(object):
         )
         self.configurator_type = self.configurator_type(
             **self._simulation_parameters)
-        self.node_manager = NodeManager(
-            self.id_manager,
-            self.graph
-        )
+        self.node_manager = NodeManager(self.graph)
 
     def pre_configure_network(self):
         self.termination_checker.start(self.address_book, self.node_db)
