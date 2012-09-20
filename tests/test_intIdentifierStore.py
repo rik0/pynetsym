@@ -11,13 +11,13 @@ class TestBasicIntIdentifierStore(TestCase):
         self.assertEqual(0, self.store.peek())
 
     def testget(self):
-        self.assertEqual(0, self.store.get())
+        self.assertEqual(0, self.store.take())
         self.assertEqual(1, self.store.peek())
 
     def testDoubleFreeFIFO(self):
-        self.store.get()
+        self.store.take()
         self.assertEqual(1, self.store.peek())
-        self.store.get()
+        self.store.take()
         self.assertEqual(2, self.store.peek())
         self.store.free(0)
         self.assertEqual(0, self.store.peek())
@@ -25,9 +25,9 @@ class TestBasicIntIdentifierStore(TestCase):
         self.assertEqual(0, self.store.peek())
 
     def testDoubleFreeLIFO(self):
-        self.store.get()
+        self.store.take()
         self.assertEqual(1, self.store.peek())
-        self.store.get()
+        self.store.take()
         self.assertEqual(2, self.store.peek())
         self.store.free(1)
         self.assertEqual(1, self.store.peek())
@@ -36,16 +36,16 @@ class TestBasicIntIdentifierStore(TestCase):
 
 @parametrized(
     (0, ),
-    (1, 'get'),
-    (1, 'get', ('free', 1)),
-    (0, 'get', ('free', 0)),
-    (3, 'get', 'get', 'get'),
-    (2, 'get', 'get', 'get', ('free', 2)),
-    (1, 'get', 'get', 'get', ('free', 1)),
-    (0, 'get', 'get', 'get', ('free', 0)),
-    (3, 'get', 'get', 'get', ('free', 2), 'get'),
-    (2, 'get', 'get', 'get', ('free', 1), ('free', 2), 'get'),
-    (2, 'get', 'get', 'get', ('free', 2), ('free', 1), 'get'),
+    (1, 'take'),
+    (1, 'take', ('free', 1)),
+    (0, 'take', ('free', 0)),
+    (3, 'take', 'take', 'take'),
+    (2, 'take', 'take', 'take', ('free', 2)),
+    (1, 'take', 'take', 'take', ('free', 1)),
+    (0, 'take', 'take', 'take', ('free', 0)),
+    (3, 'take', 'take', 'take', ('free', 2), 'take'),
+    (2, 'take', 'take', 'take', ('free', 1), ('free', 2), 'take'),
+    (2, 'take', 'take', 'take', ('free', 2), ('free', 1), 'take'),
 )
 class TestPeek(TestCase):
     def setUp(self):

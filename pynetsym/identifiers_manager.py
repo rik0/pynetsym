@@ -16,7 +16,7 @@ class IntIdentifierStore(object):
             lambda x: x < self._upper_identifier,
             self._holes))
 
-    def get(self):
+    def take(self):
         """
         Return the lowest available index and marks is as used.
         @return: the lowest possible index
