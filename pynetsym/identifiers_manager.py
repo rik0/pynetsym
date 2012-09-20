@@ -44,15 +44,11 @@ class IntIdentifierStore(object):
         if not self._holes:
             return False
         possible_index = bisect_left(self._holes, identifier)
-        if self._holes[possible_index] == identifier:
+        if (possible_index < len(self._holes)
+            and self._holes[possible_index] == identifier):
             return True
         else:
             return False
-
-    def _remove_from_holes(self, identifier):
-        possible_index = bisect_left(self._holes, identifier)
-        if self._holes[possible_index] == identifier:
-            del self._holes[possible_index]
 
     def free(self, identifier):
         """
