@@ -65,3 +65,45 @@ class IGraph(Interface):
         @return: The number of edges in the network.
         @rtype: int
         """
+
+    def to_nx(self, copy=False):
+        """
+        Return corresponding NetworkX graph.
+        @param copy: whether the graph should be copied.
+        @type copy: bool
+        @return: A networkx graph.
+        @rtype: networkx.Graph
+
+        @warning: depending from the actual kind of graph this may be a copy
+          or the original one. Modifications to a graph that is not a copy
+          may lead to servere malfunctions, unless the simulation has already
+          stopped.
+        """
+
+    def to_scipy(self, copy=False):
+        """
+        Return corresponding NetworkX graph.
+        @param copy: whether the graph should be copied.
+        @type copy: bool
+        @return: A scipy sparse matrix.
+        @rtype: scipy.sparse.spmatrix
+
+        @warning: depending from the actual kind of graph this may be a copy
+          or the original one. Modifications to a graph that is not a copy
+          may lead to servere malfunctions, unless the simulation has already
+          stopped.
+        """
+
+    def to_numpy(self, copy=False):
+        """
+        Return corresponding NetworkX graph.
+        @param copy: whether the graph should be copied.
+        @type copy: bool
+        @return: A numpy dense matrix.
+        @rtype: numpy.ndarray
+
+        @warning: depending from the actual kind of graph this may be a copy
+          or the original one. Modifications to a graph that is not a copy
+          may lead to servere malfunctions, unless the simulation has already
+          stopped.
+        """
