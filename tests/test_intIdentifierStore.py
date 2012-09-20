@@ -10,23 +10,42 @@ class TestBasicIntIdentifierStore(TestCase):
     def testPeek(self):
         self.assertEqual(0, self.store.peek())
 
-    def testPop(self):
-        self.assertEqual(0, self.store.pop())
+    def testget(self):
+        self.assertEqual(0, self.store.get())
         self.assertEqual(1, self.store.peek())
 
+    def testDoubleFreeFIFO(self):
+        self.store.get()
+        self.assertEqual(1, self.store.peek())
+        self.store.get()
+        self.assertEqual(2, self.store.peek())
+        self.store.free(0)
+        self.assertEqual(0, self.store.peek())
+        self.store.free(1)
+        self.assertEqual(0, self.store.peek())
+
+    def testDoubleFreeLIFO(self):
+        self.store.get()
+        self.assertEqual(1, self.store.peek())
+        self.store.get()
+        self.assertEqual(2, self.store.peek())
+        self.store.free(1)
+        self.assertEqual(1, self.store.peek())
+        self.store.free(0)
+        self.assertEqual(0, self.store.peek())
 
 @parametrized(
     (0, ),
-    (1, 'pop'),
-    (1, 'pop', ('unmark', 1)),
-    (0, 'pop', ('unmark', 0)),
-    (3, 'pop', 'pop', 'pop'),
-    (2, 'pop', 'pop', 'pop', ('unmark', 2)),
-    (1, 'pop', 'pop', 'pop', ('unmark', 1)),
-    (0, 'pop', 'pop', 'pop', ('unmark', 0)),
-    (3, 'pop', 'pop', 'pop', ('unmark', 2), 'pop'),
-    (2, 'pop', 'pop', 'pop', ('unmark', 1), ('unmark', 2), 'pop'),
-    (2, 'pop', 'pop', 'pop', ('unmark', 2), ('unmark', 1), 'pop'),
+    (1, 'get'),
+    (1, 'get', ('free', 1)),
+    (0, 'get', ('free', 0)),
+    (3, 'get', 'get', 'get'),
+    (2, 'get', 'get', 'get', ('free', 2)),
+    (1, 'get', 'get', 'get', ('free', 1)),
+    (0, 'get', 'get', 'get', ('free', 0)),
+    (3, 'get', 'get', 'get', ('free', 2), 'get'),
+    (2, 'get', 'get', 'get', ('free', 1), ('free', 2), 'get'),
+    (2, 'get', 'get', 'get', ('free', 2), ('free', 1), 'get'),
 )
 class TestPeek(TestCase):
     def setUp(self):

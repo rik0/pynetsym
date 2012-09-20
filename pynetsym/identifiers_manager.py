@@ -16,26 +16,29 @@ class IntIdentifierStore(object):
             lambda x: x < self._upper_identifier,
             self._holes))
 
-    def peek(self):
+    def get(self):
         """
-        Return the lowest available index
+        Return the lowest available index and marks is as used.
         @return: the lowest possible index
         @rtype: int
         """
         if self._holes:
             return heappop(self._holes)
         else:
-            return self._upper_identifier
+            tmp = self._upper_identifier
+            self._upper_identifier += 1
+            return tmp
 
-    def pop(self):
+    def peek(self):
         """
-        Return the lowest available index and marks it as used.
+        Return the lowest available index.
         @return: the lowest possible index
         @rtype: int
         """
-        identifier = self.peek()
-        self.mark(identifier)
-        return identifier
+        if self._holes:
+            return self._holes[0]
+        else:
+            return self._upper_identifier
 
     def _is_in_holes(self, identifier):
         if not self._holes:
@@ -51,23 +54,7 @@ class IntIdentifierStore(object):
         if self._holes[possible_index] == identifier:
             del self._holes[possible_index]
 
-    def mark(self, identifier):
-        """
-        Marks the identifier as used
-        @param identifier: the identifier to mark
-        @type identifier: int
-        @warning: NOP if identifier is not free
-        """
-        if self._is_in_holes(identifier):
-            self._remove_from_holes(identifier)
-            return identifier
-        elif self._upper_identifier == identifier:
-            self._upper_identifier += 1
-            return identifier
-        else:
-            raise ValueError("Identifier %s was not free.", identifier)
-
-    def unmark(self, identifier):
+    def free(self, identifier):
         """
         Frees the identifier.
         @param identifier: marks the identifier as free
@@ -81,10 +68,8 @@ class IntIdentifierStore(object):
             self._try_regress_upper()
 
     def _try_regress_upper(self):
-        while self._holes:
-            if self._holes[-1] == self._upper_identifier - 1:
-                del self._holes[-1]
-                self._upper_identifier -= 1
-            else:
-                break
+        while self._holes and self._holes[-1] == self._upper_identifier - 1:
+            del self._holes[-1]
+            self._upper_identifier -= 1
+
 

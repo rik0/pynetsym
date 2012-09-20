@@ -98,7 +98,7 @@ class AgentDB(HasTraits):
 
     def recover(self, identifier):
         try:
-            node = self.pickling_module.loads(self.storage.pop(identifier))
+            node = self.pickling_module.loads(self.storage.get(identifier))
             return node
         except KeyError as e:
             raise MissingNode(e)

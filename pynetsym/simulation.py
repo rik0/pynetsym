@@ -135,7 +135,7 @@ class Simulation(object):
         self._simulation_parameters[key] = value
 
     def remove_parameter(self, key):
-        self._simulation_parameters.pop(key)
+        self._simulation_parameters.get(key)
 
     def update_parameters(self, cli_args_dict):
         self._simulation_parameters.update(cli_args_dict)
