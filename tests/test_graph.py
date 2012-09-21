@@ -6,13 +6,13 @@ import networkx as nx
 from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph
 
 
-basic_graph_types = [(ScipyGraph, 100),
+undirected_graph_types = [(ScipyGraph, 100),
                      (NxGraph, )]
 directed_graph_types = [(DirectedScipyGraph, 100),
                         (NxGraph, nx.DiGraph)]
+all_graphs = undirected_graph_types + directed_graph_types
 
-
-@paramunittest.parametrized(basic_graph_types + directed_graph_types)
+@paramunittest.parametrized(*all_graphs)
 class TestGraph(unittest.TestCase):
 
     def setParameters(self, graph_factory, *args):
