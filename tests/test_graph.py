@@ -34,6 +34,15 @@ class TestEmptyGraph(unittest.TestCase):
         self.assertEqual(2, self.graph.number_of_nodes())
         self.assertEqual(1, self.graph.number_of_edges())
 
+    def testDoubleAddEdge(self):
+        self.assertEqual(0, self.graph.add_node())
+        self.assertEqual(1, self.graph.add_node())
+        self.graph.add_edge(0, 1)
+        self.graph.add_edge(0, 1)
+
+        self.assertEqual(2, self.graph.number_of_nodes())
+        self.assertEqual(1, self.graph.number_of_edges())
+
     def testDiadNoNodes(self):
         with self.assertRaises(GraphError):
             self.graph.add_edge(0, 1)
