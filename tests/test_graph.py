@@ -7,14 +7,13 @@ from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph
 
 
 undirected_graph_types = [(ScipyGraph, 100),
-                     (NxGraph, )]
+                          (NxGraph, )]
 directed_graph_types = [(DirectedScipyGraph, 100),
                         (NxGraph, nx.DiGraph)]
 all_graphs = undirected_graph_types + directed_graph_types
 
 @paramunittest.parametrized(*all_graphs)
 class TestGraph(unittest.TestCase):
-
     def setParameters(self, graph_factory, *args):
         self.graph = graph_factory(*args)
 
@@ -65,3 +64,26 @@ class TestGraph(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.graph.has_node(-1)
 
+
+@paramunittest.parametrized(*it.product([5, 7, 10, 12], all_graphs))
+class TestStarGraph(paramunittest.ParametrizedTestCase):
+    def setParameters(self, size, construction_options):
+        self.size = size
+        graph_factory, args = construction_options[0], construction_options[1:]
+        self.graph = graph_factory(*args)
+
+    def setUp(self):
+        for _ in xrange(self.size):
+            self.graph.add_node()
+
+        for node_index in xrange(1, self.size):
+            self.graph.add_edge(0, node_index)
+
+    def testStar(self):
+        self.assertEqual(self.size-1, self.graph.number_of_edges())
+        self.assertEqual(self.size, self.graph.number_of_nodes())
+
+    def testRemoveEdge(self):
+        self.graph.remove_edge(0, 1)
+        self.assertEqual(self.size-2, self.graph.number_of_edges())
+        self.assertEqual(self.size, self.graph.number_of_nodes())
