@@ -1,11 +1,9 @@
 from traits.api import Interface
 
 class IGraph(Interface):
-    def add_node(self, identifier):
+    def add_node(self):
         """
-        Add specified node to the graph.
-        @param identifier: the identifier of the node
-        @type identifier: int
+        Add a node to the graph.
         """
 
     def add_edge(self, source, target):

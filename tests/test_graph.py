@@ -16,3 +16,8 @@ class TestGraph(unittest.TestCase):
     def testEmpty(self):
         self.assertEqual(0, self.graph.number_of_nodes())
         self.assertEqual(0, self.graph.number_of_edges())
+
+    def testAddedNode(self):
+        self.graph.add_node()
+        self.assertEqual(1, self.graph.number_of_nodes())
+        self.assertEqual(0, self.graph.number_of_edges())

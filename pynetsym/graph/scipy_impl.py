@@ -1,26 +1,34 @@
 from scipy import sparse
 from traits.api import HasTraits, implements, Callable, Instance
 from traits.api import Int
+from traits.trait_types import Set
 
 from .interface import IGraph
+from ._abstract import AbstractGraph
 
 
-
-class ScipyGraph(HasTraits):
+class ScipyGraph(AbstractGraph):
     implements(IGraph)
 
     matrix_factory = Callable(sparse.lil_matrix)
     matrix = Instance(
             sparse.spmatrix, factory=matrix_factory,
             allow_none=False)
-    max_nodes = Int(0)
+
+    _nodes = Set(Int)
+
+    def _max_nodes(self):
+        return self.matrix.shape[0]
 
     def __init__(self, max_nodes):
         self.matrix = self.matrix_factory(
             (max_nodes, max_nodes), dtype=bool)
 
-    def add_node(self, node):
-        assert node < self.max_nodes
+    def add_node(self):
+        node_index = self.index_store.take()
+        if node_index >= self._max_nodes():
+            self._enlarge(node_index)
+        self._nodes.add(node_index)
 
     def add_edge(self, source, target):
         # consider direct vs. undirected
@@ -28,15 +36,19 @@ class ScipyGraph(HasTraits):
             self.matrix[target, source] = True
 
     def number_of_nodes(self):
-        return self.matrix.shape[0]
+        return len(self._nodes)
 
     def number_of_edges(self):
-        assert self.matrix.nnx % 2 == 0
+        assert self.matrix.nnz % 2 == 0
         return self.matrix.nnz / 2
 
     def remove_edge(self, source, target):
         self.matrix[source, target] = \
             self.matrix[target, source] = False
+
+    def _enlarge(self, node_index):
+        self.matrix.reshape((node_index, node_index))
+
 
 class DirectedScipyGraph(ScipyGraph):
     def number_of_edges(self):
