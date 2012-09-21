@@ -51,7 +51,7 @@ class NodeManager(core.Agent):
         @rtype: int | str
         """
         node = cls(**parameters)
-        identifier = self.id_store.pop()
+        identifier = self.id_store.take()
         node.start(self._address_book, self._node_db, identifier)
         return identifier
 
