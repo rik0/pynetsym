@@ -1,7 +1,7 @@
 import unittest
 import paramunittest
 
-from pynetsym.graph import NxGraph, ScipyGraph
+from pynetsym.graph import NxGraph, ScipyGraph, GraphError
 
 
 @paramunittest.parametrized(
@@ -21,3 +21,19 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(0, self.graph.add_node())
         self.assertEqual(1, self.graph.number_of_nodes())
         self.assertEqual(0, self.graph.number_of_edges())
+
+    def testDiad(self):
+        self.assertEqual(0, self.graph.add_node())
+        self.assertEqual(1, self.graph.add_node())
+        self.graph.add_edge(0, 1)
+
+        self.assertEqual(2, self.graph.number_of_nodes())
+        self.assertEqual(1, self.graph.number_of_edges())
+
+    def testDiadNoNodes(self):
+        with self.assertRaises(GraphError):
+            self.graph.add_edge(0, 1)
+
+        self.assertEqual(0, self.graph.number_of_nodes())
+        self.assertEqual(0, self.graph.number_of_edges())
+

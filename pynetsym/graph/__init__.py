@@ -1,8 +1,9 @@
 import warnings
 
-__all__ = ['IGraph']
+__all__ = ['IGraph', 'GraphError']
 
 from .interface import IGraph
+from .error import GraphError
 
 try:
     import networkx

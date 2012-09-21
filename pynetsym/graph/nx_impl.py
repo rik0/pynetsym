@@ -4,6 +4,7 @@ from traits.api import HasTraits, Instance
 from traits.api import DelegatesTo
 from traits.has_traits import implements
 from ._abstract import AbstractGraph
+from .error import GraphError
 
 
 class NxGraph(AbstractGraph):
@@ -16,7 +17,6 @@ class NxGraph(AbstractGraph):
     number_of_edges = DelegatesTo('nx_graph')
 
 
-
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
         self.nx_graph = graph_type(data=data, **kwargs)
 
@@ -26,8 +26,14 @@ class NxGraph(AbstractGraph):
         return node_index
 
     def add_edge(self, source, target):
+        self._valid_nodes(source, target)
         self.nx_graph.add_edge(source, target)
 
     def remove_edge(self, source, target):
         self.nx_graph.remove_edge(source, target)
+
+    def _valid_nodes(self, *nodes):
+        for node in nodes:
+            if node not in self.nx_graph:
+                raise GraphError('%s node not in graph.' % node)
 
