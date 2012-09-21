@@ -26,6 +26,6 @@ except ImportError:
     warnings.warn("Scipy not installed.")
 else:
     from scipy_impl import ScipyGraph, DirectedScipyGraph
-    __all__.append('ScipyGraph', 'DirectedScipyGraph')
+    __all__.extend(['ScipyGraph', 'DirectedScipyGraph'])
 
 del warnings
