@@ -46,8 +46,11 @@ class ScipyGraph(AbstractGraph):
         return self.matrix.nnz / 2
 
     def remove_edge(self, source, target):
-        self.matrix[source, target] = \
-            self.matrix[target, source] = False
+        if self.matrix[source, target]:
+            self.matrix[source, target] = \
+                self.matrix[target, source] = False
+        else:
+            raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
     def __contains__(self, node_index):
         return node_index in self._nodes
@@ -73,4 +76,7 @@ class DirectedScipyGraph(ScipyGraph):
 
     def remove_edge(self, source, target):
         self._valid_nodes(source, target)
-        self.matrix[source, target] = False
+        if self.matrix[source, target]:
+            self.matrix[source, target] = False
+        else:
+            raise GraphError('Edge %d-%d not present in graph' % (source, target))

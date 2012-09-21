@@ -30,7 +30,10 @@ class NxGraph(AbstractGraph):
         self.nx_graph.add_edge(source, target)
 
     def remove_edge(self, source, target):
-        self.nx_graph.remove_edge(source, target)
+        try:
+            self.nx_graph.remove_edge(source, target)
+        except nx.NetworkXError as e:
+            raise GraphError(e)
 
     def __contains__(self, node_index):
         return node_index in self.nx_graph

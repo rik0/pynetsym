@@ -13,7 +13,7 @@ directed_graph_types = [(DirectedScipyGraph, 100),
 all_graphs = undirected_graph_types + directed_graph_types
 
 @paramunittest.parametrized(*all_graphs)
-class TestGraph(unittest.TestCase):
+class TestEmptyGraph(unittest.TestCase):
     def setParameters(self, graph_factory, *args):
         self.graph = graph_factory(*args)
 
@@ -64,6 +64,16 @@ class TestGraph(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.graph.has_node(-1)
 
+    def testRemove(self):
+        with self.assertRaises(GraphError):
+            self.graph.remove_edge(0, 1)
+
+        self.graph.add_node()
+        self.graph.add_node()
+
+        with self.assertRaises(GraphError):
+            self.graph.remove_edge(0, 1)
+
 
 @paramunittest.parametrized(*it.product([5, 7, 10, 12], all_graphs))
 class TestStarGraph(paramunittest.ParametrizedTestCase):
@@ -87,3 +97,11 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
         self.graph.remove_edge(0, 1)
         self.assertEqual(self.size-2, self.graph.number_of_edges())
         self.assertEqual(self.size, self.graph.number_of_nodes())
+
+    def testDoubleRemoveEdge(self):
+        self.graph.remove_edge(0, 1)
+        with self.assertRaises(GraphError):
+            self.graph.remove_edge(0, 1)
+        self.assertEqual(self.size-2, self.graph.number_of_edges())
+        self.assertEqual(self.size, self.graph.number_of_nodes())
+
