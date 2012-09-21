@@ -43,6 +43,18 @@ class IGraph(Interface):
         """
         pass
 
+    def has_node(self, identifier):
+        """
+        True if the graph contains the specified identifier.
+        @param identifier: the identifier to seek
+        @type identifier: int
+        @return: True if identifier is in graph
+        @rtype: bool
+        @raise ValueError: if identifier is not convertible to a non negative integer.
+        """
+        pass
+
+
     def neighbors(self, identifier):
         """
         Return the neighbors of the specified node.

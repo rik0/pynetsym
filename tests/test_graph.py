@@ -37,3 +37,26 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(0, self.graph.number_of_nodes())
         self.assertEqual(0, self.graph.number_of_edges())
 
+    def testContains(self):
+        self.assertFalse(0 in self.graph)
+        self.graph.add_node()
+        self.assert_(0 in self.graph)
+        self.assertFalse(1 in self.graph)
+
+        self.assertFalse(-1 in self.graph)
+        self.assertFalse('foo' in self.graph)
+
+    def testHasNode(self):
+        self.assertFalse(self.graph.has_node(0))
+        self.graph.add_node()
+        self.assert_(self.graph.has_node(0))
+        self.assertFalse(self.graph.has_node(1))
+
+    def testHasNodeString(self):
+        with self.assertRaises(ValueError):
+            self.graph.has_node('foo')
+
+    def testHasNodeNegative(self):
+        with self.assertRaises(ValueError):
+            self.graph.has_node(-1)
+

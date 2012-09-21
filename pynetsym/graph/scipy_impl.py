@@ -49,6 +49,9 @@ class ScipyGraph(AbstractGraph):
         self.matrix[source, target] = \
             self.matrix[target, source] = False
 
+    def __contains__(self, node_index):
+        return node_index in self._nodes
+
     def _enlarge(self, node_index):
         self.matrix.reshape((node_index, node_index))
 
@@ -56,6 +59,8 @@ class ScipyGraph(AbstractGraph):
         for node in nodes:
             if node not in self._nodes:
                 raise GraphError('%s node not in graph.' % node)
+
+
 
 
 class DirectedScipyGraph(ScipyGraph):

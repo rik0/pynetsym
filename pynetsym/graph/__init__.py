@@ -2,6 +2,10 @@ import warnings
 
 __all__ = ['IGraph', 'GraphError']
 
+import traits.has_traits
+traits.has_traits.CHECK_INTERFACES = 1
+del traits
+
 from .interface import IGraph
 from .error import GraphError
 

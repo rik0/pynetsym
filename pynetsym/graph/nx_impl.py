@@ -32,6 +32,9 @@ class NxGraph(AbstractGraph):
     def remove_edge(self, source, target):
         self.nx_graph.remove_edge(source, target)
 
+    def __contains__(self, node_index):
+        return node_index in self.nx_graph
+
     def _valid_nodes(self, *nodes):
         for node in nodes:
             if node not in self.nx_graph:
