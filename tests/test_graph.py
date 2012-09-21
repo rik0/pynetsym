@@ -1,13 +1,18 @@
 import unittest
 import paramunittest
+import itertools as it
 
-from pynetsym.graph import NxGraph, ScipyGraph, GraphError
+import networkx as nx
+from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph
 
 
-@paramunittest.parametrized(
-    (ScipyGraph, 100),
-    (NxGraph, )
-)
+basic_graph_types = [(ScipyGraph, 100),
+                     (NxGraph, )]
+directed_graph_types = [(DirectedScipyGraph, 100),
+                        (NxGraph, nx.DiGraph)]
+
+
+@paramunittest.parametrized(basic_graph_types + directed_graph_types)
 class TestGraph(unittest.TestCase):
 
     def setParameters(self, graph_factory, *args):
