@@ -21,7 +21,9 @@ class NxGraph(AbstractGraph):
         self.nx_graph = graph_type(data=data, **kwargs)
 
     def add_node(self):
-        self.nx_graph.add_node(self.index_store.take())
+        node_index = self.index_store.take()
+        self.nx_graph.add_node(node_index)
+        return node_index
 
     def add_edge(self, source, target):
         self.nx_graph.add_edge(source, target)

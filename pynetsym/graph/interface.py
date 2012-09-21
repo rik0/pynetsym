@@ -4,6 +4,8 @@ class IGraph(Interface):
     def add_node(self):
         """
         Add a node to the graph.
+        @return The index of the newly created node.
+        @rtype int
         """
 
     def add_edge(self, source, target):

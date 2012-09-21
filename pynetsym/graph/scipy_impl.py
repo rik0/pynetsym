@@ -29,6 +29,7 @@ class ScipyGraph(AbstractGraph):
         if node_index >= self._max_nodes():
             self._enlarge(node_index)
         self._nodes.add(node_index)
+        return node_index
 
     def add_edge(self, source, target):
         # consider direct vs. undirected
