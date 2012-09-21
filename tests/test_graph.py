@@ -64,7 +64,7 @@ class TestEmptyGraph(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.graph.has_node(-1)
 
-    def testRemove(self):
+    def testRemoveEdge(self):
         with self.assertRaises(GraphError):
             self.graph.remove_edge(0, 1)
 
