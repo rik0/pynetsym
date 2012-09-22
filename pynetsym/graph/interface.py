@@ -68,17 +68,26 @@ class IGraph(Interface):
         """
         pass
 
-    def neighbors(self, identifier):
+    def neighbors(self, node):
         """
         Return the neighbors of the specified node.
+        @return: the neighbors
+        @rtype: list
         """
         pass
 
-    def successors(self, identifier):
+    def successors(self, node):
         """
-        Return the ...
-        @param identifier:
-        @return:
+        Return the nodes that have an incoming edge from node.
+        @return: the neighbors
+        @rtype: list
+        """
+
+    def predecessors(self, node):
+        """
+        Return the nodes that have an outgoing edge to node.
+        @return: the neighbors
+        @rtype: list
         """
 
     def number_of_nodes(self):
