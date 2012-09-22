@@ -16,7 +16,7 @@ class NxGraph(AbstractGraph):
     number_of_nodes = DelegatesTo('nx_graph')
     number_of_edges = DelegatesTo('nx_graph')
     has_edge = DelegatesTo('nx_graph')
-
+    is_directed = DelegatesTo('nx_graph')
 
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
         self.nx_graph = graph_type(data=data, **kwargs)

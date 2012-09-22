@@ -90,6 +90,13 @@ class IGraph(Interface):
         @rtype: int
         """
 
+    def is_directed(self):
+        """
+        Return true if the graph is directed.
+        @return: True if the graph is directed, False otherwise.
+        @rtype: bool
+        """
+
     def to_nx(self, copy=False):
         """
         Return corresponding NetworkX graph.
