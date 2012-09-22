@@ -1,3 +1,4 @@
+from numpy import flatnonzero
 from scipy import sparse
 from traits.api import HasTraits, implements, Callable, Instance
 from traits.api import Int
@@ -59,6 +60,13 @@ class ScipyGraph(AbstractGraph):
     def is_directed(self):
         return False
 
+    def neighbors(self, identifier):
+        A = self.matrix.getrow(identifier).toarray()
+        return flatnonzero(A).tolist()
+
+    predecessors = neighbors
+    successors = neighbors
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 
@@ -90,3 +98,7 @@ class DirectedScipyGraph(ScipyGraph):
 
     def is_directed(self):
         return True
+
+    def predecessors(self, identifier):
+        A = self.matrix.getcol(identifier).toarray()
+        return flatnonzero(A).tolist()

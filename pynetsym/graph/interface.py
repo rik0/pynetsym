@@ -1,4 +1,5 @@
-from traits.api import Interface
+from traits.api import Interface, Enum
+
 
 class IGraph(Interface):
     def add_node(self):
@@ -72,6 +73,13 @@ class IGraph(Interface):
         Return the neighbors of the specified node.
         """
         pass
+
+    def successors(self, identifier):
+        """
+        Return the ...
+        @param identifier:
+        @return:
+        """
 
     def number_of_nodes(self):
         """

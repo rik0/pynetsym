@@ -128,5 +128,32 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
             for node in self._peripheral_nodes():
                 self.assert_(self.graph.has_edge(node, 0))
 
+    def testNeighbors(self):
+        if self.graph.is_directed():
+            self.assertSequenceEqual(range(1, self.size), self.graph.neighbors(0))
+            for node in self._peripheral_nodes():
+                self.assertSequenceEqual([], self.graph.neighbors(node))
+        else:
+            self.assertSequenceEqual(range(1, self.size), self.graph.neighbors(0))
+            for node in self._peripheral_nodes():
+                self.assertSequenceEqual([0], self.graph.neighbors(node))
 
+    def testPredecessors(self):
+        if self.graph.is_directed():
+            self.assertSequenceEqual([], self.graph.predecessors(0))
+            for node in self._peripheral_nodes():
+                self.assertSequenceEqual([0], self.graph.predecessors(node))
+        else:
+            self.assertSequenceEqual(range(1, self.size), self.graph.predecessors(0))
+            for node in self._peripheral_nodes():
+                self.assertSequenceEqual([0], self.graph.predecessors(node))
 
+    def testSuccessors(self):
+        if self.graph.is_directed():
+            self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
+            for node in self._peripheral_nodes():
+                self.assertSequenceEqual([], self.graph.successors(node))
+        else:
+            self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
+            for node in self._peripheral_nodes():
+                self.assertSequenceEqual([0], self.graph.successors(node))

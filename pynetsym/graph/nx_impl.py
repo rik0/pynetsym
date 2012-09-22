@@ -1,4 +1,4 @@
-from  . import interface
+from .import interface
 import networkx as nx
 from traits.api import HasTraits, Instance
 from traits.api import DelegatesTo
@@ -10,7 +10,6 @@ from .error import GraphError
 class NxGraph(AbstractGraph):
     implements(interface.IGraph)
 
-
     nx_graph = Instance(nx.Graph, allow_none=False)
 
     number_of_nodes = DelegatesTo('nx_graph')
@@ -18,8 +17,15 @@ class NxGraph(AbstractGraph):
     has_edge = DelegatesTo('nx_graph')
     is_directed = DelegatesTo('nx_graph')
 
+    neighbors = DelegatesTo('nx_graph')
+    successors = DelegatesTo('nx_graph', prefix='neighbors')
+    predecessors = DelegatesTo('nx_graph')
+
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
         self.nx_graph = graph_type(data=data, **kwargs)
+        if not self.is_directed():
+            self.add_trait('predecessors',
+                           DelegatesTo('nx_graph', prefix='neighbors'))
 
     def add_node(self):
         node_index = self.index_store.take()
