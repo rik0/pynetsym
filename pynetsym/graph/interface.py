@@ -54,6 +54,18 @@ class IGraph(Interface):
         """
         pass
 
+    def has_edge(self, source, target):
+        """
+        True if the graph contains the specified identifier.
+        @param source: the node from where the edge starts
+        @type source: int
+        @param target: the node to which the edge arrives
+        @type target: int
+        @return: True if edge is in graph
+        @rtype: bool
+        @raise ValueError: if identifier is not convertible to a non negative integer.
+        """
+        pass
 
     def neighbors(self, identifier):
         """

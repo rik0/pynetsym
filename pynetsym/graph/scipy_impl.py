@@ -52,6 +52,10 @@ class ScipyGraph(AbstractGraph):
         else:
             raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
+    def has_edge(self, source, target):
+        self._valid_nodes(source, target)
+        return self.matrix[source, target]
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 

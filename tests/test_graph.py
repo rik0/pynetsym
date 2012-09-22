@@ -91,11 +91,14 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
         graph_factory, args = construction_options[0], construction_options[1:]
         self.graph = graph_factory(*args)
 
+    def _peripheral_nodes(self):
+        return xrange(1, self.size)
+
     def setUp(self):
         for _ in xrange(self.size):
             self.graph.add_node()
 
-        for node_index in xrange(1, self.size):
+        for node_index in self._peripheral_nodes():
             self.graph.add_edge(0, node_index)
 
     def testStar(self):
@@ -113,4 +116,8 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
             self.graph.remove_edge(0, 1)
         self.assertEqual(self.size-2, self.graph.number_of_edges())
         self.assertEqual(self.size, self.graph.number_of_nodes())
+
+    def testHasEdges(self):
+        for node in self._peripheral_nodes():
+            self.assert_(self.graph.has_edge(0, node))
 
