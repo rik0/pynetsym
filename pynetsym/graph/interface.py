@@ -111,11 +111,15 @@ class IGraph(Interface):
           stopped.
         """
 
-    def to_scipy(self, copy=False):
+    def to_scipy(self, copy=False, sparse_type=None, minimize=False):
         """
         Return corresponding NetworkX graph.
         @param copy: whether the graph should be copied.
         @type copy: bool
+        @param sparse_type: the kind of sparse matrix that is returned
+        @param minimize: whether we want the returned sparse matrix to be
+          reshaped so that it contains only the minimum possible number
+          of nodes
         @return: A scipy sparse matrix.
         @rtype: scipy.sparse.spmatrix
 
@@ -123,13 +127,19 @@ class IGraph(Interface):
           or the original one. Modifications to a graph that is not a copy
           may lead to servere malfunctions, unless the simulation has already
           stopped.
+
+          In general, if the type of sparse matrix requested is different from
+          the underlying representation or if a minimization is requested, a copy
+          is made.
         """
 
-    def to_numpy(self, copy=False):
+    def to_numpy(self, copy=False, minimize=True):
         """
         Return corresponding NetworkX graph.
         @param copy: whether the graph should be copied.
         @type copy: bool
+        @param minimize: determines if the returned matrix is as small
+          as possible considering the nodes.
         @return: A numpy dense matrix.
         @rtype: numpy.ndarray
 
@@ -138,3 +148,12 @@ class IGraph(Interface):
           may lead to servere malfunctions, unless the simulation has already
           stopped.
         """
+
+    def copy_into(self, matrix):
+        """
+        Copies the adjacency matrix inside the argument, if big enough.
+        Otherwise a ValueError exception is thrown.
+        @param matrix: the matrix where data is copied
+            Typically it should be something that acts like a numpy array.
+        """
+        pass
