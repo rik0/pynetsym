@@ -121,3 +121,12 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
         for node in self._peripheral_nodes():
             self.assert_(self.graph.has_edge(0, node))
 
+        if self.graph.is_directed():
+            for node in self._peripheral_nodes():
+                self.assertFalse(self.graph.has_edge(node, 0))
+        else:
+            for node in self._peripheral_nodes():
+                self.assert_(self.graph.has_edge(node, 0))
+
+
+
