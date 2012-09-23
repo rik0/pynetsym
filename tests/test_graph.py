@@ -120,9 +120,15 @@ class TestStarGraph(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
         self.assertEqual(self.size-2, self.graph.number_of_edges())
         self.assertEqual(self.size, self.graph.number_of_nodes())
 
+    @unittest.skipUnless(*can_test('numpy'))
     def testToNumpy(self):
         A = self.graph.to_numpy()
         self.assertTupleEqual((self.size, self.size), A.shape)
+
+    #@unittest.skipUnless(*can_test('networkx'))
+    @unittest.skip('not ready')
+    def testNetworkX(self):
+        G = self.graph.to_nx()
 
 @paramunittest.parametrized(*it.product([5, 7, 10, 12], directed_graph_types))
 class TestStarDirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
@@ -181,6 +187,7 @@ class TestStarDirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
 
         testing.assert_array_equal(B, A)
 
+
 @paramunittest.parametrized(*it.product([5, 7, 10, 12], undirected_graph_types))
 class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
     def testHasEdges(self):
@@ -238,3 +245,43 @@ class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase)
         B[1:, 0] = True
 
         testing.assert_array_equal(B, A)
+
+@paramunittest.parametrized(
+    (NxGraph, nx.Graph),
+    (NxGraph, nx.DiGraph)
+)
+class TestNXExport(paramunittest.ParametrizedTestCase):
+    def setParameters(self, graph_type, nx_graph):
+        self.graph = graph_type(nx_graph)
+        self.nx_graph = self.graph.nx_graph
+
+    def setUp(self):
+        self.size = 5
+        self.nx_graph.add_star(range(self.size))
+        self.new_node = self.size + 1
+
+    def testSanityCheck(self):
+        self.assertEqual(self.size, self.graph.number_of_nodes())
+        self.assertEqual(self.size - 1, self.graph.number_of_edges())
+
+    def testDontCopy(self):
+        other_graph = self.graph.to_nx(copy=False)
+        self.assertIs(self.nx_graph, other_graph)
+
+    def testCopy(self):
+        other_graph = self.graph.to_nx(copy=True)
+        self.assertIsNot(self.nx_graph, other_graph)
+
+    def testCopySemantics(self):
+        other_graph = self.graph.to_nx(copy=True)
+        other_graph.add_node(self.new_node)
+        self.assertEqual(self.size, self.graph.number_of_nodes())
+        other_graph.add_edge(self.new_node, 0)
+        self.assertEqual(self.size - 1, self.graph.number_of_edges())
+
+    def testNoCopySemantics(self):
+        other_graph = self.graph.to_nx(copy=False)
+        other_graph.add_node(self.new_node)
+        self.assertEqual(self.size + 1, self.graph.number_of_nodes())
+        other_graph.add_edge(self.new_node, 0)
+        self.assertEqual(self.size, self.graph.number_of_edges())

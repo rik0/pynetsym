@@ -60,6 +60,12 @@ class NxGraph(AbstractGraph):
     def to_numpy(self, copy=False, minimize=False):
         return nx.to_numpy_matrix(self.nx_graph, dtype=bool)
 
+    def to_nx(self, copy=False):
+        if copy:
+            return self.nx_graph.copy()
+        else:
+            return self.nx_graph
+
     def __contains__(self, node_index):
         return node_index in self.nx_graph
 
