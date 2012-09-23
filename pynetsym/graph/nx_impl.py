@@ -1,8 +1,8 @@
 from .import interface
 import networkx as nx
-from traits.api import HasTraits, Instance
+from traits.api import Instance
 from traits.api import DelegatesTo
-from traits.has_traits import implements
+from traits.api import implements
 from ._abstract import AbstractGraph
 from .error import GraphError
 
@@ -42,8 +42,26 @@ class NxGraph(AbstractGraph):
         except nx.NetworkXError as e:
             raise GraphError(e)
 
+    def in_degree(self, node):
+        if self.nx_graph.is_directed():
+            return self.nx_graph.in_degree(node)
+        else:
+            return self.nx_graph.degree(node)
+
+    def out_degree(self, node):
+        if self.nx_graph.is_directed():
+            return self.nx_graph.out_degree(node)
+        else:
+            return self.nx_graph.degree(node)
+
+    def degree(self, node):
+        return self.nx_graph.degree(node)
+
     def __contains__(self, node_index):
         return node_index in self.nx_graph
+
+    def __iter__(self):
+        return iter(self.nx_graph)
 
     def _valid_nodes(self, *nodes):
         for node in nodes:

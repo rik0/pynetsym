@@ -67,8 +67,17 @@ class ScipyGraph(AbstractGraph):
     predecessors = neighbors
     successors = neighbors
 
+    def degree(self, node):
+        return self.matrix.getrow(node).nnz
+
+    out_degree = degree
+    in_degree = degree
+
     def __contains__(self, node_index):
         return node_index in self._nodes
+
+    def __iter__(self):
+        return iter(self._nodes)
 
     def _enlarge(self, node_index):
         self.matrix.reshape((node_index, node_index))
@@ -102,3 +111,9 @@ class DirectedScipyGraph(ScipyGraph):
     def predecessors(self, identifier):
         A = self.matrix.getcol(identifier).toarray()
         return flatnonzero(A).tolist()
+
+    def degree(self, node):
+        return self.in_degree(node) + self.out_degree(node)
+
+    def in_degree(self, identifier):
+        return self.matrix.getcol(identifier).nnz

@@ -157,3 +157,47 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
             self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
             for node in self._peripheral_nodes():
                 self.assertSequenceEqual([0], self.graph.successors(node))
+
+    def testDegree(self):
+        if self.graph.is_directed():
+            for node in self.graph:
+                self.assertEqual(self.graph.degree(node),
+                                 self.graph.in_degree(node) + self.graph.out_degree(node))
+        else:
+            for node in self.graph:
+                self.assertEqual(self.graph.degree(node), self.graph.out_degree(node))
+                self.assertEqual(self.graph.degree(node), self.graph.in_degree(node))
+
+    def testInDegree(self):
+        if self.graph.is_directed():
+            self.assertEqual(0, self.graph.in_degree(0))
+        else:
+            self.assertEqual(self.size-1, self.graph.in_degree(0))
+
+        for node in self._peripheral_nodes():
+            self.assertEqual(1, self.graph.in_degree(node))
+
+    def testOutDegree(self):
+        self.assertEqual(self.size-1, self.graph.out_degree(0))
+
+        if self.graph.is_directed():
+            for node in self._peripheral_nodes():
+                self.assertEqual(0, self.graph.out_degree(node))
+        else:
+            for node in self._peripheral_nodes():
+                self.assertEqual(1, self.graph.out_degree(node))
+
+    def testDegreeAndNeighbors(self):
+        for node in self.graph:
+            if self.graph.is_directed():
+                total_neighbors_num = len(self.graph.neighbors(node) +
+                    self.graph.predecessors(node))
+            else:
+                total_neighbors_num = len(self.graph.neighbors(node) +
+                                    self.graph.predecessors(node)) / 2
+            self.assertEqual(total_neighbors_num,
+                             self.graph.degree(node))
+            self.assertEqual(len(self.graph.successors(node)),
+                             self.graph.out_degree(node))
+            self.assertEqual(len(self.graph.predecessors(node)),
+                             self.graph.in_degree(node))

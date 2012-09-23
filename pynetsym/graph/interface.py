@@ -44,6 +44,9 @@ class IGraph(Interface):
         """
         pass
 
+    def __iter__(self):
+        pass
+
     def has_node(self, identifier):
         """
         True if the graph contains the specified identifier.
@@ -88,6 +91,30 @@ class IGraph(Interface):
         Return the nodes that have an outgoing edge to node.
         @return: the neighbors
         @rtype: list
+        """
+
+    def degree(self, node):
+        """
+        Return the degree of the specified node
+        @param node: a node
+        @return: the degree
+        @rtype: int
+        """
+
+    def in_degree(self, node):
+        """
+        Return the in-degree of the specified node
+        @param node: a node
+        @return: the degree
+        @rtype: int
+        """
+
+    def out_degree(self, node):
+        """
+        Return the out-degree of the specified node
+        @param node: a node
+        @return: the degree
+        @rtype: int
         """
 
     def number_of_nodes(self):
