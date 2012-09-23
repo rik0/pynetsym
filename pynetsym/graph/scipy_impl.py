@@ -1,4 +1,5 @@
-from numpy import flatnonzero
+from heapq import heappush
+from numpy import flatnonzero, ix_
 from scipy import sparse
 from traits.api import HasTraits, implements, Callable, Instance
 from traits.api import Int
@@ -17,7 +18,7 @@ class ScipyGraph(AbstractGraph):
             sparse.spmatrix, factory=matrix_factory,
             allow_none=False)
 
-    _nodes = Set(Int)
+    _nodes = Instance(set, args=())
 
     def _max_nodes(self):
         return self.matrix.shape[0]
@@ -30,6 +31,7 @@ class ScipyGraph(AbstractGraph):
         node_index = self.index_store.take()
         if node_index >= self._max_nodes():
             self._enlarge(node_index)
+        #heappush(self._nodes, node_index)
         self._nodes.add(node_index)
         return node_index
 
@@ -72,6 +74,11 @@ class ScipyGraph(AbstractGraph):
 
     out_degree = degree
     in_degree = degree
+
+    def to_numpy(self, copy=False, minimize=False):
+        A = self.matrix.toarray()
+        node_list = list(self._nodes)
+        return A[ix_(node_list, node_list)].copy()
 
     def __contains__(self, node_index):
         return node_index in self._nodes

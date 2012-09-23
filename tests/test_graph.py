@@ -119,6 +119,10 @@ class TestStarGraph(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
         self.assertEqual(self.size-2, self.graph.number_of_edges())
         self.assertEqual(self.size, self.graph.number_of_nodes())
 
+    def testToNumpy(self):
+        A = self.graph.to_numpy()
+        self.assertTupleEqual((self.size, self.size), A.shape)
+
 @paramunittest.parametrized(*it.product([5, 7, 10, 12], directed_graph_types))
 class TestStarDirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
     def testHasEdges(self):

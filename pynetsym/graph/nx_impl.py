@@ -57,6 +57,9 @@ class NxGraph(AbstractGraph):
     def degree(self, node):
         return self.nx_graph.degree(node)
 
+    def to_numpy(self, copy=False, minimize=False):
+        return nx.to_numpy_matrix(self.nx_graph, dtype=bool)
+
     def __contains__(self, node_index):
         return node_index in self.nx_graph
 
