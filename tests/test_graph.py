@@ -228,3 +228,13 @@ class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase)
                              self.graph.out_degree(node))
             self.assertEqual(len(self.graph.predecessors(node)),
                              self.graph.in_degree(node))
+
+    @unittest.skipUnless(*can_test('numpy'))
+    def testToNumpyElements(self):
+        from numpy import testing
+        A = self.graph.to_numpy()
+        B = zeros((self.size, self.size), dtype=bool)
+        B[0, 1:] = True
+        B[1:, 0] = True
+
+        testing.assert_array_equal(B, A)
