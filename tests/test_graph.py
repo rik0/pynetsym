@@ -1,9 +1,10 @@
 import unittest
+from numpy import ones, zeros
 import paramunittest
 import itertools as it
 
 import networkx as nx
-from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph
+from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph, has, can_test
 
 
 undirected_graph_types = [(ScipyGraph, 100),
@@ -170,6 +171,15 @@ class TestStarDirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
                              self.graph.out_degree(node))
             self.assertEqual(len(self.graph.predecessors(node)),
                              self.graph.in_degree(node))
+
+    @unittest.skipUnless(*can_test('numpy'))
+    def testToNumpyElements(self):
+        from numpy import testing
+        A = self.graph.to_numpy()
+        B = zeros((self.size, self.size), dtype=bool)
+        B[0, 1:] = True
+
+        testing.assert_array_equal(B, A)
 
 @paramunittest.parametrized(*it.product([5, 7, 10, 12], undirected_graph_types))
 class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
