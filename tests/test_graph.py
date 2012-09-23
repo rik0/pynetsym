@@ -84,8 +84,8 @@ class TestEmptyGraph(unittest.TestCase):
             self.graph.remove_edge(0, 1)
 
 
-@paramunittest.parametrized(*it.product([5, 7, 10, 12], all_graphs))
-class TestStarGraph(paramunittest.ParametrizedTestCase):
+
+class _AbstractStarGraph(object):
     def setParameters(self, size, construction_options):
         self.size = size
         graph_factory, args = construction_options[0], construction_options[1:]
@@ -101,6 +101,8 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
         for node_index in self._peripheral_nodes():
             self.graph.add_edge(0, node_index)
 
+@paramunittest.parametrized(*it.product([5, 7, 10, 12], all_graphs))
+class TestStarGraph(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
     def testStar(self):
         self.assertEqual(self.size-1, self.graph.number_of_edges())
         self.assertEqual(self.size, self.graph.number_of_nodes())
@@ -117,84 +119,95 @@ class TestStarGraph(paramunittest.ParametrizedTestCase):
         self.assertEqual(self.size-2, self.graph.number_of_edges())
         self.assertEqual(self.size, self.graph.number_of_nodes())
 
+@paramunittest.parametrized(*it.product([5, 7, 10, 12], directed_graph_types))
+class TestStarDirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
     def testHasEdges(self):
         for node in self._peripheral_nodes():
             self.assert_(self.graph.has_edge(0, node))
-
-        if self.graph.is_directed():
-            for node in self._peripheral_nodes():
-                self.assertFalse(self.graph.has_edge(node, 0))
-        else:
-            for node in self._peripheral_nodes():
-                self.assert_(self.graph.has_edge(node, 0))
+            self.assertFalse(self.graph.has_edge(node, 0))
 
     def testNeighbors(self):
-        if self.graph.is_directed():
-            self.assertSequenceEqual(range(1, self.size), self.graph.neighbors(0))
-            for node in self._peripheral_nodes():
-                self.assertSequenceEqual([], self.graph.neighbors(node))
-        else:
-            self.assertSequenceEqual(range(1, self.size), self.graph.neighbors(0))
-            for node in self._peripheral_nodes():
-                self.assertSequenceEqual([0], self.graph.neighbors(node))
+        self.assertSequenceEqual(range(1, self.size), self.graph.neighbors(0))
+        for node in self._peripheral_nodes():
+            self.assertSequenceEqual([], self.graph.neighbors(node))
 
     def testPredecessors(self):
-        if self.graph.is_directed():
-            self.assertSequenceEqual([], self.graph.predecessors(0))
-            for node in self._peripheral_nodes():
-                self.assertSequenceEqual([0], self.graph.predecessors(node))
-        else:
-            self.assertSequenceEqual(range(1, self.size), self.graph.predecessors(0))
-            for node in self._peripheral_nodes():
-                self.assertSequenceEqual([0], self.graph.predecessors(node))
+        self.assertSequenceEqual([], self.graph.predecessors(0))
+        for node in self._peripheral_nodes():
+            self.assertSequenceEqual([0], self.graph.predecessors(node))
 
     def testSuccessors(self):
-        if self.graph.is_directed():
-            self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
-            for node in self._peripheral_nodes():
-                self.assertSequenceEqual([], self.graph.successors(node))
-        else:
-            self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
-            for node in self._peripheral_nodes():
-                self.assertSequenceEqual([0], self.graph.successors(node))
+        self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
+        for node in self._peripheral_nodes():
+            self.assertSequenceEqual([], self.graph.successors(node))
 
     def testDegree(self):
-        if self.graph.is_directed():
-            for node in self.graph:
-                self.assertEqual(self.graph.degree(node),
-                                 self.graph.in_degree(node) + self.graph.out_degree(node))
-        else:
-            for node in self.graph:
-                self.assertEqual(self.graph.degree(node), self.graph.out_degree(node))
-                self.assertEqual(self.graph.degree(node), self.graph.in_degree(node))
+        for node in self.graph:
+            self.assertEqual(self.graph.degree(node),
+                             self.graph.in_degree(node) + self.graph.out_degree(node))
 
     def testInDegree(self):
-        if self.graph.is_directed():
-            self.assertEqual(0, self.graph.in_degree(0))
-        else:
-            self.assertEqual(self.size-1, self.graph.in_degree(0))
-
+        self.assertEqual(0, self.graph.in_degree(0))
         for node in self._peripheral_nodes():
             self.assertEqual(1, self.graph.in_degree(node))
 
     def testOutDegree(self):
         self.assertEqual(self.size-1, self.graph.out_degree(0))
-
-        if self.graph.is_directed():
-            for node in self._peripheral_nodes():
-                self.assertEqual(0, self.graph.out_degree(node))
-        else:
-            for node in self._peripheral_nodes():
-                self.assertEqual(1, self.graph.out_degree(node))
+        for node in self._peripheral_nodes():
+            self.assertEqual(0, self.graph.out_degree(node))
 
     def testDegreeAndNeighbors(self):
         for node in self.graph:
-            if self.graph.is_directed():
-                total_neighbors_num = len(self.graph.neighbors(node) +
-                    self.graph.predecessors(node))
-            else:
-                total_neighbors_num = len(self.graph.neighbors(node) +
-                                    self.graph.predecessors(node)) / 2
+            total_neighbors_num = len(self.graph.neighbors(node) +
+                self.graph.predecessors(node))
+            self.assertEqual(total_neighbors_num,
+                             self.graph.degree(node))
+            self.assertEqual(len(self.graph.successors(node)),
+                             self.graph.out_degree(node))
+            self.assertEqual(len(self.graph.predecessors(node)),
+                             self.graph.in_degree(node))
+
+@paramunittest.parametrized(*it.product([5, 7, 10, 12], undirected_graph_types))
+class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
+    def testHasEdges(self):
+        for node in self._peripheral_nodes():
+            self.assert_(self.graph.has_edge(0, node))
+            self.assert_(self.graph.has_edge(node, 0))
+
+    def testNeighbors(self):
+        self.assertSequenceEqual(range(1, self.size), self.graph.neighbors(0))
+        for node in self._peripheral_nodes():
+            self.assertSequenceEqual([0], self.graph.neighbors(node))
+
+    def testPredecessors(self):
+        self.assertSequenceEqual(range(1, self.size), self.graph.predecessors(0))
+        for node in self._peripheral_nodes():
+            self.assertSequenceEqual([0], self.graph.predecessors(node))
+
+    def testSuccessors(self):
+        self.assertSequenceEqual(range(1, self.size), self.graph.successors(0))
+        for node in self._peripheral_nodes():
+            self.assertSequenceEqual([0], self.graph.successors(node))
+
+    def testDegree(self):
+        for node in self.graph:
+            self.assertEqual(self.graph.degree(node), self.graph.out_degree(node))
+            self.assertEqual(self.graph.degree(node), self.graph.in_degree(node))
+
+    def testInDegree(self):
+        self.assertEqual(self.size-1, self.graph.in_degree(0))
+        for node in self._peripheral_nodes():
+            self.assertEqual(1, self.graph.in_degree(node))
+
+    def testOutDegree(self):
+        self.assertEqual(self.size-1, self.graph.out_degree(0))
+        for node in self._peripheral_nodes():
+            self.assertEqual(1, self.graph.out_degree(node))
+
+    def testDegreeAndNeighbors(self):
+        for node in self.graph:
+            total_neighbors_num = len(self.graph.neighbors(node) +
+                                self.graph.predecessors(node)) / 2
             self.assertEqual(total_neighbors_num,
                              self.graph.degree(node))
             self.assertEqual(len(self.graph.successors(node)),
