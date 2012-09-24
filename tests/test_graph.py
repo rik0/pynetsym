@@ -128,6 +128,12 @@ class TestStarGraph(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
     @unittest.skipUnless(*can_test('networkx'))
     def testNetworkX(self):
         G = self.graph.to_nx()
+        if self.graph.is_directed():
+            G2 = nx.DiGraph()
+        else:
+            G2 = nx.Graph()
+        G2.add_star(range(self.size))
+        self.assert_(nx.is_isomorphic(G, G2))
 
 @paramunittest.parametrized(*it.product([5, 7, 10, 12], directed_graph_types))
 class TestStarDirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase):

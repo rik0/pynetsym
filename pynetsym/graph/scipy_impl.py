@@ -1,4 +1,5 @@
-from numpy import flatnonzero, ix_
+from itertools import izip
+from numpy import flatnonzero, ix_, ufunc
 from scipy import sparse
 from traits.api import implements, Callable, Instance
 
@@ -80,7 +81,7 @@ class ScipyGraph(AbstractGraph):
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
-            networkx.from_scipy_sparse_matrix(self.matrix, create_using=networkx.Graph())
+            return self._make_networkx(networkx.Graph())
         else:
             raise NotImplementedError()
 
@@ -89,6 +90,13 @@ class ScipyGraph(AbstractGraph):
 
     def __iter__(self):
         return iter(self._nodes)
+
+    def _make_networkx(self, graph):
+        graph.add_nodes_from(self._nodes)
+        # not very efficient
+        xs, ys = self.matrix.nonzero()
+        graph.add_edges_from(izip(xs, ys))
+        return graph
 
     def _enlarge(self, node_index):
         self.matrix.reshape((node_index, node_index))
@@ -133,6 +141,6 @@ class DirectedScipyGraph(ScipyGraph):
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
-            networkx.from_scipy_sparse_matrix(self.matrix, create_using=networkx.DiGraph())
+            return self._make_networkx(networkx.DiGraph())
         else:
             raise NotImplementedError()
