@@ -1,10 +1,10 @@
 import unittest
-from numpy import ones, zeros
+from numpy import zeros
 import paramunittest
 import itertools as it
 
 import networkx as nx
-from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph, has, can_test
+from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph, can_test
 
 
 undirected_graph_types = [(ScipyGraph, 100),
@@ -125,8 +125,7 @@ class TestStarGraph(_AbstractStarGraph, paramunittest.ParametrizedTestCase):
         A = self.graph.to_numpy()
         self.assertTupleEqual((self.size, self.size), A.shape)
 
-    #@unittest.skipUnless(*can_test('networkx'))
-    @unittest.skip('not ready')
+    @unittest.skipUnless(*can_test('networkx'))
     def testNetworkX(self):
         G = self.graph.to_nx()
 
@@ -278,10 +277,3 @@ class TestNXExport(paramunittest.ParametrizedTestCase):
         self.assertEqual(self.size, self.graph.number_of_nodes())
         other_graph.add_edge(self.new_node, 0)
         self.assertEqual(self.size - 1, self.graph.number_of_edges())
-
-    def testNoCopySemantics(self):
-        other_graph = self.graph.to_nx(copy=False)
-        other_graph.add_node(self.new_node)
-        self.assertEqual(self.size + 1, self.graph.number_of_nodes())
-        other_graph.add_edge(self.new_node, 0)
-        self.assertEqual(self.size, self.graph.number_of_edges())

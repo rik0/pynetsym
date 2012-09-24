@@ -1,14 +1,11 @@
-from heapq import heappush
 from numpy import flatnonzero, ix_
 from scipy import sparse
-from traits.api import HasTraits, implements, Callable, Instance
-from traits.api import Int
-from traits.trait_types import Set
+from traits.api import implements, Callable, Instance
+
 
 from .interface import IGraph
 from ._abstract import AbstractGraph
-from pynetsym.graph import GraphError
-
+from pynetsym.graph import GraphError, has
 
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
@@ -80,6 +77,13 @@ class ScipyGraph(AbstractGraph):
         node_list = list(self._nodes)
         return A[ix_(node_list, node_list)].copy()
 
+    def to_nx(self, copy=False):
+        if has('networkx'):
+            import networkx
+            networkx.from_scipy_sparse_matrix(self.matrix, create_using=networkx.Graph())
+        else:
+            raise NotImplementedError()
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 
@@ -124,3 +128,11 @@ class DirectedScipyGraph(ScipyGraph):
 
     def in_degree(self, identifier):
         return self.matrix.getcol(identifier).nnz
+
+
+    def to_nx(self, copy=False):
+        if has('networkx'):
+            import networkx
+            networkx.from_scipy_sparse_matrix(self.matrix, create_using=networkx.DiGraph())
+        else:
+            raise NotImplementedError()

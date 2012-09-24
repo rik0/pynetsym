@@ -1,6 +1,6 @@
 import warnings
 
-__all__ = ['IGraph', 'GraphError']
+__all__ = ['IGraph', 'GraphError', 'can_test', 'has']
 
 import traits.has_traits
 traits.has_traits.CHECK_INTERFACES = 1
@@ -8,22 +8,7 @@ del traits
 
 from .interface import IGraph
 from .error import GraphError
-
-
-class _RegisteredPlugins:
-    _plugins = set()
-
-    @classmethod
-    def has(cls, what):
-        return what in cls._plugins
-
-    @classmethod
-    def can_test(cls, what):
-        return what in cls._plugins, 'Missing module %s' % what
-
-    @classmethod
-    def register(cls, what):
-        cls._plugins.add(what)
+from ._plugin import has, can_test, register
 
 try:
     import networkx
@@ -33,7 +18,7 @@ except ImportError:
 else:
     from nx_impl import NxGraph
     __all__.append('NxGraph')
-    _RegisteredPlugins.register('networkx')
+    register('networkx')
 
 try:
     import scipy.sparse
@@ -43,7 +28,7 @@ except ImportError:
 else:
     from scipy_impl import ScipyGraph, DirectedScipyGraph
     __all__.extend(['ScipyGraph', 'DirectedScipyGraph'])
-    _RegisteredPlugins.register('scipy')
+    register('scipy')
 
 try:
     import numpy
@@ -51,10 +36,7 @@ try:
 except ImportError:
     warnings.warn("Numpy not installed.")
 else:
-    _RegisteredPlugins.register('numpy')
+    register('numpy')
 
 
-has = _RegisteredPlugins.has
-can_test = _RegisteredPlugins.can_test
-
-del warnings
+del warnings, register
