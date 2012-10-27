@@ -248,6 +248,15 @@ class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase)
         B = zeros((self.size, self.size), dtype=bool)
         B[0, 1:] = True
         B[1:, 0] = True
+        testing.assert_array_equal(B, A)
+
+    @unittest.skipUnless(*can_test('scipy'))
+    def testToScipyElements(self):
+        from numpy import testing
+        A = self.graph.to_scipy().toarray()
+        B = zeros((self.size, self.size))
+        B[0, 1:] = True
+        B[1:, 0] = True
 
         testing.assert_array_equal(B, A)
 

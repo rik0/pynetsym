@@ -74,6 +74,7 @@ class ScipyGraph(AbstractGraph):
     in_degree = degree
 
     def to_numpy(self, copy=False, minimize=False):
+        # FIXME: not efficient!
         A = self.matrix.toarray()
         node_list = list(self._nodes)
         return A[ix_(node_list, node_list)].copy()
@@ -84,6 +85,18 @@ class ScipyGraph(AbstractGraph):
             return self._make_networkx(networkx.Graph())
         else:
             raise NotImplementedError()
+
+    def to_scipy(self, copy=False, sparse_type=None, minimize=False):
+        if minimize:
+            raise NotImplementedError()
+        if sparse_type is None:
+            sparse_type = self.matrix.getformat()
+
+        M = sparse.lil_matrix((self.size, self.size))
+        M[self.matrix.nonzero()] = True
+        return M.toformat(sparse_type)
+            
+
 
     def __contains__(self, node_index):
         return node_index in self._nodes
