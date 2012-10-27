@@ -96,8 +96,6 @@ class ScipyGraph(AbstractGraph):
         M = self.matrix.tocoo()
         M._shape = (max_node, max_node)
         return M.asformat(sparse_type)
-            
-
 
     def __contains__(self, node_index):
         return node_index in self._nodes
