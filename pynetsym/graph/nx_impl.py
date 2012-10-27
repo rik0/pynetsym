@@ -66,7 +66,7 @@ class NxGraph(AbstractGraph):
         else:
             return self.nx_graph
 
-    def to_scipy(self, copy=False, sparse_type=None, minimize=False):
+    def to_scipy(self, sparse_type=None, minimize=False):
         if minimize:
             raise NotImplementedError()
         return nx.to_scipy_sparse_matrix(self.nx_graph, format=sparse_type)

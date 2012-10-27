@@ -155,17 +155,20 @@ class IGraph(Interface):
           stopped.
         """
 
-    def to_scipy(self, copy=False, sparse_type=None, minimize=False):
+    def to_scipy(self, sparse_type=None, minimize=False):
         """
         Return corresponding NetworkX graph.
         @param copy: whether the graph should be copied.
-        @type copy: bool
         @param sparse_type: the kind of sparse matrix that is returned
         @param minimize: whether we want the returned sparse matrix to be
           reshaped so that it contains only the minimum possible number
-          of nodes
-        @return: A scipy sparse matrix.
-        @rtype: scipy.sparse.spmatrix
+          of nodes. If False, the matrix can contain "empty" nodes before the
+          maximum, however, no "empty" nodes remain after the last real node.
+        @return: A scipy sparse matrix or, if minimize is requested, a tuple where
+            the first element is a 2d sparse matrix whose first column maps the node indexes
+            to the rows and cols in the columns and whose second column does the
+            oppposite
+        @rtype: scipy.sparse.spmatrix | (scipy.sparse.spmatrix, scipy.sparse.spmatrix)
 
         @warning: depending from the actual kind of graph this may be a copy
           or the original one. Modifications to a graph that is not a copy

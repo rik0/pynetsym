@@ -86,15 +86,16 @@ class ScipyGraph(AbstractGraph):
         else:
             raise NotImplementedError()
 
-    def to_scipy(self, copy=False, sparse_type=None, minimize=False):
+    def to_scipy(self, sparse_type=None, minimize=False):
         if minimize:
             raise NotImplementedError()
         if sparse_type is None:
             sparse_type = self.matrix.getformat()
 
-        M = sparse.lil_matrix((self.size, self.size))
-        M[self.matrix.nonzero()] = True
-        return M.toformat(sparse_type)
+        max_node = max(self._nodes) + 1
+        M = self.matrix.tocoo()
+        M._shape = (max_node, max_node)
+        return M.asformat(sparse_type)
             
 
 
