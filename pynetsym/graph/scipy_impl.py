@@ -60,8 +60,8 @@ class ScipyGraph(AbstractGraph):
     def is_directed(self):
         return False
 
-    def neighbors(self, identifier):
-        A = self.matrix.getrow(identifier).toarray()
+    def neighbors(self, node):
+        A = self.matrix.getrow(node).toarray()
         return flatnonzero(A).tolist()
 
     predecessors = neighbors
@@ -73,7 +73,7 @@ class ScipyGraph(AbstractGraph):
     out_degree = degree
     in_degree = degree
 
-    def to_numpy(self, copy=False, minimize=False):
+    def to_numpy(self, minimize=False):
         # FIXME: not efficient!
         A = self.matrix.toarray()
         node_list = list(self._nodes)

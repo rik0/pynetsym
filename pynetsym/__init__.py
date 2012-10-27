@@ -15,11 +15,6 @@ __all__ = [
 ]
 __all__.extend(configurators.__all__)
 
-
-import traits.has_traits
-traits.has_traits.CHECK_INTERFACES = 1
-del traits
-
 from .core import Agent, AgentError, MinimalAgentRuntime, Logger, get_logger
 from .addressing import AddressingError
 from .agent_db import MissingNode, AgentDB

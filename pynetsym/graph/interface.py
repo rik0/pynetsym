@@ -1,6 +1,9 @@
 from traits.api import Interface, Enum
 
 
+import traits.has_traits
+traits.has_traits.CHECK_INTERFACES = 2
+
 class IGraph(Interface):
     def add_node(self):
         """
@@ -47,7 +50,7 @@ class IGraph(Interface):
     def __iter__(self):
         pass
 
-    def has_node(self, identifier):
+    def has_node(self, node_index):
         """
         True if the graph contains the specified identifier.
         @param identifier: the identifier to seek
@@ -180,11 +183,9 @@ class IGraph(Interface):
           is made.
         """
 
-    def to_numpy(self, copy=False, minimize=True):
+    def to_numpy(self, minimize=False):
         """
         Return corresponding NetworkX graph.
-        @param copy: whether the graph should be copied.
-        @type copy: bool
         @param minimize: determines if the returned matrix is as small
           as possible considering the nodes.
         @return: A numpy dense matrix.
@@ -196,11 +197,11 @@ class IGraph(Interface):
           stopped.
         """
 
-    def copy_into(self, matrix):
-        """
-        Copies the adjacency matrix inside the argument, if big enough.
-        Otherwise a ValueError exception is thrown.
-        @param matrix: the matrix where data is copied
-            Typically it should be something that acts like a numpy array.
-        """
-        pass
+#    def copy_into(self, matrix):
+#        """
+#        Copies the adjacency matrix inside the argument, if big enough.
+#        Otherwise a ValueError exception is thrown.
+#        @param matrix: the matrix where data is copied
+#            Typically it should be something that acts like a numpy array.
+#        """
+#        pass

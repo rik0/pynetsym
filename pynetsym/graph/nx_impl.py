@@ -12,15 +12,6 @@ class NxGraph(AbstractGraph):
 
     nx_graph = Instance(nx.Graph, allow_none=False)
 
-    number_of_nodes = DelegatesTo('nx_graph')
-    number_of_edges = DelegatesTo('nx_graph')
-    has_edge = DelegatesTo('nx_graph')
-    is_directed = DelegatesTo('nx_graph')
-
-    neighbors = DelegatesTo('nx_graph')
-    successors = DelegatesTo('nx_graph', prefix='neighbors')
-    predecessors = DelegatesTo('nx_graph')
-
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
         self.nx_graph = graph_type(data=data, **kwargs)
         if not self.is_directed():
@@ -57,7 +48,7 @@ class NxGraph(AbstractGraph):
     def degree(self, node):
         return self.nx_graph.degree(node)
 
-    def to_numpy(self, copy=False, minimize=False):
+    def to_numpy(self, minimize=False):
         return nx.to_numpy_matrix(self.nx_graph, dtype=bool)
 
     def to_nx(self, copy=False):
@@ -70,6 +61,26 @@ class NxGraph(AbstractGraph):
         if minimize:
             raise NotImplementedError()
         return nx.to_scipy_sparse_matrix(self.nx_graph, format=sparse_type)
+
+    def predecessors(self, node):
+        return self.nx_graph.predecessors(node)
+
+    def neighbors(self, node):
+        return self.nx_graph.neighbors(node)
+
+    successors = neighbors
+
+    def number_of_nodes(self):
+        return self.nx_graph.number_of_nodes()
+
+    def number_of_edges(self):
+        return self.nx_graph.number_of_edges()
+
+    def has_edge(self, source, target):
+        return self.nx_graph.has_edge(source, target)
+
+    def is_directed(self):
+        return self.nx_graph.is_directed()
 
     def __contains__(self, node_index):
         return node_index in self.nx_graph
