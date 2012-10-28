@@ -149,7 +149,6 @@ class DirectedScipyGraph(ScipyGraph):
     def in_degree(self, identifier):
         return self.matrix.getcol(identifier).nnz
 
-
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
