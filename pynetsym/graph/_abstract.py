@@ -16,3 +16,6 @@ class AbstractGraph(HasTraits):
             return node_index in self
         else:
             raise ValueError('%d is not a valid node index' % node_index)
+
+    def add_nodes(self, how_many):
+        return [self.add_node() for _index in xrange(how_many)]
