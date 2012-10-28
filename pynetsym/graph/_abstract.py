@@ -5,7 +5,6 @@ from .interface import IGraph
 from pynetsym import identifiers_manager
 
 class AbstractGraph(HasTraits):
-
     index_store = Instance(identifiers_manager.IntIdentifierStore,
                            allow_none=False, args=())
 
@@ -19,3 +18,12 @@ class AbstractGraph(HasTraits):
 
     def add_nodes(self, how_many):
         return [self.add_node() for _index in xrange(how_many)]
+
+    def remove_node(self, node):
+        if node in self:
+            self._remove_node_sure(node)
+        else:
+            raise ValueError('Node %s not in the graph' % node)
+
+    def _remove_node_sure(self, node):
+        raise NotImplementedError()

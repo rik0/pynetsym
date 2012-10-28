@@ -19,6 +19,9 @@ class NxGraph(AbstractGraph):
         self.nx_graph.add_node(node_index)
         return node_index
 
+    def _remove_node_sure(self, node):
+        self.nx_graph.remove_node(node)
+
     def add_edge(self, source, target):
         self._valid_nodes(source, target)
         self.nx_graph.add_edge(source, target)

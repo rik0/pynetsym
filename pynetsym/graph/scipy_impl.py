@@ -33,6 +33,11 @@ class ScipyGraph(AbstractGraph):
         self._nodes.add(node_index)
         return node_index
 
+    def _remove_node_sure(self, node):
+        self._nodes.remove(node)
+        self.matrix[node,:] = False
+        self.matrix[:, node] = False
+
     def add_edge(self, source, target):
         # consider direct vs. undirected
         self._valid_nodes(source, target)

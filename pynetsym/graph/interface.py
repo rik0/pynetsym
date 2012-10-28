@@ -19,6 +19,13 @@ class IGraph(Interface):
         @return: the sequence of indexes of the created nodes.
         """
 
+    def remove_node(self, node):
+        """
+        Removes the node "node" from the graph.
+        @param node: the node to remove
+        @return: None
+        @raise ValueError: if the node is not in the graph.
+        """
 
     def add_edge(self, source, target):
         """
