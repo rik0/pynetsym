@@ -7,7 +7,7 @@ from pynetsym.graph import ScipyGraph, NxGraph
     (NxGraph, ()),
     (NxGraph, (networkx.DiGraph, ))
 )
-class TestGraphExporting(paramunittest.ParametrizedTestCase):
+class TestGraphRemoveNode(paramunittest.ParametrizedTestCase):
     def setParameters(self, factory, arguments):
         self.factory = factory
         self.arguments = arguments
