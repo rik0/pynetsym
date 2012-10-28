@@ -12,6 +12,14 @@ class IGraph(Interface):
         @rtype int
         """
 
+    def add_nodes(self, how_many):
+        """
+        Adds how_many nodes to the graph.
+        @param how_many: The number of nodes to create
+        @return: the sequence of indexes of the created nodes.
+        """
+
+
     def add_edge(self, source, target):
         """
         Add edge to the graph
