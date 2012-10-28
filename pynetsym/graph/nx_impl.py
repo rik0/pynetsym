@@ -1,7 +1,6 @@
 from .import interface
 import networkx as nx
 from traits.api import Instance
-from traits.api import DelegatesTo
 from traits.api import implements
 from ._abstract import AbstractGraph
 from .error import GraphError
@@ -14,9 +13,6 @@ class NxGraph(AbstractGraph):
 
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
         self.nx_graph = graph_type(data=data, **kwargs)
-        if not self.is_directed():
-            self.add_trait('predecessors',
-                           DelegatesTo('nx_graph', prefix='neighbors'))
 
     def add_node(self):
         node_index = self.index_store.take()
@@ -63,12 +59,24 @@ class NxGraph(AbstractGraph):
         return nx.to_scipy_sparse_matrix(self.nx_graph, format=sparse_type)
 
     def predecessors(self, node):
-        return self.nx_graph.predecessors(node)
+        try:
+            method = self.nx_graph.predecessors
+        except AttributeError:
+            return self.nx_graph.neighbors()
+        else:
+            return method(node)
 
     def neighbors(self, node):
         return self.nx_graph.neighbors(node)
 
-    successors = neighbors
+    def successors(self, node):
+        try:
+            method = self.nx_graph.successors
+        except AttributeError:
+            return self.nx_graph.neighbors()
+        else:
+            return method(node)
+
 
     def number_of_nodes(self):
         return self.nx_graph.number_of_nodes()
