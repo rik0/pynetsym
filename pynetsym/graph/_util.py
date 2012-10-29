@@ -38,7 +38,7 @@ class DefaultIndexMap(object):
         if issequence(item):
             return [self._get_one(element) for element in item]
         elif isinstance(item, slice):
-            stride = 1 if item.step is None else item.step
-
+            max_value = max(item.start, -item.start, item.stop, -item.stop, *self.elements.keys())
+            return [self._get_one(element) for element in xrange(*item.indices(max_value))]
         else:
             return self._get_one(item)
