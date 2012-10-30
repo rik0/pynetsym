@@ -186,11 +186,11 @@ class IGraph(Interface):
             the first element is a 2d sparse matrix whose first column maps the node indexes
             to the rows and cols in the columns and whose second column does the
             oppposite
-        @rtype: scipy.sparse.spmatrix | (scipy.sparse.spmatrix, scipy.sparse.spmatrix)
+        @rtype: scipy.sparse.spmatrix | (scipy.sparse.spmatrix, numpy.ndarray, numpy.ndarray)
 
         @warning: depending from the actual kind of graph this may be a copy
           or the original one. Modifications to a graph that is not a copy
-          may lead to servere malfunctions, unless the simulation has already
+          may lead to severe malfunctions, unless the simulation has already
           stopped.
 
           In general, if the type of sparse matrix requested is different from
@@ -204,11 +204,11 @@ class IGraph(Interface):
         @param minimize: determines if the returned matrix is as small
           as possible considering the nodes.
         @return: A numpy dense matrix.
-        @rtype: numpy.ndarray
+        @rtype: numpy.ndarray | (scipy.sparse.spmatrix, numpy.ndarray, numpy.ndarray)
 
         @warning: depending from the actual kind of graph this may be a copy
           or the original one. Modifications to a graph that is not a copy
-          may lead to servere malfunctions, unless the simulation has already
+          may lead to severe malfunctions, unless the simulation has already
           stopped.
         """
 

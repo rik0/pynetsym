@@ -59,7 +59,8 @@ class NxGraph(AbstractGraph):
     def to_scipy(self, sparse_type=None, minimize=False):
         if minimize:
             raise NotImplementedError()
-        return nx.to_scipy_sparse_matrix(self.nx_graph, format=sparse_type)
+        return nx.to_scipy_sparse_matrix(self.nx_graph,
+                                         format=sparse_type, dtype=bool)
 
     def predecessors(self, node):
         try:

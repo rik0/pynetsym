@@ -51,7 +51,7 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
 
     def testScipyNotMinimized(self):
         testing.assert_array_equal(
-            self.minimized_adjacency,
+            self.adjacency,
             self.graph.to_scipy(minimize=False).todense())
 
     def testScipyMinimized(self):

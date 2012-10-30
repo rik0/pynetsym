@@ -79,10 +79,7 @@ class ScipyGraph(AbstractGraph):
     in_degree = degree
 
     def to_numpy(self, minimize=False):
-        # FIXME: not efficient!
-        A = self.matrix.toarray()
-        node_list = list(self._nodes)
-        return A[ix_(node_list, node_list)].copy()
+        return self.to_scipy(minimize=minimize).todense()
 
     def to_nx(self, copy=False):
         if has('networkx'):
