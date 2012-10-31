@@ -182,11 +182,13 @@ class IGraph(Interface):
           reshaped so that it contains only the minimum possible number
           of nodes. If False, the matrix can contain "empty" nodes before the
           maximum, however, no "empty" nodes remain after the last real node.
-        @return: A scipy sparse matrix or, if minimize is requested, a tuple where
-            the first element is a 2d sparse matrix whose first column maps the node indexes
-            to the rows and cols in the columns and whose second column does the
-            oppposite
-        @rtype: scipy.sparse.spmatrix | (scipy.sparse.spmatrix, numpy.ndarray, numpy.ndarray)
+        @return: A scipy sparse matrix or, if minimize is requested, a tuple
+            (matrix, node_to_index, index_to_node) where matrix is the
+            sparse matrix with cols and rows corresponding to "nodes" not
+            present in the network removed, node_to_index maps the node
+            name to the corresponding matrix index and index_to_node makes
+            the opposite.
+        @rtype: scipy.sparse.spmatrix | (scipy.sparse.spmatrix, collections.Mapping, collections.Mapping)
 
         @warning: depending from the actual kind of graph this may be a copy
           or the original one. Modifications to a graph that is not a copy

@@ -59,12 +59,24 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
          to_matrix_indices,
          from_matrix_indices) = self.graph.to_scipy(minimize=True)
         testing.assert_array_equal(
-            self.adjacency, matrix.todense())
+            self.minimized_adjacency, matrix.todense())
+        testing.assert_array_equal(
+            [0, 1, 2, 4],
+            from_matrix_indices[:],
+        )
+        testing.assert_array_equal(
+            [0, 1, 2, 3],
+            to_matrix_indices[:],
+        )
 
     def testNumpyMinimized(self):
         (matrix,
          to_matrix_indices,
-         from_matrix_indices) = self.graph.to_scipy(minimize=True)
+         from_matrix_indices) = self.graph.to_numpy(minimize=True)
+        testing.assert_array_equal(
+            [0, 1, 2, 4],
+            from_matrix_indices,
+        )
         testing.assert_array_equal(
             self.minimized_adjacency,
             matrix.todense())
