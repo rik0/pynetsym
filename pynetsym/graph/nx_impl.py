@@ -1,5 +1,6 @@
 from .import interface
 import networkx as nx
+from numpy import fromiter
 from traits.api import Instance
 from traits.api import implements
 from ._abstract import AbstractGraph
@@ -46,6 +47,25 @@ class NxGraph(AbstractGraph):
 
     def degree(self, node):
         return self.nx_graph.degree(node)
+
+    def node_to_index(self, node):
+        return self.NTI[node]
+
+    def index_to_node(self, index):
+        return self.ITN[index]
+
+    @property
+    def NTI(self): # maybe pass optional ITN?
+        pass
+
+
+    @property
+    def ITN(self):
+        nodes = fromiter(self.nx_graph.nodes_iter(),
+                         dtype=int,
+                         count=self.nx_graph.number_of_nodes())
+        nodes.sort()
+        return nodes
 
     def to_numpy(self, minimize=False):
         return nx.to_numpy_matrix(self.nx_graph, dtype=bool)

@@ -159,6 +159,47 @@ class IGraph(Interface):
         @rtype: bool
         """
 
+    def node_to_index(self, node):
+        """
+        Return the progressive index of the node as if nodes where ordered.
+        "Missing" values are skipped.
+
+        @param node: the node
+        @type node: int
+        @return: the index
+        @rtype: int
+        @raise IndexError: if the required node is not in the matrix.
+        """
+
+    def index_to_node(self, index):
+        """
+        Returns the name of the nth node as specified by index.
+
+        @param index: the index
+        @type index: int
+        @return: the node
+        @rtype: int
+
+        @warning: if the graph changed since when the index was created,
+            the method is not an inverse for node_to_index anymore and
+            creates wrong results.
+        """
+
+    @property
+    def NTI(self):
+        """
+        An indexable object converting from nodes to indexes. See node_to_index.
+        It also accepts some forms of advanced indexing.
+        """
+
+    @property
+    def ITN(self):
+        """
+        An indexable object converting from indexes to nodes. See index_to_node.
+        It also accepts some forms of advanced indexing.
+        """
+
+
     def to_nx(self, copy=False):
         """
         Return corresponding NetworkX graph.

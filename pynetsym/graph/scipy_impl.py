@@ -78,6 +78,20 @@ class ScipyGraph(AbstractGraph):
     out_degree = degree
     in_degree = degree
 
+    def node_to_index(self, node):
+        pass
+
+    def index_to_node(self, index):
+        pass
+
+    @property
+    def NTI(self):
+        pass
+
+    @property
+    def ITN(self):
+        pass
+
     def to_numpy(self, minimize=False):
         return self.to_scipy(minimize=minimize).todense()
 
