@@ -1,6 +1,6 @@
 import unittest
 from unittest import skip
-from numpy import testing, array
+from numpy import testing, array, arange
 import numpy as np
 import paramunittest
 from pynetsym.graph import ScipyGraph, NxGraph
@@ -102,32 +102,25 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
             self.adjacency,
             self.graph.to_scipy(minimize=False).todense())
 
-    @skip('...')
     def testScipyMinimized(self):
         (matrix,
-         to_matrix_indices,
-         from_matrix_indices) = self.graph.to_scipy(minimize=True)
+         node_to_index,
+         index_to_node) = self.graph.to_scipy(minimize=True)
         testing.assert_array_equal(
-            self.minimized_adjacency, matrix.todense())
-        testing.assert_array_equal(
-            [0, 1, 2, 4],
-            from_matrix_indices[:],
-        )
-        testing.assert_array_equal(
-            [0, 1, 2, 3],
-            to_matrix_indices[:],
-        )
-
-    @skip('...')
-    def testNumpyMinimized(self):
-        (matrix,
-         to_matrix_indices,
-         from_matrix_indices) = self.graph.to_numpy(minimize=True)
-        testing.assert_array_equal(
-            [0, 1, 2, 4],
-            from_matrix_indices,
-        )
+            node_to_index[index_to_node],
+            arange(matrix.shape[0]))
         testing.assert_array_equal(
             self.minimized_adjacency,
             matrix.todense())
+
+    def testNumpyMinimized(self):
+        (matrix,
+         node_to_index,
+         index_to_node) = self.graph.to_numpy(minimize=True)
+        testing.assert_array_equal(
+            node_to_index[index_to_node],
+            arange(matrix.shape[0]))
+        testing.assert_array_equal(
+            self.minimized_adjacency,
+            matrix)
 

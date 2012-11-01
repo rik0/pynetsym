@@ -60,8 +60,8 @@ class NxGraph(AbstractGraph):
     def to_numpy(self, minimize=False):
         if minimize:
             matrix = nx.to_numpy_matrix(self.nx_graph, dtype=bool)
-            node_to_index = self._make_node_to_index()
-            index_to_node = self._make_index_to_node()
+            index_to_node = self.ITN
+            node_to_index = self.make_NTI(index_to_node)
             return matrix, node_to_index, index_to_node
         else:
             raise NotImplementedError()
@@ -72,22 +72,12 @@ class NxGraph(AbstractGraph):
         else:
             return self.nx_graph
 
-    def _make_node_to_index(self):
-        pass
-
-    def _make_index_to_node(self):
-        sorted_nodes = self.nx_graph.nodes()
-        sorted_nodes.sort()
-        to_matrix = IndexMapper(fromiter(sorted_nodes, dtype=int),
-                                sorted_nodes[-1])
-        return to_matrix
-
     def to_scipy(self, sparse_type=None, minimize=False):
         if minimize:
             matrix = nx.to_scipy_sparse_matrix(
                 self.nx_graph, format=sparse_type, dtype=bool)
-            node_to_index = self._make_node_to_index()
-            index_to_node = self._make_index_to_node()
+            index_to_node = self.ITN
+            node_to_index = self.make_NTI(index_to_node)
             return matrix, node_to_index, index_to_node
         else:
             raise NotImplementedError()

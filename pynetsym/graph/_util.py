@@ -1,5 +1,6 @@
 import collections
-from numpy import fromiter
+from numpy import fromiter, ndarray
+from scipy import sparse
 
 class function_to_map(object):
     def __init__(self, func):
@@ -19,7 +20,8 @@ class IndexMapper(object):
         if isinstance(item, slice):
             return self._get_item_iter(
                 xrange(*item.indices(self.max_index)))
-        elif isinstance(item, collections.Sequence):
+        elif isinstance(item, (collections.Sequence,
+                                ndarray, sparse.spmatrix)):
             return self._get_item_iter(item)
         else:
             try:
