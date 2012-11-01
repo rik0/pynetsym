@@ -55,6 +55,29 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
             else:
                 self.assertEqual(node-1, self.graph.node_to_index(node))
 
+    def testNTI(self):
+        NTI = self.graph.NTI
+
+        testing.assert_array_equal(
+            [0, 1, 2, 3],
+            NTI[:]
+        )
+
+        testing.assert_array_equal(
+            [0, 1, 2, 3],
+            NTI[[0, 1, 2, 3, 4]]
+        )
+
+        testing.assert_array_equal(
+            [0, 1, 2, 3],
+            NTI[[0, 1, 2, 4]]
+        )
+
+        testing.assert_array_equal(
+            [0, 1, 2],
+            NTI[[0, 1, 2]]
+        )
+
     def testITN(self):
         ITN_array = self.graph.ITN
         testing.assert_array_equal(

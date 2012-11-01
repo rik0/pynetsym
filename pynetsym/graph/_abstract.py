@@ -1,7 +1,6 @@
 
-from traits.api import HasTraits, implements, Instance
+from traits.api import HasTraits, Instance
 
-from .interface import IGraph
 from pynetsym import identifiers_manager
 from pynetsym.graph._util import IndexMapper
 
@@ -13,7 +12,7 @@ class AbstractGraph(HasTraits):
     def make_NTI(self, ITN=None):
         itn = self.ITN if ITN is None else ITN
         inverse_map = {node: index for index, node in enumerate(itn)}
-        return IndexMapper(inverse_map, itn[-1])
+        return IndexMapper(inverse_map, itn[-1]+1)
 
     @property
     def NTI(self):
