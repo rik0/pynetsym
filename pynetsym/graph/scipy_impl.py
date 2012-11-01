@@ -1,5 +1,5 @@
 from itertools import izip
-from numpy import flatnonzero, ix_, ufunc
+from numpy import flatnonzero, ix_, ufunc, array, fromiter
 from scipy import sparse
 from traits.api import implements, Callable, Instance
 
@@ -78,19 +78,15 @@ class ScipyGraph(AbstractGraph):
     out_degree = degree
     in_degree = degree
 
-    def node_to_index(self, node):
-        pass
-
-    def index_to_node(self, index):
-        pass
-
     @property
     def NTI(self):
         pass
 
     @property
     def ITN(self):
-        pass
+        nodes = fromiter(self._nodes, dtype=int, count=len(self._nodes))
+        nodes.sort()
+        return nodes
 
     def to_numpy(self, minimize=False):
         return self.to_scipy(minimize=minimize).todense()
