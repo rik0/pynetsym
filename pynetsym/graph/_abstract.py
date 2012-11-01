@@ -8,6 +8,11 @@ class AbstractGraph(HasTraits):
     index_store = Instance(identifiers_manager.IntIdentifierStore,
                            allow_none=False, args=())
 
+    def node_to_index(self, node):
+        return self.NTI[node]
+
+    def index_to_node(self, index):
+        return self.ITN[index]
 
     def has_node(self, node_index):
         node_index = int(node_index)

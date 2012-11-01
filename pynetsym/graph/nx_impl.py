@@ -48,12 +48,6 @@ class NxGraph(AbstractGraph):
     def degree(self, node):
         return self.nx_graph.degree(node)
 
-    def node_to_index(self, node):
-        return self.NTI[node]
-
-    def index_to_node(self, index):
-        return self.ITN[index]
-
     @property
     def NTI(self): # maybe pass optional ITN?
         pass
