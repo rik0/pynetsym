@@ -120,7 +120,6 @@ class ScipyGraph(AbstractGraph):
     def _to_scipy_minimized(self, sparse_type):
         index_to_node = self.ITN
         node_to_index = self.make_NTI(index_to_node)
-
         matrix = self._sub_matrix(index_to_node, sparse_type)
         return matrix, node_to_index, index_to_node
 

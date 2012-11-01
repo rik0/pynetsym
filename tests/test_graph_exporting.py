@@ -1,6 +1,7 @@
 import unittest
 from unittest import skip
-from numpy import testing, array, arange
+from numpy import testing, arange
+from scipy import sparse
 import numpy as np
 import paramunittest
 from pynetsym.graph import ScipyGraph, NxGraph
@@ -16,6 +17,7 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
         self.arguments = arguments
 
     def setUp(self):
+        self.formats = ['csr', 'csc', 'dok', 'lil', 'coo']
         self.removed_node = 3
         self.number_of_initial_nodes = 5
 
@@ -103,15 +105,16 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
             self.graph.to_scipy(minimize=False).todense())
 
     def testScipyMinimized(self):
-        (matrix,
-         node_to_index,
-         index_to_node) = self.graph.to_scipy(minimize=True)
-        testing.assert_array_equal(
-            node_to_index[index_to_node],
-            arange(matrix.shape[0]))
-        testing.assert_array_equal(
-            self.minimized_adjacency,
-            matrix.todense())
+        for format in self.formats:
+            (matrix,
+             node_to_index,
+             index_to_node) = self.graph.to_scipy(sparse_type=format, minimize=True)
+            testing.assert_array_equal(
+                node_to_index[index_to_node],
+                arange(matrix.shape[0]))
+            testing.assert_array_equal(
+                self.minimized_adjacency,
+                matrix.tolil().todense())
 
     def testNumpyMinimized(self):
         (matrix,
