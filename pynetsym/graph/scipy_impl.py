@@ -1,5 +1,6 @@
 from itertools import izip
-from numpy import flatnonzero, ix_, ufunc, array, fromiter
+import logging
+from numpy import flatnonzero, fromiter, ix_
 from scipy import sparse
 from traits.api import implements, Callable, Instance
 
@@ -7,7 +8,6 @@ from traits.api import implements, Callable, Instance
 from .interface import IGraph
 from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
-from pynetsym.graph._util import IndexMapper
 
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
@@ -81,12 +81,17 @@ class ScipyGraph(AbstractGraph):
 
     @property
     def ITN(self):
-        nodes = fromiter(self._nodes, dtype=int, count=len(self._nodes))
+        nodes = fromiter(self._nodes, dtype=int,
+                         count=len(self._nodes))
         nodes.sort()
         return nodes
 
     def to_numpy(self, minimize=False):
-        return self.to_scipy(minimize=minimize).todense()
+        if minimize:
+            matrix, node_to_index, index_to_node = self.to_scipy(minimize=minimize)
+            return matrix.todense(), node_to_index, index_to_node
+        else:
+            return self.to_scipy(minimize=minimize).todense()
 
     def to_nx(self, copy=False):
         if has('networkx'):
@@ -95,16 +100,37 @@ class ScipyGraph(AbstractGraph):
         else:
             raise NotImplementedError()
 
-    def to_scipy(self, sparse_type=None, minimize=False):
-        if minimize:
-            raise NotImplementedError()
-        if sparse_type is None:
-            sparse_type = self.matrix.getformat()
-
+    def _to_scipy_not_minimized(self, sparse_type):
         max_node = max(self._nodes) + 1
         M = self.matrix.tocoo()
         M._shape = (max_node, max_node)
         return M.asformat(sparse_type)
+
+    def _sub_matrix(self, index_to_node, sparse_type):
+        if sparse_type == 'csr':
+            full_matrix_csc = self.matrix.tocsc()
+            matrix_csr = full_matrix_csc[:, index_to_node].tocsr()
+            return matrix_csr[index_to_node, :]
+        else:
+            full_matrix_csr = self.matrix.tocsr()
+            matrix_csc = full_matrix_csr[index_to_node, :].tocsc()
+            matrix = matrix_csc[:, index_to_node].asformat(sparse_type)
+            return matrix
+
+    def _to_scipy_minimized(self, sparse_type):
+        index_to_node = self.ITN
+        node_to_index = self.make_NTI(index_to_node)
+
+        matrix = self._sub_matrix(index_to_node, sparse_type)
+        return matrix, node_to_index, index_to_node
+
+    def to_scipy(self, sparse_type=None, minimize=False):
+        if sparse_type is None:
+            sparse_type = self.matrix.getformat()
+        if minimize:
+            return self._to_scipy_minimized(sparse_type)
+        else:
+            return self._to_scipy_not_minimized(sparse_type)
 
     def __contains__(self, node_index):
         return node_index in self._nodes
