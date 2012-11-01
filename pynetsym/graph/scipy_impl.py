@@ -7,6 +7,7 @@ from traits.api import implements, Callable, Instance
 from .interface import IGraph
 from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
+from pynetsym.graph._util import IndexMapper
 
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
@@ -77,11 +78,6 @@ class ScipyGraph(AbstractGraph):
 
     out_degree = degree
     in_degree = degree
-
-    @property
-    def NTI(self):
-        inverse_map = {node: index for index, node in enumerate(self.ITN)}
-
 
     @property
     def ITN(self):

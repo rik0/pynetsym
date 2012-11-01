@@ -5,6 +5,7 @@ from traits.api import Instance
 from traits.api import implements
 from ._abstract import AbstractGraph
 from .error import GraphError
+from pynetsym.graph._util import IndexMapper
 
 
 class NxGraph(AbstractGraph):
@@ -49,11 +50,6 @@ class NxGraph(AbstractGraph):
         return self.nx_graph.degree(node)
 
     @property
-    def NTI(self): # maybe pass optional ITN?
-        pass
-
-
-    @property
     def ITN(self):
         nodes = fromiter(self.nx_graph.nodes_iter(),
                          dtype=int,
@@ -62,7 +58,13 @@ class NxGraph(AbstractGraph):
         return nodes
 
     def to_numpy(self, minimize=False):
-        return nx.to_numpy_matrix(self.nx_graph, dtype=bool)
+        if minimize:
+            matrix = nx.to_numpy_matrix(self.nx_graph, dtype=bool)
+            node_to_index = self._make_node_to_index()
+            index_to_node = self._make_index_to_node()
+            return matrix, node_to_index, index_to_node
+        else:
+            raise NotImplementedError()
 
     def to_nx(self, copy=False):
         if copy:
@@ -70,11 +72,26 @@ class NxGraph(AbstractGraph):
         else:
             return self.nx_graph
 
+    def _make_node_to_index(self):
+        pass
+
+    def _make_index_to_node(self):
+        sorted_nodes = self.nx_graph.nodes()
+        sorted_nodes.sort()
+        to_matrix = IndexMapper(fromiter(sorted_nodes, dtype=int),
+                                sorted_nodes[-1])
+        return to_matrix
+
     def to_scipy(self, sparse_type=None, minimize=False):
         if minimize:
+            matrix = nx.to_scipy_sparse_matrix(
+                self.nx_graph, format=sparse_type, dtype=bool)
+            node_to_index = self._make_node_to_index()
+            index_to_node = self._make_index_to_node()
+            return matrix, node_to_index, index_to_node
+        else:
             raise NotImplementedError()
-        return nx.to_scipy_sparse_matrix(self.nx_graph,
-                                         format=sparse_type, dtype=bool)
+
 
     def predecessors(self, node):
         try:
@@ -118,4 +135,6 @@ class NxGraph(AbstractGraph):
         for node in nodes:
             if node not in self.nx_graph:
                 raise GraphError('%s node not in graph.' % node)
+
+
 

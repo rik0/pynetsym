@@ -46,7 +46,6 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
         star_graph.remove_node(self.removed_node)
         self.assert_(nx.is_isomorphic(star_graph, self.graph.to_nx()))
 
-    @skip('...')
     def testNodeToIndex(self):
         for node in xrange(self.number_of_initial_nodes):
             if node < self.removed_node:

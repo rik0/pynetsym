@@ -3,10 +3,17 @@ from traits.api import HasTraits, implements, Instance
 
 from .interface import IGraph
 from pynetsym import identifiers_manager
+from pynetsym.graph._util import IndexMapper
 
 class AbstractGraph(HasTraits):
     index_store = Instance(identifiers_manager.IntIdentifierStore,
                            allow_none=False, args=())
+
+    @property
+    def NTI(self):
+        itn = self.ITN
+        inverse_map = {node: index for index, node in enumerate(itn)}
+        return IndexMapper(inverse_map, itn[-1])
 
     def node_to_index(self, node):
         return self.NTI[node]
