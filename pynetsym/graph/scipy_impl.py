@@ -80,7 +80,8 @@ class ScipyGraph(AbstractGraph):
 
     @property
     def NTI(self):
-        pass
+        inverse_map = {node: index for index, node in enumerate(self.ITN)}
+
 
     @property
     def ITN(self):
