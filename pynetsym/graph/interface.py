@@ -185,6 +185,11 @@ class IGraph(Interface):
             creates wrong results.
         """
 
+    def make_NTI(self, ITN=None):
+        """
+        Creates an NTI instance from an ITN instance.
+        """
+
     @property
     def NTI(self):
         """
