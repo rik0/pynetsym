@@ -1,11 +1,13 @@
 from .import interface
+
 import networkx as nx
-from numpy import fromiter
+
+from scipy import sparse
+from numpy import fromiter, array
 from traits.api import Instance
 from traits.api import implements
 from ._abstract import AbstractGraph
 from .error import GraphError
-from pynetsym.graph._util import IndexMapper
 
 
 class NxGraph(AbstractGraph):
@@ -64,7 +66,10 @@ class NxGraph(AbstractGraph):
             node_to_index = self.make_NTI(index_to_node)
             return matrix, node_to_index, index_to_node
         else:
-            raise NotImplementedError()
+            # FIXME: there is a scipy bug that bits when converting
+            # boolean matrices from non-lil to dense.
+            return self.to_scipy(
+                minimize=minimize).tolil().todense()
 
     def to_nx(self, copy=False):
         if copy:
@@ -72,15 +77,33 @@ class NxGraph(AbstractGraph):
         else:
             return self.nx_graph
 
+    def _to_scipy_minimize(self, sparse_type):
+        matrix = nx.to_scipy_sparse_matrix(
+            self.nx_graph, format=sparse_type, dtype=bool)
+        index_to_node = self.ITN
+        node_to_index = self.make_NTI(index_to_node)
+        return matrix, node_to_index, index_to_node
+
+    def _to_scipy_not_minimize(self, sparse_type):
+        edges_array = array(self.nx_graph.edges(), dtype=int).T
+
+        class SayTrue(object):
+            def __len__(_):
+                return self.nx_graph.number_of_edges() * 2
+            def __getitem__(_, __):
+                return True
+
+        M = sparse.coo_matrix(
+            (SayTrue(),
+             (edges_array.flat, edges_array[::-1,:].flat)),
+            dtype=bool)
+        return M.asformat(sparse_type)
+
     def to_scipy(self, sparse_type=None, minimize=False):
         if minimize:
-            matrix = nx.to_scipy_sparse_matrix(
-                self.nx_graph, format=sparse_type, dtype=bool)
-            index_to_node = self.ITN
-            node_to_index = self.make_NTI(index_to_node)
-            return matrix, node_to_index, index_to_node
+            return self._to_scipy_minimize(sparse_type)
         else:
-            raise NotImplementedError()
+            return self._to_scipy_not_minimize(sparse_type)
 
 
     def predecessors(self, node):

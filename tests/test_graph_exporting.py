@@ -1,7 +1,4 @@
-import unittest
-from unittest import skip
 from numpy import testing, arange
-from scipy import sparse
 import numpy as np
 import paramunittest
 from pynetsym.graph import ScipyGraph, NxGraph
@@ -92,17 +89,17 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
                                self.expected_nodes):
             self.assertEqual(node, self.graph.index_to_node(index))
 
-    @skip('...')
     def testNumpyNotMinimized(self):
         testing.assert_array_equal(
             self.adjacency,
             self.graph.to_numpy(minimize=False))
 
-    @skip('...')
     def testScipyNotMinimized(self):
-        testing.assert_array_equal(
-            self.adjacency,
-            self.graph.to_scipy(minimize=False).todense())
+        for format in self.formats:
+            testing.assert_array_equal(
+                self.adjacency,
+                self.graph.to_scipy(sparse_type=format,
+                                    minimize=False).tolil().todense())
 
     def testScipyMinimized(self):
         for format in self.formats:
