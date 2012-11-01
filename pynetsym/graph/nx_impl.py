@@ -1,6 +1,7 @@
 from .import interface
 
 import networkx as nx
+import numpy
 
 from scipy import sparse
 from numpy import fromiter, array
@@ -87,16 +88,25 @@ class NxGraph(AbstractGraph):
     def _to_scipy_not_minimize(self, sparse_type):
         edges_array = array(self.nx_graph.edges(), dtype=int).T
 
-        class SayTrue(object):
-            def __len__(_):
-                return self.nx_graph.number_of_edges() * 2
-            def __getitem__(_, __):
-                return True
+        if self.nx_graph.is_directed():
+            multiplier = 1
+            sources = edges_array[0, :]
+            targets = edges_array[1, :]
+            max_node = max(self.nx_graph.nodes_iter())
+            shape = max_node + 1, max_node + 1
+        else:
+            multiplier = 2
+            sources = edges_array.flat
+            targets = edges_array[::-1, :].flat
+            shape = None
 
         M = sparse.coo_matrix(
-            (SayTrue(),
-             (edges_array.flat, edges_array[::-1,:].flat)),
-            dtype=bool)
+            (type('.', (object, ),
+                  {'__len__': lambda _: self.nx_graph.number_of_edges() * multiplier,
+                   '__getitem__': lambda _, __: True})(),
+             (sources, targets)),
+            dtype=bool, shape=shape)
+
         return M.asformat(sparse_type)
 
     def to_scipy(self, sparse_type=None, minimize=False):

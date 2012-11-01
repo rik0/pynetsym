@@ -1,14 +1,11 @@
 from numpy import testing, arange
 import numpy as np
 import paramunittest
-from pynetsym.graph import ScipyGraph, NxGraph
+from pynetsym.graph import ScipyGraph, NxGraph, DirectedScipyGraph
 import networkx as nx
 
-@paramunittest.parametrized(
-    (ScipyGraph, (12, )),
-    (NxGraph, ())
-)
-class TestGraphExporting(paramunittest.ParametrizedTestCase):
+
+class TGraphExportingBase():
     def setParameters(self, factory, arguments):
         self.factory = factory
         self.arguments = arguments
@@ -24,26 +21,13 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
             self.graph.add_edge(0, target)
 
         self.graph.remove_node(self.removed_node)
-
-        self.adjacency = np.matrix(
-            [[0, 1, 1, 0, 1],
-             [1, 0, 0, 0, 0],
-             [1, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0],
-             [1, 0, 0, 0, 0]], dtype=bool)
-        self.minimized_adjacency = np.matrix(
-            [[0, 1, 1, 1],
-             [1, 0, 0, 0],
-             [1, 0, 0, 0],
-             [1, 0, 0, 0]], dtype=bool)
         self.expected_nodes = [0, 1, 2, 4]
 
     def testNetworkX(self):
-        star_graph = nx.star_graph(self.number_of_initial_nodes - 1)
         self.assertFalse(
-            nx.is_isomorphic(star_graph, self.graph.to_nx()))
-        star_graph.remove_node(self.removed_node)
-        self.assert_(nx.is_isomorphic(star_graph, self.graph.to_nx()))
+            nx.is_isomorphic(self.star_graph, self.graph.to_nx()))
+        self.star_graph.remove_node(self.removed_node)
+        self.assert_(nx.is_isomorphic(self.star_graph, self.graph.to_nx()))
 
     def testNodeToIndex(self):
         for node in xrange(self.number_of_initial_nodes):
@@ -124,3 +108,44 @@ class TestGraphExporting(paramunittest.ParametrizedTestCase):
             self.minimized_adjacency,
             matrix)
 
+@paramunittest.parametrized(
+    (ScipyGraph, (12, )),
+    (NxGraph, ())
+)
+class TestGraphExporting(TGraphExportingBase, paramunittest.ParametrizedTestCase):
+    def setUp(self):
+        TGraphExportingBase.setUp(self)
+        self.star_graph = nx.star_graph(self.number_of_initial_nodes - 1)
+        self.adjacency = np.matrix(
+            [[0, 1, 1, 0, 1],
+             [1, 0, 0, 0, 0],
+             [1, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0],
+             [1, 0, 0, 0, 0]], dtype=bool)
+        self.minimized_adjacency = np.matrix(
+            [[0, 1, 1, 1],
+             [1, 0, 0, 0],
+             [1, 0, 0, 0],
+             [1, 0, 0, 0]], dtype=bool)
+
+@paramunittest.parametrized(
+    (DirectedScipyGraph, (12, )),
+    (NxGraph, (nx.DiGraph, ))
+)
+class TestGraphExportingDirected(TGraphExportingBase, paramunittest.ParametrizedTestCase):
+    def setUp(self):
+        TGraphExportingBase.setUp(self)
+        self.star_graph = nx.star_graph(
+            self.number_of_initial_nodes - 1)
+        self.star_graph = nx.DiGraph(data=self.star_graph.edges())
+        self.adjacency = np.matrix(
+            [[0, 1, 1, 0, 1],
+             [0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0]], dtype=bool)
+        self.minimized_adjacency = np.matrix(
+            [[0, 1, 1, 1],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]], dtype=bool)
