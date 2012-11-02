@@ -253,7 +253,7 @@ class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase)
     @unittest.skipUnless(*can_test('scipy'))
     def testToScipyElements(self):
         from numpy import testing
-        A = self.graph.to_scipy().toarray()
+        A = self.graph.to_scipy().tolil().toarray()
         B = zeros((self.size, self.size))
         B[0, 1:] = True
         B[1:, 0] = True
