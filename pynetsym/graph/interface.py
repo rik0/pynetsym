@@ -260,6 +260,14 @@ class IGraph(Interface):
           stopped.
         """
 
+    def apply(self, func, *args, **kwargs):
+        """
+        Applies func to the underlying graph representation as first argument.
+
+        *args and **kwargs are passed as well.
+        @return the value of the function call.
+        """
+
 #    def copy_into(self, matrix):
 #        """
 #        Copies the adjacency matrix inside the argument, if big enough.

@@ -131,6 +131,9 @@ class ScipyGraph(AbstractGraph):
         else:
             return self._to_scipy_not_minimized(sparse_type)
 
+    def apply(self, func, *args, **kwargs):
+        return func(self.matrix, *args, **kwargs)
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 

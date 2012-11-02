@@ -159,5 +159,8 @@ class NxGraph(AbstractGraph):
             if node not in self.nx_graph:
                 raise GraphError('%s node not in graph.' % node)
 
+    def apply(self, func, *args, **kwargs):
+        return func(self.nx_graph, *args, **kwargs)
+
 
 
