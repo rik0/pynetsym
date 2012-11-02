@@ -121,7 +121,7 @@ class NxGraph(AbstractGraph):
         try:
             method = self.nx_graph.predecessors
         except AttributeError:
-            return self.nx_graph.neighbors()
+            return self.nx_graph.neighbors(node)
         else:
             return method(node)
 
@@ -132,7 +132,7 @@ class NxGraph(AbstractGraph):
         try:
             method = self.nx_graph.successors
         except AttributeError:
-            return self.nx_graph.neighbors()
+            return self.nx_graph.neighbors(node)
         else:
             return method(node)
 
