@@ -156,6 +156,11 @@ class NxGraph(AbstractGraph):
     def handle(self):
         yield self.nx_graph
 
+    @property
+    @contextmanager
+    def handle_copy(self):
+        yield self.nx_graph.copy()
+
     def __contains__(self, node_index):
         return node_index in self.nx_graph
 

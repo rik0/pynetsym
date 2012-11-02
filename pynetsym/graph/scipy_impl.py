@@ -140,6 +140,11 @@ class ScipyGraph(AbstractGraph):
     def handle(self):
         yield self.matrix
 
+    @property
+    @contextmanager
+    def handle_copy(self):
+        yield self.matrix.copy()
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 

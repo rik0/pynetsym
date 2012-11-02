@@ -22,13 +22,11 @@ class TestGraphApplyNXGraph(TestSkeleton, TestCase):
     def testApply(self):
         self.assertEqual(
             len(self.expected_nodes),
-            self.graph.apply(nx.number_of_nodes)
-        )
+            self.graph.apply(nx.number_of_nodes))
 
         self.assertEqual(
             len(self.expected_nodes)-1,
-            self.graph.apply(nx.number_of_edges)
-        )
+            self.graph.apply(nx.number_of_edges))
 
     def testContext(self):
         with self.graph.handle as handle:
@@ -37,9 +35,25 @@ class TestGraphApplyNXGraph(TestSkeleton, TestCase):
                 handle.number_of_nodes())
             self.assertEqual(
                 len(self.expected_nodes)-1,
-                handle.number_of_edges()
-            )
+                handle.number_of_edges())
 
+    def testContextCopy(self):
+        with self.graph.handle_copy as handle:
+            self.assertEqual(
+                len(self.expected_nodes),
+                handle.number_of_nodes())
+            self.assertEqual(
+                len(self.expected_nodes)-1,
+                handle.number_of_edges())
+
+            handle.add_node(self.number_of_nodes)
+            self.assertEqual(
+                len(self.expected_nodes) + 1,
+                handle.number_of_nodes())
+
+        self.assertEqual(
+            len(self.expected_nodes),
+            self.graph.apply(nx.number_of_nodes))
 
 class TestGraphApplyScipy(TestSkeleton, TestCase):
 
@@ -49,11 +63,23 @@ class TestGraphApplyScipy(TestSkeleton, TestCase):
     def testApply(self):
         self.assertEqual(
             len(self.expected_nodes)-1,
-            self.graph.apply(lambda G: G.getnnz() / 2)
-        )
+            self.graph.apply(lambda G: G.getnnz() / 2))
 
     def testContext(self):
         with self.graph.handle as handle:
             self.assertEqual(
                 len(self.expected_nodes) - 1,
                 handle.getnnz()/2)
+
+    def testContextCopy(self):
+        with self.graph.handle_copy as handle:
+            self.assertEqual(
+                len(self.expected_nodes) - 1,
+                handle.getnnz()/2)
+            handle[2,3] = handle[3,2] = True
+            self.assertEqual(
+                len(self.expected_nodes),
+                handle.getnnz()/2)
+        self.assertEqual(
+            len(self.expected_nodes)-1,
+            self.graph.apply(lambda G: G.getnnz() / 2))

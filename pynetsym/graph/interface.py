@@ -277,6 +277,19 @@ class IGraph(Interface):
             with graph.handle as handle:
                 print clustering_coefficient(handle)
             ```
+        """
+
+    @property
+    def handle_copy(self):
+        """
+        Used to create a context:
+
+            ```
+            with graph.handle_copy as handle:
+                print clustering_coefficient(handle)
+            ```
+        """
+
 
 #    def copy_into(self, matrix):
 #        """
