@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from itertools import izip
 import logging
 from numpy import flatnonzero, fromiter, ix_
@@ -133,6 +134,11 @@ class ScipyGraph(AbstractGraph):
 
     def apply(self, func, *args, **kwargs):
         return func(self.matrix, *args, **kwargs)
+
+    @property
+    @contextmanager
+    def handle(self):
+        yield self.matrix
 
     def __contains__(self, node_index):
         return node_index in self._nodes

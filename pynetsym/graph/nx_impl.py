@@ -1,4 +1,5 @@
 from .import interface
+from contextlib import contextmanager
 
 import networkx as nx
 import numpy
@@ -135,7 +136,6 @@ class NxGraph(AbstractGraph):
         else:
             return method(node)
 
-
     def number_of_nodes(self):
         return self.nx_graph.number_of_nodes()
 
@@ -148,6 +148,14 @@ class NxGraph(AbstractGraph):
     def is_directed(self):
         return self.nx_graph.is_directed()
 
+    def apply(self, func, *args, **kwargs):
+        return func(self.nx_graph, *args, **kwargs)
+
+    @property
+    @contextmanager
+    def handle(self):
+        yield self.nx_graph
+
     def __contains__(self, node_index):
         return node_index in self.nx_graph
 
@@ -159,8 +167,8 @@ class NxGraph(AbstractGraph):
             if node not in self.nx_graph:
                 raise GraphError('%s node not in graph.' % node)
 
-    def apply(self, func, *args, **kwargs):
-        return func(self.nx_graph, *args, **kwargs)
+
+
 
 
 

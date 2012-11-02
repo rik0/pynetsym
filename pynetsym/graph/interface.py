@@ -268,6 +268,16 @@ class IGraph(Interface):
         @return the value of the function call.
         """
 
+    @property
+    def handle(self):
+        """
+        Used to create a context:
+
+            ```
+            with graph.handle as handle:
+                print clustering_coefficient(handle)
+            ```
+
 #    def copy_into(self, matrix):
 #        """
 #        Copies the adjacency matrix inside the argument, if big enough.

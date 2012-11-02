@@ -30,6 +30,17 @@ class TestGraphApplyNXGraph(TestSkeleton, TestCase):
             self.graph.apply(nx.number_of_edges)
         )
 
+    def testContext(self):
+        with self.graph.handle as handle:
+            self.assertEqual(
+                len(self.expected_nodes),
+                handle.number_of_nodes())
+            self.assertEqual(
+                len(self.expected_nodes)-1,
+                handle.number_of_edges()
+            )
+
+
 class TestGraphApplyScipy(TestSkeleton, TestCase):
 
     def makeGraph(self):
@@ -40,3 +51,9 @@ class TestGraphApplyScipy(TestSkeleton, TestCase):
             len(self.expected_nodes)-1,
             self.graph.apply(lambda G: G.getnnz() / 2)
         )
+
+    def testContext(self):
+        with self.graph.handle as handle:
+            self.assertEqual(
+                len(self.expected_nodes) - 1,
+                handle.getnnz()/2)
