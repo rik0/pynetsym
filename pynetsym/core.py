@@ -176,12 +176,10 @@ class Agent(t.HasTraits):
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
             message =  "{%s} SEND %s to %s" % (
-                gl, payload, receiver.id
-            )
+                gl, payload, receiver.id)
         else:
             message =  "SEND %s to %s" % (
-                payload, receiver.id
-            )
+                payload, receiver.id)
         self.send_log(message)
 
     def log_received(self, msg):
