@@ -13,6 +13,11 @@ from traits import api as t
 from pynetsym.error import PyNetSymError
 from pynetsym.util import SequenceAsyncResult
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
 __all__ = [
     'Agent',
     'Logger',
@@ -34,10 +39,12 @@ class Message(_M):
     """
     An immutable object that is used to send a message among agents.
     """
+
     def __repr__(self):
         return '%s:%s%s' % (self.sender, self.payload, self.parameters)
 
     __str__ = __repr__
+
 
 class Agent(t.HasTraits):
     """
@@ -124,12 +131,8 @@ class Agent(t.HasTraits):
         del self._node_db
         del self._greenlet
 
-    def on_error(self, source):
-        from cStringIO import StringIO
-
+    def _create_error_text(self, source):
         ss = StringIO()
-
-        print >> ss, '=' * 80
         print >> ss, self
         print >> ss, source
         print >> ss, 'succesful:', source.successful()
@@ -139,9 +142,15 @@ class Agent(t.HasTraits):
             print >> ss, 'messages:', self._default_queue.qsize()
             if self._default_queue.qsize():
                 import pprint
-                pprint.pprint(self._default_queue.queue, stream=ss)
-        print ss.getvalue()
 
+                pprint.pprint(
+                    [message for message, _result in self._default_queue.queue],
+                    stream=ss)
+        return ss.getvalue()
+
+    def on_error(self, source):
+        text = self._create_error_text(source)
+        self._get_logger().put_error(self, text)
 
     def kill(self):
         return self._greenlet.kill()
@@ -175,19 +184,19 @@ class Agent(t.HasTraits):
     def log_sent(self, payload, receiver):
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
-            message =  "{%s} SEND %s to %s" % (
+            message = "{%s} SEND %s to %s" % (
                 gl, payload, receiver.id)
         else:
-            message =  "SEND %s to %s" % (
+            message = "SEND %s to %s" % (
                 payload, receiver.id)
         self.send_log(message)
 
     def log_received(self, msg):
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
-            message =  "RECV {%s} %s" % (gl, msg)
+            message = "RECV {%s} %s" % (gl, msg)
         else:
-            message =  "RECV %s" % (msg,)
+            message = "RECV %s" % (msg,)
         self.send_log(message)
 
     def send_all(self, receivers, message, **additional_parameters):
@@ -299,11 +308,12 @@ class Agent(t.HasTraits):
                 message, result = self.read(timeout=0.01)
                 self.process(message, result)
                 del message, result
-                self.cooperate()
             except NoMessage:
                 if self.can_be_collected():
                     self._store_agent()
                     return self
+            finally:
+                self.cooperate()
 
     def unsupported_message(self, name, **additional_parameters):
         """
@@ -321,16 +331,16 @@ class Agent(t.HasTraits):
     __repr__ = __str__
 
 
-
-
 class Logger(Agent, t.SingletonHasTraits):
     DEBUG_RECEIVE = False
     DEBUG_SEND = False
 
     name = 'logger'
+    standard_stderr = sys.stderr
 
-    def __init__(self, stream):
+    def __init__(self, stream, error_stream=standard_stderr):
         self.stream = stream
+        self.error_stream = error_stream
 
     def log_entry(self, sender, message, when=None):
         if when is None:
@@ -347,12 +357,30 @@ class Logger(Agent, t.SingletonHasTraits):
                                when=time.clock()))
         self.deliver(message, result)
 
+    def put_error(self, sender, text):
+        result = event.AsyncResult()
+        message = Message(sender, 'error_message',
+                          dict(sender=sender, text=text))
+        self.deliver(message, result)
+
+    def error_message(self, sender, text):
+        ss = StringIO()
+        ss.write('=' * 10)
+        ss.write(str(sender))
+        ss.write('=' * 10)
+        ss.write('\n')
+        ss.write(text)
+        ss.write('=' * 80)
+        ss.write('\n')
+        self.error_stream.write(ss.getvalue())
+
 
 def get_logger(address_book, node_db, stream=sys.stderr):
     logger = Logger(stream)
     if not logger.started:
         logger.start(address_book, node_db)
     return logger
+
 
 class MinimalAgentRuntime(object):
     """
@@ -362,8 +390,8 @@ class MinimalAgentRuntime(object):
     """
 
     def __init__(self, address_book_factory=addressing.FlatAddressBook,
-                 node_db_factory=lambda: agent_db.AgentDB(
-                     agent_db.PythonPickler(), dict())):
+            node_db_factory=lambda: agent_db.AgentDB(
+                agent_db.PythonPickler(), dict())):
         self.address_book = address_book_factory()
         self.node_db = node_db_factory()
         self.logger = self.create_agent(Logger, stream=sys.stdout)
