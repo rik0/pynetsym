@@ -2,7 +2,6 @@ from .import interface
 from contextlib import contextmanager
 
 import networkx as nx
-import numpy
 
 from scipy import sparse
 from numpy import fromiter, array
