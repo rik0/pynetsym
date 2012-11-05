@@ -15,6 +15,7 @@ else:
     from nx_impl import NxGraph
     __all__.append('NxGraph')
     register('networkx')
+    default_graph = NxGraph
 
 try:
     import scipy.sparse
