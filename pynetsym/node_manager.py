@@ -31,11 +31,19 @@ class NodeManager(core.Agent):
 
     # TODO: deal with returning identifiers.
 
-    def fill_node(self, node):
+    def setup_node(self, node, greenlet):
         self.graph.add_node(node.id)
-        node._greenlet.link_value(node._remove_from_network)
+        greenlet.link_value(node.deactivate_node)
         node.graph = self.graph
-        self.group.add(node._greenlet)
+        self.group.add(greenlet)
+
+    def unset_node(self, node, greenlet):
+        del node.graph
+        self.group.discard(greenlet)
+
+        if isinstance(greenlet.value, core.GreenletExit):
+            self.graph.remove_node(node.id)
+            print 'Removing', node.id
 
     def create_node(self, cls, parameters):
         """
