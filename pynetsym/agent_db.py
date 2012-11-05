@@ -86,7 +86,7 @@ class AgentDB(HasTraits):
 
     def __init__(self, pickling_module, storage):
         """
-        Creates a new NodeDB.
+        Creates a new AgentDB.
 
         @param pickling_module: something that is able to pickle Python
             objects. Pickle interface expected (loads and dumps).
