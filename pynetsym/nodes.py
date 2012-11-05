@@ -28,16 +28,13 @@ class Node(core.Agent):
         """
         self.set(**attributes)
 
-    def _remove_from_network(self, source):
-        if isinstance(source.value, core.GreenletExit):
-            self.graph.remove_node(self.id)
-            print 'Removing', self
-            pass
+    def deactivate_node(self, greenlet):
+        self._node_manager.unset_node(self, greenlet)
 
     def start(self, address_book, node_db, identifier=None):
         super(Node, self).start(address_book, node_db, identifier)
         self._node_manager =  self._resolve(NodeManager.name)
-        self._node_manager.fill_node(self)
+        self._node_manager.setup_node(self, self._greenlet)
         return self
 
     def __str__(self):
