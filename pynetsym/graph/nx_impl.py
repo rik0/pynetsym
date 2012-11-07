@@ -212,6 +212,7 @@ class NxRandomSelector(AbstractRandomSelector):
             extraction_probability = degree + 1
             self.repeated_nodes[counter:counter+extraction_probability] = node
             counter += extraction_probability
+        self._initialized_preferential_attachment = True
 
     def extract_preferential_attachment(self):
         return random.choice(self.repeated_nodes)
