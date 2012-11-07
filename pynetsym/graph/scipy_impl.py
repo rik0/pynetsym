@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 from itertools import izip
 import logging
+import random
 from numpy import flatnonzero, fromiter, ix_
 from scipy import sparse
 from traits.api import implements, Callable, Instance
-
+from traits.trait_types import DelegatesTo
 
 from .interface import IGraph
 from ._abstract import AbstractGraph
@@ -16,8 +17,8 @@ class ScipyGraph(AbstractGraph):
 
     matrix_factory = Callable(sparse.lil_matrix)
     matrix = Instance(
-            sparse.spmatrix, factory=matrix_factory,
-            allow_none=False)
+        sparse.spmatrix, factory=matrix_factory,
+        allow_none=False)
 
     _nodes = Instance(set, args=())
 
@@ -27,6 +28,8 @@ class ScipyGraph(AbstractGraph):
     def __init__(self, max_nodes=None, **kwargs):
         matrix = kwargs.pop('matrix', None)
         nodes = kwargs.pop('nodes', None)
+        self.random_selector = kwargs.pop('random_selector',
+                                          ScipyRandomSelector(graph_container=self))
 
         if matrix is not None:
             self.matrix = matrix
@@ -37,7 +40,7 @@ class ScipyGraph(AbstractGraph):
                 max_nodes = min(max_nodes, matrix.shape[0])
                 self._nodes = set(xrange(max_nodes))
             else:
-                self._nodes =  set(xrange(matrix.shape[0]))
+                self._nodes = set(xrange(matrix.shape[0]))
         elif max_nodes is None:
             self.matrix = self.matrix_factory(
                 (max_nodes, max_nodes), dtype=bool)
@@ -49,20 +52,20 @@ class ScipyGraph(AbstractGraph):
         node_index = self.index_store.take()
         if node_index >= self._max_nodes():
             self._enlarge(node_index)
-        #heappush(self._nodes, node_index)
+            #heappush(self._nodes, node_index)
         self._nodes.add(node_index)
         return node_index
 
     def _remove_node_sure(self, node):
         self._nodes.remove(node)
-        self.matrix[node,:] = False
+        self.matrix[node, :] = False
         self.matrix[:, node] = False
 
     def add_edge(self, source, target):
         # consider direct vs. undirected
         self._valid_nodes(source, target)
-        self.matrix[source, target] = \
-            self.matrix[target, source] = True
+        self.matrix[source, target] =\
+        self.matrix[target, source] = True
 
     def number_of_nodes(self):
         return len(self._nodes)
@@ -73,8 +76,8 @@ class ScipyGraph(AbstractGraph):
 
     def remove_edge(self, source, target):
         if self.matrix[source, target]:
-            self.matrix[source, target] = \
-                self.matrix[target, source] = False
+            self.matrix[source, target] =\
+            self.matrix[target, source] = False
         else:
             raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
@@ -115,6 +118,7 @@ class ScipyGraph(AbstractGraph):
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
+
             return self._make_networkx(networkx.Graph())
         else:
             raise NotImplementedError()
@@ -163,6 +167,7 @@ class ScipyGraph(AbstractGraph):
     def handle_copy(self):
         yield self.matrix.copy()
 
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 
@@ -183,8 +188,6 @@ class ScipyGraph(AbstractGraph):
         for node in nodes:
             if node not in self._nodes:
                 raise GraphError('%s node not in graph.' % node)
-
-
 
 
 class DirectedScipyGraph(ScipyGraph):
@@ -218,16 +221,35 @@ class DirectedScipyGraph(ScipyGraph):
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
+
             return self._make_networkx(networkx.DiGraph())
         else:
             raise NotImplementedError()
 
+
 class ScipyRandomSelector(AbstractRandomSelector):
     implements(IRandomSelector)
 
-    def random_node(self):
+    nodes = DelegatesTo('graph_container', prefix='_nodes')
+    matrix = DelegatesTo('graph_container')
+
+    def remove_node(self, node):
         pass
 
     def add_node(self, node):
         pass
+
+    def remove_edge(self, source, target):
+        pass
+
+    def add_egde(self, source, target):
+        pass
+
+    def random_node(self):
+        return random.choice(list(self.nodes))
+
+    def random_edge(self):
+        index = random.randrange(0, self.matrix.nnz)
+        rows, cols = self.matrix.nonzero()
+        return rows[index], cols[index]
 

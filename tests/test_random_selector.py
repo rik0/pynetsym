@@ -95,13 +95,12 @@ class TestNxRandomSelector(AbstractTestRandomSelector, TestCase):
         self.graph = NxGraph(data=star.edges())
         self.random_selector = self.graph.random_selector
 
-@skip('not ready')
 class TestScipyRandomSelector(AbstractTestRandomSelector, TestCase):
     def setUp(self):
         self.nodes = 10
         matrix = sparse.lil_matrix(self.nodes)
-        matrix[0, :] = self.matrix[:, 0] = 1
+        matrix[0, :] = matrix[:, 0] = 1
         matrix[0,0]= 0
         self.graph = ScipyGraph(matrix=matrix)
 
-        self.random_selector = ScipyRandomSelector(graph=self.matrix)
+        self.random_selector = self.graph.random_selector
