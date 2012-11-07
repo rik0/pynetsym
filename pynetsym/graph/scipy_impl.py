@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from itertools import izip
 import logging
 import random
-from numpy import flatnonzero, fromiter, ix_
+from numpy import flatnonzero, fromiter, ix_, concatenate, hstack, append
 from scipy import sparse
 from traits.api import implements, Callable, Instance
 from traits.trait_types import DelegatesTo
@@ -253,3 +253,8 @@ class ScipyRandomSelector(AbstractRandomSelector):
         rows, cols = self.matrix.nonzero()
         return rows[index], cols[index]
 
+    def prepare_preferential_attachment(self):
+        self.repeated_nodes = hstack(
+            self.matrix.nonzero())
+        self.repeated_nodes = append(self.repeated_nodes, self.nodes)
+        self._initialized_preferential_attachment = True

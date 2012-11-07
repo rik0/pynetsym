@@ -61,3 +61,6 @@ class AbstractRandomSelector(HasTraits):
 
     def extract_preferential_attachment(self):
         raise NotImplementedError()
+
+class RepeatedNodesRandomSelector(AbstractRandomSelector):
+    pass

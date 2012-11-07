@@ -25,7 +25,7 @@ class AbstractTestRandomSelector(object):
             except IndexError:
                 pass
             else:
-                self.assertEqual(old_edges - node_degree * 2,
+                self.assertEqual(old_edges - node_degree * 2 - 1,
                                  len(self.random_selector.repeated_nodes))
 
     def testRemoveNodeUnprepared(self):
