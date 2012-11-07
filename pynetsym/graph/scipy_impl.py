@@ -1,8 +1,8 @@
 from contextlib import contextmanager
 from itertools import izip
-import logging
 import random
-from numpy import flatnonzero, fromiter, ix_, concatenate, hstack, append
+import numpy as np
+from numpy import flatnonzero, fromiter, hstack, append
 from scipy import sparse
 from traits.api import implements, Callable, Instance
 from traits.trait_types import DelegatesTo
@@ -10,7 +10,7 @@ from traits.trait_types import DelegatesTo
 from .interface import IGraph
 from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
-from pynetsym.graph.random_selector import AbstractRandomSelector, IRandomSelector
+from pynetsym.graph.random_selector import IRandomSelector, RepeatedNodesRandomSelector
 
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
@@ -54,18 +54,21 @@ class ScipyGraph(AbstractGraph):
             self._enlarge(node_index)
             #heappush(self._nodes, node_index)
         self._nodes.add(node_index)
+        self.random_selector.add_node(node_index)
         return node_index
 
     def _remove_node_sure(self, node):
         self._nodes.remove(node)
         self.matrix[node, :] = False
         self.matrix[:, node] = False
+        self.random_selector.remove_node(node)
 
     def add_edge(self, source, target):
         # consider direct vs. undirected
         self._valid_nodes(source, target)
         self.matrix[source, target] =\
         self.matrix[target, source] = True
+        self.random_selector.add_edge(source, target)
 
     def number_of_nodes(self):
         return len(self._nodes)
@@ -78,6 +81,7 @@ class ScipyGraph(AbstractGraph):
         if self.matrix[source, target]:
             self.matrix[source, target] =\
             self.matrix[target, source] = False
+            self.random_selector.remove_edge(source, target)
         else:
             raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
@@ -227,23 +231,11 @@ class DirectedScipyGraph(ScipyGraph):
             raise NotImplementedError()
 
 
-class ScipyRandomSelector(AbstractRandomSelector):
+class ScipyRandomSelector(RepeatedNodesRandomSelector):
     implements(IRandomSelector)
 
     nodes = DelegatesTo('graph_container', prefix='_nodes')
     matrix = DelegatesTo('graph_container')
-
-    def remove_node(self, node):
-        pass
-
-    def add_node(self, node):
-        pass
-
-    def remove_edge(self, source, target):
-        pass
-
-    def add_egde(self, source, target):
-        pass
 
     def random_node(self):
         return random.choice(list(self.nodes))
@@ -256,5 +248,7 @@ class ScipyRandomSelector(AbstractRandomSelector):
     def prepare_preferential_attachment(self):
         self.repeated_nodes = hstack(
             self.matrix.nonzero())
-        self.repeated_nodes = append(self.repeated_nodes, self.nodes)
+        self.repeated_nodes = append(self.repeated_nodes,
+                                     fromiter(iter(self.nodes),
+                                              dtype=np.int32),)
         self._initialized_preferential_attachment = True

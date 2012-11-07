@@ -1,9 +1,9 @@
 from scipy import sparse
 import networkx as nx
 
-from unittest import TestCase, skip
-from pynetsym.graph.nx_impl import NxRandomSelector, NxGraph
-from pynetsym.graph.scipy_impl import ScipyRandomSelector, ScipyGraph
+from unittest import TestCase
+from pynetsym.graph.nx_impl import  NxGraph
+from pynetsym.graph.scipy_impl import  ScipyGraph
 
 class AbstractTestRandomSelector(object):
     def testAddNode(self):
@@ -102,7 +102,8 @@ class TestNxRandomSelector(AbstractTestRandomSelector, TestCase):
 class TestScipyRandomSelector(AbstractTestRandomSelector, TestCase):
     def setUp(self):
         self.nodes = 10
-        matrix = sparse.lil_matrix(self.nodes)
+        matrix = sparse.lil_matrix((self.nodes,
+                                    self.nodes), dtype=bool)
         matrix[0, :] = matrix[:, 0] = 1
         matrix[0,0]= 0
         self.graph = ScipyGraph(matrix=matrix)
