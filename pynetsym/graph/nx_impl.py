@@ -201,10 +201,17 @@ class NxRandomSelector(AbstractRandomSelector):
     def random_node(self):
         return random.choice(self.graph.nodes())
 
+    def _degree_distribution(self):
+        degrees = nx.degree(self.graph)
+        return degrees
+
+    def _number_of_edges(self):
+        return self.graph.number_of_edges()
+
     def prepare_preferential_attachment(self):
         self.repeated_nodes = np.zeros(dtype=np.int32,
-                                       shape=(self.graph.number_of_edges() * 2))
-        degrees = nx.degree(self.graph)
+                                       shape=(self._number_of_edges() * 2))
+        degrees = self._degree_distribution()
         counter = 0
         for node, degree in degrees.iteritems():
             self.repeated_nodes[counter:counter+degree] = node
