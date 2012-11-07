@@ -11,7 +11,7 @@ import numpy as np
 from traits.api import Instance
 from traits.api import implements
 from traits.trait_numeric import Array
-from traits.trait_types import Delegate, DelegatesTo
+from traits.trait_types import DelegatesTo
 
 from ._abstract import AbstractGraph
 from .error import GraphError
@@ -205,12 +205,13 @@ class NxRandomSelector(AbstractRandomSelector):
 
     def prepare_preferential_attachment(self):
         self.repeated_nodes = np.zeros(dtype=np.int32,
-                                       shape=(self.graph.number_of_edges() * 3))
+                                       shape=(self.graph.number_of_edges() * 2
+                                              + self.graph.number_of_nodes()))
         degrees = nx.degree(self.graph)
         counter = 0
         for node, degree in degrees.iteritems():
             extraction_probability = degree + 1
-            self.repeated_nodes[counter:counter+extraction_probability] = node
+            self.repeated_nodes[counter:counter + extraction_probability] = node
             counter += extraction_probability
         self._initialized_preferential_attachment = True
 
@@ -230,8 +231,8 @@ class NxRandomSelector(AbstractRandomSelector):
             max_index = max(source_index, target_index)
             self.repeated_nodes = np.hstack(
                 [self.repeated_nodes[:min_index],
-                 self.repeated_nodes[min_index+1:max_index],
-                 self.repeated_nodes[max_index+1:]])
+                 self.repeated_nodes[min_index + 1:max_index],
+                 self.repeated_nodes[max_index + 1:]])
 
 
     def remove_node(self, node):
