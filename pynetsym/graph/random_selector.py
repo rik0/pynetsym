@@ -51,7 +51,7 @@ class AbstractRandomSelector(HasTraits):
         if not self._initialized_preferential_attachment:
             self.prepare_preferential_attachment()
             self._initialized_preferential_attachment = True
-        return self.extract_preferential_attachment()
+        return int(self.extract_preferential_attachment())
 
     def prepare_preferential_attachment(self):
         raise NotImplementedError()

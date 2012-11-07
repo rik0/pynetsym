@@ -14,9 +14,8 @@ class TestBA(unittest.TestCase):
                 starting_network_size=starting_network_size,
                 steps=steps,
                 starting_connections=starting_connections)
-        graph = sim.graph.handle
-
-        self.assertEquals(
-               starting_network_size + steps,
-               graph.number_of_nodes())
+        with sim.graph.handle as graph:
+            self.assertEquals(
+                   starting_network_size + steps,
+                   graph.number_of_nodes())
 

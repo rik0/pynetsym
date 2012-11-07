@@ -10,7 +10,7 @@ class Node(Node):
         forbidden = set()
         forbidden.add(self.id)
         while self.starting_edges:
-            random_node = self.graph.preferential_attachment_node()
+            random_node = self.graph.random_selector.preferential_attachment()
             if random_node not in forbidden:
                 self.link_to(random_node)
                 forbidden.add(random_node)
