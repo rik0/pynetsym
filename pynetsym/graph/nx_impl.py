@@ -205,12 +205,13 @@ class NxRandomSelector(AbstractRandomSelector):
 
     def prepare_preferential_attachment(self):
         self.repeated_nodes = np.zeros(dtype=np.int32,
-                                       shape=(self.graph.number_of_edges() * 2))
+                                       shape=(self.graph.number_of_edges() * 3))
         degrees = nx.degree(self.graph)
         counter = 0
         for node, degree in degrees.iteritems():
-            self.repeated_nodes[counter:counter+degree] = node
-            counter += degree
+            extraction_probability = degree + 1
+            self.repeated_nodes[counter:counter+extraction_probability] = node
+            counter += extraction_probability
 
     def extract_preferential_attachment(self):
         return random.choice(self.repeated_nodes)
