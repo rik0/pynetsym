@@ -24,9 +24,26 @@ class ScipyGraph(AbstractGraph):
     def _max_nodes(self):
         return self.matrix.shape[0]
 
-    def __init__(self, max_nodes):
-        self.matrix = self.matrix_factory(
-            (max_nodes, max_nodes), dtype=bool)
+    def __init__(self, max_nodes=None, **kwargs):
+        matrix = kwargs.pop('matrix', None)
+        nodes = kwargs.pop('nodes', None)
+
+        if matrix is not None:
+            self.matrix = matrix
+            self.matrix_factory = type(matrix)
+            if nodes is not None:
+                self._nodes = nodes
+            elif max_nodes is not None:
+                max_nodes = min(max_nodes, matrix.shape[0])
+                self._nodes = set(xrange(max_nodes))
+            else:
+                self._nodes =  set(xrange(matrix.shape[0]))
+        elif max_nodes is None:
+            self.matrix = self.matrix_factory(
+                (max_nodes, max_nodes), dtype=bool)
+        else:
+            raise ValueError('Bad parameters %s, %s' % (max_nodes, kwargs))
+        super(ScipyGraph, self).__init__(**kwargs)
 
     def add_node(self):
         node_index = self.index_store.take()
