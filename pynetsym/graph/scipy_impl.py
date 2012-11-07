@@ -208,4 +208,9 @@ class DirectedScipyGraph(ScipyGraph):
 class ScipyRandomSelector(AbstractRandomSelector):
     implements(IRandomSelector)
 
-    0
+    def random_node(self):
+        pass
+
+    def add_node(self, node):
+        pass
+

@@ -11,6 +11,7 @@ import numpy as np
 from traits.api import Instance
 from traits.api import implements
 from traits.trait_numeric import Array
+from traits.trait_types import Delegate, DelegatesTo
 
 from ._abstract import AbstractGraph
 from .error import GraphError
@@ -25,7 +26,7 @@ class NxGraph(AbstractGraph):
 
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
         random_selector = kwargs.pop('random_selector',
-                                     NxRandomSelector(graph=self.nx_graph))
+                                     NxRandomSelector(graph_container=self))
         self.nx_graph = graph_type(data=data, **kwargs)
         self.random_selector = random_selector
 
@@ -192,7 +193,7 @@ class NxRandomSelector(AbstractRandomSelector):
     implements(IRandomSelector)
     # FIXME: this can be made faster!
 
-    graph = Instance(nx.Graph, allow_none=False)
+    graph = DelegatesTo('graph_container', prefix='nx_graph')
     repeated_nodes = Array(dtype=np.int32, shape=(None, ))
 
     def random_edge(self):
@@ -201,17 +202,11 @@ class NxRandomSelector(AbstractRandomSelector):
     def random_node(self):
         return random.choice(self.graph.nodes())
 
-    def _degree_distribution(self):
-        degrees = nx.degree(self.graph)
-        return degrees
-
-    def _number_of_edges(self):
-        return self.graph.number_of_edges()
 
     def prepare_preferential_attachment(self):
         self.repeated_nodes = np.zeros(dtype=np.int32,
-                                       shape=(self._number_of_edges() * 2))
-        degrees = self._degree_distribution()
+                                       shape=(self.graph.number_of_edges() * 2))
+        degrees = nx.degree(self.graph)
         counter = 0
         for node, degree in degrees.iteritems():
             self.repeated_nodes[counter:counter+degree] = node

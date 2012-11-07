@@ -1,6 +1,8 @@
 from traits.api import Interface
 from traits.api import HasTraits, implements
 from traits.api import false
+from traits.trait_types import Instance
+from pynetsym.graph import IGraph
 
 class IRandomSelector(Interface):
     def random_node(self):
@@ -39,6 +41,7 @@ class IRandomSelector(Interface):
 class AbstractRandomSelector(HasTraits):
     implements(IRandomSelector)
 
+    graph_container = Instance(IGraph)
     _initialized_preferential_attachment = false
 
     def preferential_attachment(self):
