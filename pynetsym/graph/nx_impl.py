@@ -15,7 +15,7 @@ from traits.trait_types import DelegatesTo
 
 from ._abstract import AbstractGraph
 from .error import GraphError
-from .random_selector import IRandomSelector, AbstractRandomSelector
+from .random_selector import IRandomSelector, AbstractRandomSelector, RepeatedNodesRandomSelector
 from .import interface
 
 
@@ -189,12 +189,11 @@ class NxGraph(AbstractGraph):
                 raise GraphError('%s node not in graph.' % node)
 
 
-class NxRandomSelector(AbstractRandomSelector):
+class NxRandomSelector(RepeatedNodesRandomSelector):
     implements(IRandomSelector)
     # FIXME: this can be made faster!
 
     graph = DelegatesTo('graph_container', prefix='nx_graph')
-    repeated_nodes = Array(dtype=np.int32, shape=(None, ))
 
     def random_edge(self):
         return random.choice(self.graph.edges())
@@ -215,34 +214,16 @@ class NxRandomSelector(AbstractRandomSelector):
             counter += extraction_probability
         self._initialized_preferential_attachment = True
 
-    def extract_preferential_attachment(self):
-        return random.choice(self.repeated_nodes)
-
-    def add_edge(self, source, target):
-        if self._initialized_preferential_attachment:
-            self.repeated_nodes = np.append(self.repeated_nodes, [source, target])
-
-    def remove_edge(self, source, target):
-        if self._initialized_preferential_attachment:
-            self.repeated_nodes.sort()
-            # algorithm supposes source and target are in the array!
-            source_index = self.repeated_nodes.searchsorted(source)
-            target_index = self.repeated_nodes.searchsorted(target)
-            min_index = min(source_index, target_index)
-            max_index = max(source_index, target_index)
-            self.repeated_nodes = np.hstack(
-                [self.repeated_nodes[:min_index],
-                 self.repeated_nodes[min_index + 1:max_index],
-                 self.repeated_nodes[max_index + 1:]])
 
 
-    def remove_node(self, node):
-        self._initialized_preferential_attachment = False
-        self.repeated_nodes = np.zeros(0, dtype=np.int32)
 
-    def add_node(self, node):
-        if self._initialized_preferential_attachment:
-            self.repeated_nodes = np.append(self.repeated_nodes, node)
+
+
+
+
+
+
+
 
 
 
