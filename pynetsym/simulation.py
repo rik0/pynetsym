@@ -1,4 +1,4 @@
-from pynetsym import addressing
+from pynetsym import addressing, graph
 from pynetsym import agent_db
 from pynetsym import configuration
 from pynetsym import core
@@ -95,7 +95,7 @@ class Simulation(object):
         Returns the factory used to build the graph.
         @rtype: callable
         """
-        return storage.NXGraphWrapper
+        return graph.default_graph
 
     @classproperty
     def clock_type(self):
@@ -200,15 +200,19 @@ class Simulation(object):
         termination.TerminationChecker(self.graph,
                                        termination.count_down(self.steps)
         )
-        self.configurator_type = self.configurator_type(
+        self.configurator = self.configurator_type(
             **self._simulation_parameters)
         self.node_manager = NodeManager(self.graph)
 
     def pre_configure_network(self):
         self.termination_checker.start(self.address_book, self.node_db)
         self.node_manager.start(self.address_book, self.node_db)
-        self.configurator_type.start(self.address_book, self.node_db)
-        self.configurator_type.join()
+        self.configurator.start(self.address_book, self.node_db)
+        # FIXME: clean this code! Too much dependence from internals!
+        self.node_manager._greenlet.link(self.configurator._greeenlet)
+        self.configurator.join()
+        self.node_manager._greenlet.unlink(self.configurator._greeenlet)
+
 
     def create_simulation_agents(self):
         self.activator = self.activator_type(

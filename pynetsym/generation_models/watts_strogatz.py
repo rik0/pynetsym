@@ -1,8 +1,7 @@
 import random
-from traits.trait_types import Range, Int
 
+from traits.api import Range, Int
 from pynetsym import Node, Activator, Simulation, BasicConfigurator
-
 
 
 class Node(Node):
@@ -15,9 +14,9 @@ class Node(Node):
             neighbors = self.graph.neighbors(self.id)
             if (random.random() < self.rewiring_probability
                     and index in neighbors):
-                random_node = self.graph.random_node()
+                random_node = self.graph.random_selector.random_node()
                 while random_node in neighbors:
-                    random_node = self.graph.random_node()
+                    random_node = self.graph.random_selector.random_node()
                 self.graph.remove_edge(self.id, index)
                 self.graph.add_edge(self.id, random_node)
             #self.cooperate()
@@ -63,6 +62,6 @@ if __name__ == '__main__':
     sim = WS()
     sim.run()
 
-    graph = sim.graph.handle
-    print graph.number_of_nodes()
-    print graph.number_of_edges()
+    with sim.graph.handle as graph:
+        print graph.number_of_nodes()
+        print graph.number_of_edges()

@@ -11,9 +11,6 @@ class NodeManager(core.Agent):
 
     """
     name = 'manager'
-
-    id_store = Instance(IntIdentifierStore, allow_none=False, args=())
-
     """
     the registered name in the L{address book<AddressBook>}
     """
@@ -29,10 +26,7 @@ class NodeManager(core.Agent):
         self.failures = []
         self.group = Group()
 
-    # TODO: deal with returning identifiers.
-
     def setup_node(self, node, greenlet):
-        self.graph.add_node(node.id)
         greenlet.link_value(node.deactivate_node)
         node.graph = self.graph
         self.group.add(greenlet)
@@ -59,7 +53,7 @@ class NodeManager(core.Agent):
         @rtype: int | str
         """
         node = cls(**parameters)
-        identifier = self.id_store.take()
+        identifier = self.graph.add_node()
         node.start(self._address_book, self._node_db, identifier)
         return identifier
 

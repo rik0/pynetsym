@@ -1,20 +1,20 @@
 import traits.api as t
 
 import pynetsym.core as core
-import pynetsym.storage as storage
-
+from pynetsym import graph
 from pynetsym.node_manager import NodeManager
 
 __all__ = [
     'Node'
 ]
 
+
 class Node(core.Agent):
     """
     A Node in the social network.
     """
 
-    graph = t.Trait(storage.GraphWrapper, transient=True, allow_none=False)
+    graph = t.Trait(graph.IGraph, transient=True, allow_none=False)
     _node_manager = t.Trait(NodeManager, transient=True, allow_none=False)
 
     #_ = t.Disallow()
