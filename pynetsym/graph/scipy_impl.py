@@ -12,6 +12,37 @@ from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
 from pynetsym.graph.random_selector import IRandomSelector, RepeatedNodesRandomSelector
 
+class ScipyRandomSelector(RepeatedNodesRandomSelector):
+    implements(IRandomSelector)
+
+    nodes = DelegatesTo('graph_container', prefix='_nodes')
+    matrix = DelegatesTo('graph_container')
+
+    def random_node(self):
+        return random.choice(list(self.nodes))
+
+    def random_edge(self):
+        index = random.randrange(0, self.matrix.nnz)
+        rows, cols = self.matrix.nonzero()
+        return rows[index], cols[index]
+
+    def prepare_preferential_attachment(self):
+        self.repeated_nodes = hstack(
+            sparse.triu(self.matrix, format='coo').nonzero())
+        self.repeated_nodes = append(self.repeated_nodes,
+                                     fromiter(iter(self.nodes),
+                                              dtype=np.int32),)
+        self._initialized_preferential_attachment = True
+
+class DirectedScipyRandomSelector(ScipyRandomSelector):
+    def prepare_preferential_attachment(self):
+        self.repeated_nodes = hstack(
+            self.matrix.nonzero())
+        self.repeated_nodes = append(self.repeated_nodes,
+                                     fromiter(iter(self.nodes),
+                                              dtype=np.int32),)
+        self._initialized_preferential_attachment = True
+
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
 
@@ -22,6 +53,8 @@ class ScipyGraph(AbstractGraph):
 
     _nodes = Instance(set, args=())
 
+    random_selector_factory = Callable(ScipyRandomSelector)
+
     def _max_nodes(self):
         return self.matrix.shape[0]
 
@@ -29,7 +62,7 @@ class ScipyGraph(AbstractGraph):
         matrix = kwargs.pop('matrix', None)
         nodes = kwargs.pop('nodes', None)
         self.random_selector = kwargs.pop('random_selector',
-                                          ScipyRandomSelector(graph_container=self))
+                                          self.random_selector_factory(graph_container=self))
 
         if matrix is not None:
             self.matrix = matrix
@@ -69,6 +102,7 @@ class ScipyGraph(AbstractGraph):
         self.matrix[source, target] =\
         self.matrix[target, source] = True
         self.random_selector.add_edge(source, target)
+
 
     def number_of_nodes(self):
         return len(self._nodes)
@@ -195,17 +229,21 @@ class ScipyGraph(AbstractGraph):
 
 
 class DirectedScipyGraph(ScipyGraph):
+    random_selector_factory = DirectedScipyRandomSelector
+
     def number_of_edges(self):
         return self.matrix.nnz
 
     def add_edge(self, source, target):
         self._valid_nodes(source, target)
         self.matrix[source, target] = True
+        self.random_selector.add_edge(source, target)
 
     def remove_edge(self, source, target):
         self._valid_nodes(source, target)
         if self.matrix[source, target]:
             self.matrix[source, target] = False
+            self.random_selector.remove_edge(source, target)
         else:
             raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
@@ -231,24 +269,3 @@ class DirectedScipyGraph(ScipyGraph):
             raise NotImplementedError()
 
 
-class ScipyRandomSelector(RepeatedNodesRandomSelector):
-    implements(IRandomSelector)
-
-    nodes = DelegatesTo('graph_container', prefix='_nodes')
-    matrix = DelegatesTo('graph_container')
-
-    def random_node(self):
-        return random.choice(list(self.nodes))
-
-    def random_edge(self):
-        index = random.randrange(0, self.matrix.nnz)
-        rows, cols = self.matrix.nonzero()
-        return rows[index], cols[index]
-
-    def prepare_preferential_attachment(self):
-        self.repeated_nodes = hstack(
-            self.matrix.nonzero())
-        self.repeated_nodes = append(self.repeated_nodes,
-                                     fromiter(iter(self.nodes),
-                                              dtype=np.int32),)
-        self._initialized_preferential_attachment = True

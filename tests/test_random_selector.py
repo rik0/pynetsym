@@ -3,7 +3,7 @@ import networkx as nx
 
 from unittest import TestCase
 from pynetsym.graph.nx_impl import  NxGraph
-from pynetsym.graph.scipy_impl import  ScipyGraph
+from pynetsym.graph.scipy_impl import  ScipyGraph, DirectedScipyGraph
 
 class AbstractTestRandomSelector(object):
     def testAddNode(self):
@@ -107,5 +107,16 @@ class TestScipyRandomSelector(AbstractTestRandomSelector, TestCase):
         matrix[0, :] = matrix[:, 0] = 1
         matrix[0,0]= 0
         self.graph = ScipyGraph(matrix=matrix)
+
+        self.random_selector = self.graph.random_selector
+
+class TestDirectedScipyRandomSelector(AbstractTestRandomSelector, TestCase):
+    def setUp(self):
+        self.nodes = 10
+        matrix = sparse.lil_matrix((self.nodes,
+                                    self.nodes), dtype=bool)
+        matrix[0, :] = matrix[:, 0] = 1
+        matrix[0,0]= 0
+        self.graph = DirectedScipyGraph(matrix=matrix)
 
         self.random_selector = self.graph.random_selector
