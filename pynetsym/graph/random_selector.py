@@ -2,7 +2,7 @@ from traits.api import Interface
 from traits.api import HasTraits, implements
 from traits.api import false
 
-class RandomSelector(Interface):
+class IRandomSelector(Interface):
     def random_node(self):
         """
         Return a random node
@@ -37,7 +37,7 @@ class RandomSelector(Interface):
 
 
 class AbstractRandomSelector(HasTraits):
-    implements(RandomSelector)
+    implements(IRandomSelector)
 
     _initialized_preferential_attachment = false
 

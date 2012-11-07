@@ -297,6 +297,6 @@ class IGraph(Interface):
         """
         Return a random selector.
         @return: the random selector.
-        @rtype RandomSelector
+        @rtype IRandomSelector
         """
         return None

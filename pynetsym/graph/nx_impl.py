@@ -14,7 +14,7 @@ from traits.trait_numeric import Array
 
 from ._abstract import AbstractGraph
 from .error import GraphError
-from .random_selector import RandomSelector, AbstractRandomSelector
+from .random_selector import IRandomSelector, AbstractRandomSelector
 from .import interface
 
 
@@ -189,7 +189,7 @@ class NxGraph(AbstractGraph):
 
 
 class NxRandomSelector(AbstractRandomSelector):
-    implements(RandomSelector)
+    implements(IRandomSelector)
     # FIXME: this can be made faster!
 
     graph = Instance(nx.Graph, allow_none=False)
