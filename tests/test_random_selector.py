@@ -8,10 +8,14 @@ from pynetsym.graph.scipy_impl import ScipyRandomSelector, ScipyGraph
 class AbstractTestRandomSelector(object):
     def testAddNode(self):
         self.random_selector.preferential_attachment()
-        self.random_selector.add_node(self.nodes)
+        old_edges = len(self.random_selector.repeated_nodes)
+        self.graph.add_node()
+        self.random_selector.preferential_attachment()
+        self.assertEqual(old_edges+1,
+                         len(self.random_selector.repeated_nodes))
 
     def testAddNodeUnprepared(self):
-        self.random_selector.add_node(self.nodes)
+        self.graph.add_node()
 
     def testRemoveNode(self):
         self.random_selector.preferential_attachment()

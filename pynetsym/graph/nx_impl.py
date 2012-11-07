@@ -219,7 +219,8 @@ class NxRandomSelector(AbstractRandomSelector):
         return random.choice(self.repeated_nodes)
 
     def add_edge(self, source, target):
-        self.repeated_nodes = np.append(self.repeated_nodes, [source, target])
+        if self._initialized_preferential_attachment:
+            self.repeated_nodes = np.append(self.repeated_nodes, [source, target])
 
     def remove_edge(self, source, target):
         if self._initialized_preferential_attachment:
@@ -240,7 +241,8 @@ class NxRandomSelector(AbstractRandomSelector):
         self.repeated_nodes = np.zeros(0, dtype=np.int32)
 
     def add_node(self, node):
-        pass
+        if self._initialized_preferential_attachment:
+            self.repeated_nodes = np.append(self.repeated_nodes, node)
 
 
 
