@@ -1,14 +1,11 @@
+from scipy import sparse
 import networkx as nx
 
 from unittest import TestCase
 from pynetsym.graph.nx_impl import NxRandomSelector
+from pynetsym.graph.scipy_impl import ScipyRandomSelector
 
-class TestRandomSelector(TestCase):
-    def setUp(self):
-        self.nodes = 10
-        self.graph = nx.star_graph(self.nodes-1)
-        self.random_selector = NxRandomSelector(graph=self.graph)
-
+class AbstractTestRandomSelector(object):
     def testAddNode(self):
         self.random_selector.preferential_attachment()
         self.random_selector.add_node(self.nodes)
@@ -95,3 +92,17 @@ class TestRandomSelector(TestCase):
 
     def testAddEdgeUnprepared4(self):
         self.random_selector.add_edge(5, 4)
+
+class TestNxRandomSelector(AbstractTestRandomSelector, TestCase):
+    def setUp(self):
+        self.nodes = 10
+        self.graph = nx.star_graph(self.nodes-1)
+        self.random_selector = NxRandomSelector(graph=self.graph)
+
+class TestScipyRandomSelector(AbstractTestRandomSelector, TestCase):
+    def setUp(self):
+        self.nodes = 10
+        self.graph = sparse.lil_matrix(self.nodes)
+        self.graph[0, :] = self.graph[:, 0] = 1
+        self.graph[0,0]= 0
+        self.random_selector = ScipyRandomSelector(graph=self.graph)

@@ -9,6 +9,7 @@ from traits.api import implements, Callable, Instance
 from .interface import IGraph
 from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
+from pynetsym.graph.random_selector import AbstractRandomSelector, IRandomSelector
 
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
@@ -203,3 +204,8 @@ class DirectedScipyGraph(ScipyGraph):
             return self._make_networkx(networkx.DiGraph())
         else:
             raise NotImplementedError()
+
+class ScipyRandomSelector(AbstractRandomSelector):
+    implements(IRandomSelector)
+
+    0
