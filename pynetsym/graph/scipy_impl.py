@@ -1,50 +1,108 @@
 from contextlib import contextmanager
 from itertools import izip
-import logging
-from numpy import flatnonzero, fromiter, ix_
+import random
+import numpy as np
+from numpy import flatnonzero, fromiter, hstack, append
 from scipy import sparse
 from traits.api import implements, Callable, Instance
-
+from traits.trait_types import DelegatesTo
 
 from .interface import IGraph
 from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
+from pynetsym.graph.random_selector import IRandomSelector, RepeatedNodesRandomSelector
+
+class ScipyRandomSelector(RepeatedNodesRandomSelector):
+    implements(IRandomSelector)
+
+    nodes = DelegatesTo('graph_container', prefix='_nodes')
+    matrix = DelegatesTo('graph_container')
+
+    def random_node(self):
+        return random.choice(list(self.nodes))
+
+    def random_edge(self):
+        index = random.randrange(0, self.matrix.nnz)
+        rows, cols = self.matrix.nonzero()
+        return rows[index], cols[index]
+
+    def prepare_preferential_attachment(self):
+        self.repeated_nodes = hstack(
+            sparse.triu(self.matrix, format='coo').nonzero())
+        self.repeated_nodes = append(self.repeated_nodes,
+                                     fromiter(iter(self.nodes),
+                                              dtype=np.int32),)
+        self._initialized_preferential_attachment = True
+
+class DirectedScipyRandomSelector(ScipyRandomSelector):
+    def prepare_preferential_attachment(self):
+        self.repeated_nodes = hstack(
+            self.matrix.nonzero())
+        self.repeated_nodes = append(self.repeated_nodes,
+                                     fromiter(iter(self.nodes),
+                                              dtype=np.int32),)
+        self._initialized_preferential_attachment = True
 
 class ScipyGraph(AbstractGraph):
     implements(IGraph)
 
     matrix_factory = Callable(sparse.lil_matrix)
     matrix = Instance(
-            sparse.spmatrix, factory=matrix_factory,
-            allow_none=False)
+        sparse.spmatrix, factory=matrix_factory,
+        allow_none=False)
 
     _nodes = Instance(set, args=())
+
+    random_selector_factory = Callable(ScipyRandomSelector)
 
     def _max_nodes(self):
         return self.matrix.shape[0]
 
-    def __init__(self, max_nodes):
-        self.matrix = self.matrix_factory(
-            (max_nodes, max_nodes), dtype=bool)
+    def __init__(self, max_nodes=None, **kwargs):
+        matrix = kwargs.pop('matrix', None)
+        nodes = kwargs.pop('nodes', None)
+        self.random_selector = kwargs.pop('random_selector',
+                                          self.random_selector_factory(graph_container=self))
+
+        if matrix is not None:
+            self.matrix = matrix
+            self.matrix_factory = type(matrix)
+            if nodes is not None:
+                self._nodes = nodes
+            elif max_nodes is not None:
+                max_nodes = min(max_nodes, matrix.shape[0])
+                self._nodes = set(xrange(max_nodes))
+            else:
+                self._nodes = set(xrange(matrix.shape[0]))
+        elif max_nodes is None:
+            self.matrix = self.matrix_factory(
+                (max_nodes, max_nodes), dtype=bool)
+        else:
+            raise ValueError('Bad parameters %s, %s' % (max_nodes, kwargs))
+        super(ScipyGraph, self).__init__(**kwargs)
 
     def add_node(self):
         node_index = self.index_store.take()
         if node_index >= self._max_nodes():
             self._enlarge(node_index)
-        #heappush(self._nodes, node_index)
+            #heappush(self._nodes, node_index)
         self._nodes.add(node_index)
+        self.random_selector.add_node(node_index)
         return node_index
 
     def _remove_node_sure(self, node):
         self._nodes.remove(node)
-        self.matrix[node,:] = False
+        self.matrix[node, :] = False
         self.matrix[:, node] = False
+        self.random_selector.remove_node(node)
 
     def add_edge(self, source, target):
         # consider direct vs. undirected
         self._valid_nodes(source, target)
-        self.matrix[source, target] = \
-            self.matrix[target, source] = True
+        self.matrix[source, target] =\
+        self.matrix[target, source] = True
+        self.random_selector.add_edge(source, target)
+
 
     def number_of_nodes(self):
         return len(self._nodes)
@@ -55,8 +113,9 @@ class ScipyGraph(AbstractGraph):
 
     def remove_edge(self, source, target):
         if self.matrix[source, target]:
-            self.matrix[source, target] = \
-                self.matrix[target, source] = False
+            self.matrix[source, target] =\
+            self.matrix[target, source] = False
+            self.random_selector.remove_edge(source, target)
         else:
             raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
@@ -97,6 +156,7 @@ class ScipyGraph(AbstractGraph):
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
+
             return self._make_networkx(networkx.Graph())
         else:
             raise NotImplementedError()
@@ -145,6 +205,7 @@ class ScipyGraph(AbstractGraph):
     def handle_copy(self):
         yield self.matrix.copy()
 
+
     def __contains__(self, node_index):
         return node_index in self._nodes
 
@@ -167,20 +228,22 @@ class ScipyGraph(AbstractGraph):
                 raise GraphError('%s node not in graph.' % node)
 
 
-
-
 class DirectedScipyGraph(ScipyGraph):
+    random_selector_factory = DirectedScipyRandomSelector
+
     def number_of_edges(self):
         return self.matrix.nnz
 
     def add_edge(self, source, target):
         self._valid_nodes(source, target)
         self.matrix[source, target] = True
+        self.random_selector.add_edge(source, target)
 
     def remove_edge(self, source, target):
         self._valid_nodes(source, target)
         if self.matrix[source, target]:
             self.matrix[source, target] = False
+            self.random_selector.remove_edge(source, target)
         else:
             raise GraphError('Edge %d-%d not present in graph' % (source, target))
 
@@ -200,6 +263,9 @@ class DirectedScipyGraph(ScipyGraph):
     def to_nx(self, copy=False):
         if has('networkx'):
             import networkx
+
             return self._make_networkx(networkx.DiGraph())
         else:
             raise NotImplementedError()
+
+

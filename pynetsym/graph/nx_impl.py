@@ -1,14 +1,22 @@
-from .import interface
+import random
+
 from contextlib import contextmanager
 
 import networkx as nx
 
 from scipy import sparse
 from numpy import fromiter, array
+import numpy as np
+
 from traits.api import Instance
 from traits.api import implements
+from traits.trait_numeric import Array
+from traits.trait_types import DelegatesTo
+
 from ._abstract import AbstractGraph
 from .error import GraphError
+from .random_selector import IRandomSelector, AbstractRandomSelector, RepeatedNodesRandomSelector
+from .import interface
 
 
 class NxGraph(AbstractGraph):
@@ -17,23 +25,32 @@ class NxGraph(AbstractGraph):
     nx_graph = Instance(nx.Graph, allow_none=False)
 
     def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
+        random_selector = kwargs.pop('random_selector',
+                                     NxRandomSelector(graph_container=self))
         self.nx_graph = graph_type(data=data, **kwargs)
+        self.random_selector = random_selector
 
     def add_node(self):
         node_index = self.index_store.take()
         self.nx_graph.add_node(node_index)
+        self.random_selector.add_node(node_index)
         return node_index
+
+    # remove_node is defined in AbstractGraph
 
     def _remove_node_sure(self, node):
         self.nx_graph.remove_node(node)
+        self.random_selector.remove_node(node)
 
     def add_edge(self, source, target):
         self._valid_nodes(source, target)
         self.nx_graph.add_edge(source, target)
+        self.random_selector.add_edge(source, target)
 
     def remove_edge(self, source, target):
         try:
             self.nx_graph.remove_edge(source, target)
+            self.random_selector.remove_edge(source, target)
         except nx.NetworkXError as e:
             raise GraphError(e)
 
@@ -170,6 +187,45 @@ class NxGraph(AbstractGraph):
         for node in nodes:
             if node not in self.nx_graph:
                 raise GraphError('%s node not in graph.' % node)
+
+
+class NxRandomSelector(RepeatedNodesRandomSelector):
+    implements(IRandomSelector)
+    # FIXME: this can be made faster!
+
+    graph = DelegatesTo('graph_container', prefix='nx_graph')
+
+    def random_edge(self):
+        return random.choice(self.graph.edges())
+
+    def random_node(self):
+        return random.choice(self.graph.nodes())
+
+
+    def prepare_preferential_attachment(self):
+        self.repeated_nodes = np.zeros(dtype=np.int32,
+                                       shape=(self.graph.number_of_edges() * 2
+                                              + self.graph.number_of_nodes()))
+        degrees = nx.degree(self.graph)
+        counter = 0
+        for node, degree in degrees.iteritems():
+            extraction_probability = degree + 1
+            self.repeated_nodes[counter:counter + extraction_probability] = node
+            counter += extraction_probability
+        self._initialized_preferential_attachment = True
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

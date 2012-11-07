@@ -278,6 +278,7 @@ class IGraph(Interface):
                 print clustering_coefficient(handle)
             ```
         """
+        return None
 
     @property
     def handle_copy(self):
@@ -289,13 +290,13 @@ class IGraph(Interface):
                 print clustering_coefficient(handle)
             ```
         """
+        return None
 
-
-#    def copy_into(self, matrix):
-#        """
-#        Copies the adjacency matrix inside the argument, if big enough.
-#        Otherwise a ValueError exception is thrown.
-#        @param matrix: the matrix where data is copied
-#            Typically it should be something that acts like a numpy array.
-#        """
-#        pass
+    @property
+    def random_selector(self):
+        """
+        Return a random selector.
+        @return: the random selector.
+        @rtype IRandomSelector
+        """
+        return None
