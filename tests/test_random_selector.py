@@ -3,7 +3,7 @@ import networkx as nx
 
 from unittest import TestCase, skip
 from pynetsym.graph.nx_impl import NxRandomSelector, NxGraph
-from pynetsym.graph.scipy_impl import ScipyRandomSelector
+from pynetsym.graph.scipy_impl import ScipyRandomSelector, ScipyGraph
 
 class AbstractTestRandomSelector(object):
     def testAddNode(self):
@@ -35,7 +35,6 @@ class AbstractTestRandomSelector(object):
         self.random_selector.preferential_attachment()
         old_edges = len(self.random_selector.repeated_nodes)
         self.graph.remove_edge(0, 2)
-        self.random_selector.remove_edge(0, 2)
         self.random_selector.preferential_attachment()
         self.assertEqual(old_edges-2,
                          len(self.random_selector.repeated_nodes))
@@ -47,7 +46,6 @@ class AbstractTestRandomSelector(object):
         self.random_selector.preferential_attachment()
         old_edges = len(self.random_selector.repeated_nodes)
         self.graph.remove_edge(0, 9)
-        self.random_selector.remove_edge(0, 9)
         self.random_selector.preferential_attachment()
         self.assertEqual(old_edges-2,
                          len(self.random_selector.repeated_nodes))
@@ -60,7 +58,6 @@ class AbstractTestRandomSelector(object):
         self.random_selector.preferential_attachment()
         old_edges = len(self.random_selector.repeated_nodes)
         self.graph.remove_edge(5, 9)
-        self.random_selector.remove_edge(5, 9)
         self.random_selector.preferential_attachment()
         self.assertEqual(old_edges-2,
                          len(self.random_selector.repeated_nodes))
@@ -73,7 +70,6 @@ class AbstractTestRandomSelector(object):
         self.random_selector.preferential_attachment()
         old_edges = len(self.random_selector.repeated_nodes)
         self.graph.remove_edge(5, 4)
-        self.random_selector.remove_edge(5, 4)
         self.random_selector.preferential_attachment()
         self.assertEqual(old_edges-2,
                          len(self.random_selector.repeated_nodes))
@@ -85,7 +81,6 @@ class AbstractTestRandomSelector(object):
         self.random_selector.preferential_attachment()
         old_edges = len(self.random_selector.repeated_nodes)
         self.graph.add_edge(5, 4)
-        self.random_selector.add_edge(5, 4)
         self.random_selector.preferential_attachment()
         self.assertEqual(old_edges+2,
                          len(self.random_selector.repeated_nodes))
@@ -98,13 +93,15 @@ class TestNxRandomSelector(AbstractTestRandomSelector, TestCase):
         self.nodes = 10
         star = nx.star_graph(self.nodes-1)
         self.graph = NxGraph(data=star.edges())
-        self.random_selector = NxRandomSelector(graph_container=self.graph)
+        self.random_selector = self.graph.random_selector
 
 @skip('not ready')
 class TestScipyRandomSelector(AbstractTestRandomSelector, TestCase):
     def setUp(self):
         self.nodes = 10
-        self.graph = sparse.lil_matrix(self.nodes)
-        self.graph[0, :] = self.graph[:, 0] = 1
-        self.graph[0,0]= 0
-        self.random_selector = ScipyRandomSelector(graph=self.graph)
+        matrix = sparse.lil_matrix(self.nodes)
+        matrix[0, :] = self.matrix[:, 0] = 1
+        matrix[0,0]= 0
+        self.graph = ScipyGraph(matrix=matrix)
+
+        self.random_selector = ScipyRandomSelector(graph=self.matrix)
