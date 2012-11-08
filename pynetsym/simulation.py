@@ -331,7 +331,7 @@ class Activator(core.Agent):
         return False
 
     def nodes_to_activate(self):
-        return [self.graph.random_node()]
+        return [self.graph.random_selector.random_node()]
 
     def nodes_to_destroy(self):
         return {}

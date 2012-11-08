@@ -6,10 +6,10 @@ from pynetsym import Node, Simulation, BasicConfigurator
 
 
 def select_preferential_attachment(graph):
-    return graph.preferential_attachment_node()
+    return graph.random_selector.preferential_attachment_node()
 
 def select_uniform(graph):
-    return graph.random_node()
+    return graph.random_selector.random_node()
 
 class Node(Node):
     MAX_TRIALS = 10
@@ -24,18 +24,18 @@ class Node(Node):
         return True
 
     def introduction(self):
-        graph = self.graph.handle
-        neighbors = graph.neighbors(self.id)
-        if len(neighbors) > 1:
-            for _ in xrange(self.MAX_TRIALS):
-                node_a, node_b = random.sample(neighbors, 2)
-                if not graph.has_edge(node_a, node_b):
-                    self.send(node_a, 'introduce_to', target_node=node_b)
-                    break
+        with self.graph.handle as graph:
+            neighbors = graph.neighbors(self.id)
+            if len(neighbors) > 1:
+                for _ in xrange(self.MAX_TRIALS):
+                    node_a, node_b = random.sample(neighbors, 2)
+                    if not graph.has_edge(node_a, node_b):
+                        self.send(node_a, 'introduce_to', target_node=node_b)
+                        break
+                else:
+                    self.link_to(self.criterion_)
             else:
                 self.link_to(self.criterion_)
-        else:
-            self.link_to(self.criterion_)
 
 
 
@@ -50,7 +50,7 @@ class Node(Node):
         self.send(target_node, 'accept_link', originating_node=self.id)
 
     def regenerate(self):
-        target_node = self.graph.random_node()
+        target_node = self.graph.random_selector.random_node()
         self.link_to(target_node)
 
 
