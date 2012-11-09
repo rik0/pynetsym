@@ -74,7 +74,7 @@ class ScipyGraph(AbstractGraph):
                 self._nodes = set(xrange(max_nodes))
             else:
                 self._nodes = set(xrange(matrix.shape[0]))
-        elif max_nodes is None:
+        elif max_nodes is not None:
             self.matrix = self.matrix_factory(
                 (max_nodes, max_nodes), dtype=bool)
         else:

@@ -262,8 +262,7 @@ class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase)
 
 @paramunittest.parametrized(
     (NxGraph, nx.Graph),
-    (NxGraph, nx.DiGraph)
-)
+    (NxGraph, nx.DiGraph))
 class TestNXExport(paramunittest.ParametrizedTestCase):
     def setParameters(self, graph_type, nx_graph):
         self.graph = graph_type(nx_graph)

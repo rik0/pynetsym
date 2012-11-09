@@ -31,22 +31,22 @@ class TestWS(unittest.TestCase):
             lattice_connections=self.lattice_connections,
             starting_network_size=self.starting_network_size)
 
-        graph = sim.graph.handle
-        self.assertEqual(
-            self.comparison_graph.number_of_nodes(),
-            graph.number_of_nodes())
-        self.assertEqual(
-            self.comparison_graph.number_of_edges(),
-            graph.number_of_edges())
+        with sim.graph.handle as graph:
+            self.assertEqual(
+                self.comparison_graph.number_of_nodes(),
+                graph.number_of_nodes())
+            self.assertEqual(
+                self.comparison_graph.number_of_edges(),
+                graph.number_of_edges())
 
-        if False:
-            self.assertAlmostEqual(
-                nx.diameter(self.comparison_graph),
-                nx.diameter(graph),
-                delta=1.
-            )
-            self.assertAlmostEqual(
-                nx.average_shortest_path_length(self.comparison_graph),
-                nx.average_shortest_path_length(graph),
-                delta=1.
-            )
+            if False:
+                self.assertAlmostEqual(
+                    nx.diameter(self.comparison_graph),
+                    nx.diameter(graph),
+                    delta=1.
+                )
+                self.assertAlmostEqual(
+                    nx.average_shortest_path_length(self.comparison_graph),
+                    nx.average_shortest_path_length(graph),
+                    delta=1.
+                )

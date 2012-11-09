@@ -3,15 +3,15 @@ from pynetsym import node_manager
 
 import itertools
 import networkx as nx
+from pynetsym.graph import IGraph
 
-from pynetsym.storage import GraphWrapper
 from pynetsym.util import extract_subdictionary, SequenceAsyncResult
 from .basic import AbstractConfigurator
 
 class StartingNXGraphConfigurator(AbstractConfigurator):
     configurator_options = {'starting_graph'}
 
-    starting_graph = Instance(GraphWrapper)
+    starting_graph = Instance(IGraph)
     node_cls = Class
     node_options = Instance(set)
 

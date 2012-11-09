@@ -2,7 +2,6 @@ from pynetsym import addressing, graph
 from pynetsym import agent_db
 from pynetsym import configuration
 from pynetsym import core
-from pynetsym import storage
 from pynetsym import termination
 from pynetsym import timing
 from pynetsym.agent_db import PythonPickler
@@ -130,6 +129,8 @@ class Simulation(object):
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
+        self.address_book = None
+
 
     def add_parameter(self, key, value):
         self._simulation_parameters[key] = value
