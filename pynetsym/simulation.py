@@ -382,7 +382,15 @@ class BaseClock(core.Agent):
     def unregister_observer(self, name):
         self.observers.remove(name)
 
+    def start_clock(self):
+        """
+        Here the clock actually starts ticking.
+        """
+        pass
+
     def send_tick(self):
+        for observer in self.observers:
+            self.send(observer, 'ticked')
         return self.send(Activator.name, 'tick')
 
     def send_simulation_ended(self):
@@ -402,8 +410,6 @@ class AsyncClock(BaseClock):
         self.setup()
         while self.active:
             self.send_tick()
-            for observer in self.observers:
-                self.send(observer, 'ticked')
             should_stop = self.ask_to_terminate().get()
             if should_stop:
                 self.simulation_end()
@@ -414,8 +420,6 @@ class Clock(BaseClock):
         self.setup()
         while self.active:
             done = self.send_tick()
-            for observer in self.observers:
-                self.send(observer, 'ticked')
             if done.get() and self.activator_can_terminate:
                 self.simulation_end()
             else:
