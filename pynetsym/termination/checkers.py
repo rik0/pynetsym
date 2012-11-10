@@ -12,13 +12,13 @@ class TerminationChecker(core.Agent):
     def add_condition(self, condition):
         self.condition.append(condition)
 
-    def check(self):
+    def check(self, requester):
         for condition in self.conditions:
             check = condition.check(self.graph)
             if check:
                 self.motive = condition.motive
                 self.active = False
-                return check
+                return self.send(requester, 'stop_clock', motive=self.motive)
         else:
             return False
 
