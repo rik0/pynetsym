@@ -12,6 +12,7 @@ __all__ = [
     'Activator',
     'AsyncClock',
     'Clock',
+    'PyNetSymError',
 ]
 __all__.extend(configurators.__all__)
 
@@ -24,3 +25,4 @@ from .simulation import Simulation
 from .simulation import Activator
 from .simulation import Clock, AsyncClock
 from .configurators import IConfigurator, AbstractConfigurator, BasicConfigurator, Either
+from .error import PyNetSymError
