@@ -353,6 +353,7 @@ class Activator(core.Agent):
     def nodes_to_create(self):
         return {}
 
+
 class SyncActivator(Activator):
     """
     This Activator variant always waits for the nodes to acknowledge the
@@ -363,6 +364,7 @@ class SyncActivator(Activator):
         for node_id in node_ids:
             done = self.send(node_id, 'activate')
             done.get()
+
 
 class BaseClock(core.Agent):
     name = 'clock'
