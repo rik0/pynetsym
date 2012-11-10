@@ -1,18 +1,38 @@
 import random
 import networkx
-from traits.trait_types import Enum, Int, Float, Set
-from pynetsym import Simulation, Node, Activator
+from traits.trait_types import Enum, Int, Float, Set, Instance
+from pynetsym import Simulation, Node, Activator, Agent
 from pynetsym.configurators import NXGraphConfigurator
+from pynetsym.simulation import BaseClock
 
+
+class Recorder(Agent):
+    name = 'recorder'
+    current_time = Int(0)
+
+    def setup(self):
+        self.send(BaseClock.name,
+                  'register_observer', self.name)
+
+    def ticked(self):
+        self.current_time += 1
+
+    def node_infected(self, size):
+        pass
+
+    def node_recovered(self, size):
+        pass
 
 class Activator(Activator):
     infected_nodes = Set(Int)
 
     def infected(self, node):
         self.infected_nodes.add(node)
+        self.send(Recorder.name, 'node_infected')
 
     def not_infected(self, node):
         self.infected_nodes.remove(node)
+        self.send(Recorder.name, 'node_recovered')
 
     def nodes_to_activate(self):
         return self.infected_nodes
