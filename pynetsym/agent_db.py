@@ -16,6 +16,10 @@ class MissingNode(PyNetSymError):
     pass
 
 
+class SerializationError(PyNetSymError):
+    pass
+
+
 class ISerialize(Interface):
     def loads(self, pickled_representation):
         """
@@ -42,11 +46,18 @@ class PythonPickler(SingletonHasStrictTraits):
         self.pickle_module = pickle_module
 
     def loads(self, pickled_representation):
-        return self.pickle_module.loads(pickled_representation)
+        try:
+            return self.pickle_module.loads(pickled_representation)
+        except TypeError as e:
+            raise SerializationError(e)
 
     def dumps(self, obj):
-        return self.pickle_module.dumps(obj,
-                                        self.pickle_module.HIGHEST_PROTOCOL)
+        try:
+            return self.pickle_module.dumps(
+                obj, self.pickle_module.HIGHEST_PROTOCOL)
+        except TypeError as e:
+            raise SerializationError(e)
+
 
 class JSONPickle(SingletonHasStrictTraits):
     implements(ISerialize)
@@ -57,10 +68,16 @@ class JSONPickle(SingletonHasStrictTraits):
         self.pickle_module = jsonpickle
 
     def loads(self, pickled_representation):
-        return self.pickle_module.decode(pickled_representation)
+        try:
+            return self.pickle_module.decode(pickled_representation)
+        except Exception as e:
+            raise SerializationError(e)
 
     def dumps(self, obj):
-        return self.pickle_module.encode(obj)
+        try:
+            return self.pickle_module.encode(obj)
+        except Exception as e:
+            raise SerializationError(e)
 
 
 class IAgentStorage(Interface):
