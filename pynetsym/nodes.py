@@ -95,5 +95,8 @@ class Node(core.Agent):
         self.graph.remove_edge(originating_node, self.id)
         return True
 
+    def neighbors(self):
+        return self.graph.neighbors(self.id)
+
     def can_be_collected(self):
         return True
