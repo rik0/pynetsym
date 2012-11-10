@@ -79,6 +79,7 @@ class Simulation(object):
     """
 
     simulation_options = {"steps", "output", "format"}
+    additional_agents = ()
 
     @classproperty
     def activator_type(self):
@@ -173,6 +174,12 @@ class Simulation(object):
         cli_args_dict = configuration_manager.process()
         return cli_args_dict
 
+    @classmethod
+    def gather_additional_agents(cls):
+        full_additional_agents = gather_from_ancestors(
+            cls, 'additional_agents', acc_type=list)
+        return full_additional_agents
+
     def set_up(self):
         pass
 
@@ -221,6 +228,12 @@ class Simulation(object):
             **self._simulation_parameters)
         self.activator.start(self.address_book, self.node_db)
         self.clock = self.clock_type()
+        additional_agents = self.gather_additional_agents()
+        for (additional_agent_factory, args, kwargs) in additional_agents:
+            additional_agent = additional_agent_factory(*args, **kwargs)
+            additional_agent.start(self.address_book, self.node_db)
+
+
 
     def start_simulation(self):
         self.clock.start(self.address_book, self.node_db)
