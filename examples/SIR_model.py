@@ -12,16 +12,17 @@ class Recorder(Agent):
 
     def setup(self):
         self.send(BaseClock.name,
-                  'register_observer', self.name)
+                  'register_observer', name=self.name)
 
     def ticked(self):
         self.current_time += 1
 
-    def node_infected(self, size):
+    def node_infected(self):
         pass
 
-    def node_recovered(self, size):
+    def node_recovered(self):
         pass
+
 
 class Activator(Activator):
     infected_nodes = Set(Int)
@@ -53,7 +54,7 @@ class Specimen(Node):
         if self.state == 'S':
             self.state = 'I'
             self.infection_time = self.infection_length
-            self.send(Activator.name, 'infected', self.id)
+            self.send(Activator.name, 'infected', node=self.id)
 
     def activate(self):
         if (self.state == 'I'
@@ -66,7 +67,7 @@ class Specimen(Node):
               and self.infection_time == 0):
             self.infection_time -= 1
             self.state = 'R'
-            self.send(Activator.name, 'not_infected', self.id)
+            self.send(Activator.name, 'not_infected', node=self.id)
         elif self.state in ('R', 'S'):
             pass
         else:
@@ -74,18 +75,22 @@ class Specimen(Node):
 
 
 class Simulation(Simulation):
-    default_infection_probability = 0.01
+    default_infection_probability = 0.5 # 0.01
     default_infection_length = 10
-    default_infected_fraction = 0.005
+    default_infected_fraction = 0.5 # 0.005
 
-    steps = 100000
+    steps = 1000
+
+    additional_agents = (
+        (Recorder, (), {}),
+    )
 
     command_line_options = (
         ('-p', '--infection-probability',
             dict(default=default_infection_probability, type=float)),
         ('-t', '--infection-length',
             dict(default=default_infection_length, type=int)),
-        ('-f', '--starting-infected-fraction',
+        ('-f', '--infected-fraction',
             dict(default=default_infected_fraction, type=float)),
     )
 
