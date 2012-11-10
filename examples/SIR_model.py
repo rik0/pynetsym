@@ -75,9 +75,9 @@ class Specimen(Node):
 
 
 class Simulation(Simulation):
-    default_infection_probability = 0.5 # 0.01
+    default_infection_probability = 0.01
     default_infection_length = 10
-    default_infected_fraction = 0.5 # 0.005
+    default_infected_fraction = 0.005
 
     steps = 1000
 
