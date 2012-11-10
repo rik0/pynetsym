@@ -31,8 +31,8 @@ class Node(core.Agent):
     def deactivate_node(self, greenlet):
         self._node_manager.unset_node(self, greenlet)
 
-    def start(self, address_book, node_db, identifier=None):
-        super(Node, self).start(address_book, node_db, identifier)
+    def start(self, address_book, agent_db, identifier=None):
+        super(Node, self).start(address_book, agent_db, identifier)
         self._node_manager =  self._resolve(NodeManager.name)
         self._node_manager.setup_node(self, self._greenlet)
         return self

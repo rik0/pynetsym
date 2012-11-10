@@ -104,12 +104,12 @@ class Agent(t.HasTraits):
         else:
             self.id = identifier
 
-    def start(self, address_book, node_db, identifier=None):
+    def start(self, address_book, agent_db, identifier=None):
         self._compute_identifier(identifier)
         self._address_book = address_book
         self._address_book.register(self, self.id)
         self._default_queue = queue.Queue()
-        self._node_db = node_db
+        self._node_db = agent_db
         self._greenlet = gevent.Greenlet(self._start)
 
         self._greenlet.link_exception(self.on_error)
