@@ -17,7 +17,7 @@ try:
 except ImportError:
     pass
 else:
-    from nx_configurator import StartingNXGraphConfigurator
-    __all__.append('StartingNXGraphConfigurator')
+    from nx_configurator import NXGraphConfigurator
+    __all__.append('NXGraphConfigurator')
 
 

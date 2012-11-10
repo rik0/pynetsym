@@ -8,7 +8,7 @@ from pynetsym.graph import IGraph
 from pynetsym.util import extract_subdictionary, SequenceAsyncResult
 from .basic import AbstractConfigurator
 
-class StartingNXGraphConfigurator(AbstractConfigurator):
+class NXGraphConfigurator(AbstractConfigurator):
     configurator_options = {'starting_graph'}
 
     starting_graph = Instance(IGraph)

@@ -19,7 +19,7 @@ class Node(Node):
 
 
 class Simulation(simulation.Simulation):
-    class configurator_type(configurators.StartingNXGraphConfigurator):
+    class configurator_type(configurators.NXGraphConfigurator):
         node_cls = Node
         node_options = {}
 
