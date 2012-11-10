@@ -1,3 +1,5 @@
+import gevent
+from gevent.greenlet import LinkedCompleted
 from pynetsym import addressing, graph
 from pynetsym import agent_db
 from pynetsym import configuration
@@ -228,15 +230,15 @@ class Simulation(object):
             **self._simulation_parameters)
         self.activator.start(self.address_book, self.node_db)
         self.clock = self.clock_type()
+        self.clock.start(self.address_book, self.node_db)
         additional_agents = self.gather_additional_agents()
         for (additional_agent_factory, args, kwargs) in additional_agents:
             additional_agent = additional_agent_factory(*args, **kwargs)
             additional_agent.start(self.address_book, self.node_db)
 
 
-
     def start_simulation(self):
-        self.clock.start(self.address_book, self.node_db)
+        self.clock.start_clock()
 
     def run(self, args=None, force_cli=False, **kwargs):
         """
@@ -275,8 +277,6 @@ class Simulation(object):
         with timing.Timer(self.callback):
             self.start_simulation()
             self.clock.join()
-            if self.node_manager.failures:
-                sys.exit(1)
             return self
 
     def exception_hook(self, node):
@@ -359,6 +359,7 @@ class SyncActivator(Activator):
     This Activator variant always waits for the nodes to acknowledge the
     activate message, thus making it essentially serial.
     """
+
     def activate_nodes(self):
         node_ids = self.nodes_to_activate()
         for node_id in node_ids:
@@ -373,16 +374,35 @@ class BaseClock(core.Agent):
     active = t.true(transient=True)
     observers = t.List
 
-    def setup(self):
-        super(BaseClock, self).setup()
-
     def register_observer(self, name):
         self.observers.append(name)
 
     def unregister_observer(self, name):
         self.observers.remove(name)
 
+    def join(self):
+        try:
+            return super(BaseClock, self).join()
+        except LinkedCompleted:
+            return True
+
+
+    def start_clock(self):
+        """
+        Here the clock actually starts ticking.
+        """
+        self.active = True
+        self.clock_loop = gevent.spawn_link(self.clock_loop)
+
+    def stop_clock(self, motive):
+        self.active = False
+
+    def clock_loop(self):
+        raise NotImplementedError()
+
     def send_tick(self):
+        for observer in self.observers:
+            self.send(observer, 'ticked')
         return self.send(Activator.name, 'tick')
 
     def send_simulation_ended(self):
@@ -394,31 +414,25 @@ class BaseClock(core.Agent):
 
     def ask_to_terminate(self):
         return self.send(
-            termination.TerminationChecker.name, 'check')
+            termination.TerminationChecker.name, 'check',
+            requester=self.name)
 
 
 class AsyncClock(BaseClock):
-    def _start(self):
-        self.setup()
+    def clock_loop(self):
         while self.active:
             self.send_tick()
-            for observer in self.observers:
-                self.send(observer, 'ticked')
-            should_stop = self.ask_to_terminate().get()
-            if should_stop:
-                self.simulation_end()
+            self.ask_to_terminate()
+        else:
+            self.simulation_end()
 
 
 class Clock(BaseClock):
-    def _start(self):
-        self.setup()
+    def clock_loop(self):
         while self.active:
-            done = self.send_tick()
-            for observer in self.observers:
-                self.send(observer, 'ticked')
-            if done.get() and self.activator_can_terminate:
-                self.simulation_end()
-            else:
-                should_stop = self.ask_to_terminate().get()
-                if should_stop:
-                    self.simulation_end()
+            waiting = self.send_tick()
+            waiting.get()
+            waiting = self.ask_to_terminate()
+            waiting.get()
+        else:
+            self.simulation_end()
