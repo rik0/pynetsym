@@ -1,5 +1,6 @@
+import collections
 from traits.has_traits import implements
-from traits.trait_types import List, Dict, Str, Int
+from traits.trait_types import Dict, Str, Int, Any
 
 from .. import core
 from ..util import gather_from_ancestors, extract_subdictionary, SequenceAsyncResult
@@ -28,7 +29,7 @@ class AbstractConfigurator(core.Agent):
     Options are accumulated along the inheritance path
     """
 
-    node_identifiers = List([])
+    node_identifiers = Any
     additional_arguments = Dict(key_trait=Str)
 
     def __init__(self, **additional_arguments):

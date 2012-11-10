@@ -11,7 +11,7 @@ from .basic import AbstractConfigurator
 class NXGraphConfigurator(AbstractConfigurator):
     configurator_options = {'starting_graph'}
 
-    starting_graph = Instance(IGraph)
+    starting_graph = Instance(nx.Graph, allow_none=False)
     node_cls = Class
     node_options = Instance(set)
 
