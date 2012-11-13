@@ -90,7 +90,7 @@ class BA(simulation.Simulation):
         node_cls = Node
         node_options = {'stepper'}
 
-    def set_up(self):
+    def setup(self):
         total_network_size = self.starting_network_size + self.steps
         stepper = ba_stepper(
             self.graph,

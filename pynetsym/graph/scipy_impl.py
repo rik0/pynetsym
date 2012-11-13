@@ -97,7 +97,6 @@ class ScipyGraph(AbstractGraph):
         self.random_selector.remove_node(node)
 
     def add_edge(self, source, target):
-        # consider direct vs. undirected
         self._valid_nodes(source, target)
         self.matrix[source, target] =\
         self.matrix[target, source] = True

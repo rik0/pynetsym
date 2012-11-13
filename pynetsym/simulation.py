@@ -1,5 +1,6 @@
 import gevent
 from gevent.greenlet import LinkedCompleted
+from traits.trait_types import Int
 from pynetsym import addressing, graph
 from pynetsym import agent_db
 from pynetsym import configuration
@@ -123,12 +124,7 @@ class Simulation(object):
         """
         object.__setattr__(self, '_simulation_parameters', {})
         self._set_parameters = False
-
-        graph_options = getattr(self, 'graph_options', {})
-        ## deepcopy: no object sharing between different simulation
-        ## executions!
-        graph_options = copy.deepcopy(graph_options)
-        self.graph = self.graph_type(**graph_options)
+        self.graph = None
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
@@ -182,8 +178,13 @@ class Simulation(object):
             cls, 'additional_agents', acc_type=list)
         return full_additional_agents
 
-    def set_up(self):
-        pass
+    def setup(self):
+        graph_options = getattr(self, 'graph_options', {})
+        ## deepcopy: no object sharing between different simulation
+        ## executions!
+        graph_options = copy.deepcopy(graph_options)
+        self.graph = self.graph_type(**graph_options)
+
 
     def create_node_db(self):
         self.node_db = agent_db.AgentDB(PythonPickler(), dict())
@@ -229,7 +230,8 @@ class Simulation(object):
             self.graph,
             **self._simulation_parameters)
         self.activator.start(self.address_book, self.node_db)
-        self.clock = self.clock_type()
+        self.clock = self.clock_type(
+            **getattr(self, 'clock_options', {}))
         self.clock.start(self.address_book, self.node_db)
         additional_agents = self.gather_additional_agents()
         for (additional_agent_factory, args, kwargs) in additional_agents:
@@ -269,7 +271,7 @@ class Simulation(object):
         else:
             self.update_parameters(kwargs)
 
-        self.set_up()
+        self.setup()
 
         self.create_service_agents()
         self.create_simulation_agents()
@@ -420,12 +422,18 @@ class BaseClock(core.Agent):
 
 
 class AsyncClock(BaseClock):
+    remaining_ticks = Int
+
     def clock_loop(self):
-        while self.active:
+        while self.remaining_ticks:
             self.send_tick()
-            self.ask_to_terminate()
+            self.remaining_ticks -= 1
         else:
             self.simulation_end()
+
+    def ask_to_terminate(self):
+        print self.value
+        super(AsyncClock, self).ask_to_terminate()
 
 
 class Clock(BaseClock):
