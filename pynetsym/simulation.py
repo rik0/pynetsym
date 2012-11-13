@@ -339,6 +339,7 @@ class Activator(core.Agent):
         self.destroy_nodes()
         self.create_nodes()
         self.activate_nodes()
+        # FIXME 'should-terminate' is not used anymore.
         return self.should_terminate()
 
     def should_terminate(self):

@@ -15,13 +15,15 @@ class Recorder(Agent):
                   'register_observer', name=self.name)
 
     def ticked(self):
+        self.send_log('ticked [%d]' % self.current_time)
         self.current_time += 1
 
     def node_infected(self):
-        pass
+        self.send_log('infected [%d]' % self.current_time)
 
     def node_recovered(self):
-        pass
+        self.send_log('recovered [%d]' % self.current_time)
+
 
 
 class Activator(Activator):
@@ -75,9 +77,9 @@ class Specimen(Node):
 
 
 class Simulation(Simulation):
-    default_infection_probability = 0.01
+    default_infection_probability = 0.1
     default_infection_length = 10
-    default_infected_fraction = 0.005
+    default_infected_fraction = 0.5
 
     steps = 1000
 
