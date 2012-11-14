@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from os import path
+from util import make_distributions
 from pynetsym import AsyncClock, BasicConfigurator
 from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 import networkx as nx
@@ -11,13 +12,6 @@ import gc
 
 from numpy import arange, save, dtype, array, savetxt
 from pynetsym.util import sna
-
-
-def make_distributions(graph):
-    bins = np.bincount(graph.degree().values())
-    ccdf = sna.ccdf(bins)
-    pdf = np.asfarray(bins) / np.sum(bins)
-    return ccdf, pdf
 
 Node = barabasi_albert.Node
 Activator = barabasi_albert.Activator
@@ -93,11 +87,13 @@ if __name__ == '__main__':
         ccdf_axes = F_ccdf.gca()
         pdf_axes = F_pdf.gca()
 
-
-
-        sim_ccdf, sim_pdf = make_distributions(graph)
-        savetxt(path.join(os.curdir, directory_name, 'raw_degrees.csv'),
-                graph.degree().values())
+        degrees = graph.degree().values()
+        sim_ccdf, sim_pdf = make_distributions(degrees)
+        savetxt(path.join(os.curdir,
+                          directory_name, 'raw_degrees.csv'),
+                degrees)
+        nx.write_graphml(graph, path.join(os.curdir,
+                                          directory_name, 'graph.graphml'))
 
         cdf_xs = arange(starting_edges - 1, len(sim_ccdf))
         pdf_xs = arange(starting_edges, len(sim_pdf))
