@@ -93,7 +93,12 @@ if __name__ == '__main__':
         ccdf_axes = F_ccdf.gca()
         pdf_axes = F_pdf.gca()
 
+
+
         sim_ccdf, sim_pdf = make_distributions(graph)
+        savetxt(path.join(os.curdir, directory_name, 'raw_degrees.csv'),
+                graph.degree().values())
+
         cdf_xs = arange(starting_edges - 1, len(sim_ccdf))
         pdf_xs = arange(starting_edges, len(sim_pdf))
 
