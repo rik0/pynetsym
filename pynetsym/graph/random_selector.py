@@ -74,6 +74,7 @@ class RepeatedNodesRandomSelector(AbstractRandomSelector):
 
     def add_edge(self, source, target):
         if self._initialized_preferential_attachment:
+            # this is embarassingly inefficient! Fix somehow!
             self.repeated_nodes = np.append(self.repeated_nodes, [source, target])
 
     def remove_edge(self, source, target):
