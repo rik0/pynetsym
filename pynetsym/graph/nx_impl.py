@@ -10,12 +10,11 @@ import numpy as np
 
 from traits.api import Instance
 from traits.api import implements
-from traits.trait_numeric import Array
 from traits.trait_types import DelegatesTo
 
 from ._abstract import AbstractGraph
 from .error import GraphError
-from .random_selector import IRandomSelector, AbstractRandomSelector, RepeatedNodesRandomSelector
+from .random_selector import IRandomSelector, RepeatedNodesRandomSelector
 from .import interface
 
 

@@ -9,8 +9,9 @@ class Node(Node):
     def activate(self):
         forbidden = set()
         forbidden.add(self.id)
+        rs = self.graph.random_selector
         while self.starting_edges:
-            random_node = self.graph.random_selector.preferential_attachment()
+            random_node = rs.preferential_attachment()
             if random_node not in forbidden:
                 self.link_to(random_node)
                 forbidden.add(random_node)
