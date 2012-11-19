@@ -59,26 +59,30 @@ class ComponentCreator(object):
         return copy.copy(options), has_kw
 
 
-
-
-    def parameters(self, options, overriding_parameters, has_kw):
-        program_specified_parameters = copy.deepcopy(getattr(self.context,
-                self.parameters_name, {}))
+    def compute_overriding_parameters(self, has_kw, options, overriding_parameters):
         if has_kw:
             reduced_parameters = overriding_parameters
         else:
             reduced_parameters = extract_subdictionary(
-                    overriding_parameters, options)
-        program_specified_parameters.update(reduced_parameters)
-        return program_specified_parameters
+                overriding_parameters, options)
+        return reduced_parameters
 
-
+    def parameters(self, factory, options, overriding_parameters, has_kw):
+        try:
+            parameters = factory.parameters
+        except AttributeError:
+            parameters = getattr(self.context, self.parameters_name, {})
+        parameters = copy.deepcopy(parameters)
+        reduced_parameters = self.compute_overriding_parameters(
+            has_kw, options, overriding_parameters)
+        parameters.update(reduced_parameters)
+        return parameters
 
     def build(self, parameters=None, set_=False):
         parameters = {} if parameters is None else parameters
         factory = self.factory()
         options, has_kw = self.options(factory)
-        parameters = self.parameters(options, parameters, has_kw)
+        parameters = self.parameters(factory, options, parameters, has_kw)
         try:
             instance = factory(**parameters)
         except TypeError as e:
