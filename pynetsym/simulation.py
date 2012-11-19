@@ -242,7 +242,6 @@ class Simulation(object):
         2. (long_option_name, parameters)
     """
 
-    simulation_options = {"steps", "output", "format"}
     additional_agents = ()
 
     @classproperty
