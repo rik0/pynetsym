@@ -1,3 +1,4 @@
+import copy
 import inspect
 
 from pynetsym import error
@@ -42,10 +43,10 @@ class ComponentCreator(object):
 
     def options(self, factory):
         try:
-            return factory.options
+            return copy.copy(factory.options)
         except AttributeError:
             try:
-                return getattr(self.context, self.options_name)
+                return copy.copy(getattr(self.context, self.options_name))
             except AttributeError:
                 if inspect.isfunction(factory):
                     arg_spec = inspect.getargspec(factory)
@@ -55,11 +56,11 @@ class ComponentCreator(object):
                     raise ComponentError(
                             'Cannot find options for %s' % (
                                 self.component_name, ))
-                return self.process_arg_spec(arg_spec)
+                return copy.copy(self.process_arg_spec(arg_spec))
 
     def parameters(self, options, simulation_parameters):
-        program_specified_parameters = getattr(self.context,
-                self.parameters_name, {})
+        program_specified_parameters = copy.deepcopy(getattr(self.context,
+                self.parameters_name, {}))
         overriding_parameters = extract_subdictionary(
                 simulation_parameters, options)
         program_specified_parameters.update(overriding_parameters)
@@ -67,7 +68,8 @@ class ComponentCreator(object):
 
 
 
-    def build(self, parameters, set_=False):
+    def build(self, parameters=None, set_=False):
+        parameters = {} if parameters is None else parameters
         factory = self.factory()
         options = self.options(factory)
         parameters = self.parameters(options, parameters)

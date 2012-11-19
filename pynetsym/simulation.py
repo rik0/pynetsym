@@ -27,7 +27,7 @@ from pynetsym.util import classproperty
 from pynetsym.agent_db import PythonPickler
 from pynetsym.node_manager import NodeManager
 from pynetsym.termination import TerminationChecker
-
+from pynetsym.util.component_creator import ComponentCreator
 
 
 __all__ = [
@@ -347,12 +347,8 @@ class Simulation(object):
             cls, 'additional_agents', acc_type=set)
 
     def setup(self):
-        graph_options = getattr(self, 'graph_options', {})
-        ## deepcopy: no object sharing between different simulation
-        ## executions!
-        graph_options = copy.deepcopy(graph_options)
-        self.graph = self.graph_type(**graph_options)
-
+        graph_creator = ComponentCreator(self, 'graph')
+        graph_creator.build(set_=True)
 
     def create_node_db(self):
         self.node_db = agent_db.AgentDB(PythonPickler(), dict())
