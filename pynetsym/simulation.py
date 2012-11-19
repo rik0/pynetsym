@@ -119,6 +119,15 @@ class Simulation(object):
         """
         return Clock
 
+
+    @classproperty
+    def termination_checker_type(self):
+        return TerminationChecker
+
+    @property
+    def termination_checker_options(self):
+        return [termination.count_down(self.steps)]
+
     @classproperty
     def configurator_type(self):
         """
@@ -218,8 +227,11 @@ class Simulation(object):
         self.create_node_db()
         self.create_address_book()
         self.create_logger()
-        self.termination_checker = TerminationChecker(self.graph,
-           termination.count_down(self.steps))
+        termination_checker_options = gather_from_ancestors(self,
+            'termination_checker_options', list)
+        self.termination_checker = self.termination_checker_type(
+                self.graph,
+                *termination_checker_options)
         self.configurator = self.configurator_type(
             **self._simulation_parameters)
         self.node_manager = NodeManager(self.graph)
