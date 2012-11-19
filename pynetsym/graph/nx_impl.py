@@ -14,6 +14,7 @@ from traits.trait_types import DelegatesTo
 
 from ._abstract import AbstractGraph
 from .error import GraphError
+from pynetsym.util import classproperty
 from .random_selector import IRandomSelector, RepeatedNodesRandomSelector
 from .import interface
 
@@ -23,11 +24,14 @@ class NxGraph(AbstractGraph):
 
     nx_graph = Instance(nx.Graph, allow_none=False)
 
-    def __init__(self, graph_type=nx.Graph, data=None, **kwargs):
-        random_selector = kwargs.pop('random_selector',
-                                     NxRandomSelector(graph_container=self))
-        self.nx_graph = graph_type(data=data, **kwargs)
-        self.random_selector = random_selector
+    @classproperty
+    def parameters(self):
+        return dict(graph=nx.Graph())
+
+    def __init__(self, graph, random_selector=None):
+        self.nx_graph = graph
+        self.random_selector = (NxRandomSelector(graph_container=self)
+                                if random_selector is None else random_selector)
 
     def add_node(self):
         node_index = self.index_store.take()

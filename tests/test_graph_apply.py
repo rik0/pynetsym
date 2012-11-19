@@ -17,7 +17,7 @@ class TestSkeleton(object):
 
 class TestGraphApplyNXGraph(TestSkeleton, TestCase):
     def makeGraph(self):
-        return NxGraph()
+        return NxGraph(nx.Graph())
 
     def testApply(self):
         self.assertEqual(

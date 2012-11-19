@@ -7,16 +7,16 @@ import networkx as nx
 from pynetsym.graph import NxGraph, ScipyGraph, GraphError, DirectedScipyGraph, can_test
 
 
-undirected_graph_types = [(ScipyGraph, 100),
-                          (NxGraph, )]
-directed_graph_types = [(DirectedScipyGraph, 100),
-                        (NxGraph, nx.DiGraph)]
+undirected_graph_types = [(ScipyGraph, lambda: dict(max_nodes=100)),
+                          (NxGraph, lambda: dict(graph=nx.Graph()))]
+directed_graph_types = [(DirectedScipyGraph, lambda: dict(max_nodes=100)),
+                        (NxGraph, lambda: dict(graph=nx.DiGraph()))]
 all_graphs = undirected_graph_types + directed_graph_types
 
 @paramunittest.parametrized(*all_graphs)
 class TestEmptyGraph(unittest.TestCase):
-    def setParameters(self, graph_factory, *args):
-        self.graph = graph_factory(*args)
+    def setParameters(self, graph_factory, make_parameters):
+        self.graph = graph_factory(**make_parameters())
 
     def testEmpty(self):
         self.assertEqual(0, self.graph.number_of_nodes())
@@ -89,8 +89,8 @@ class TestEmptyGraph(unittest.TestCase):
 class _AbstractStarGraph(object):
     def setParameters(self, size, construction_options):
         self.size = size
-        graph_factory, args = construction_options[0], construction_options[1:]
-        self.graph = graph_factory(*args)
+        graph_factory, make_parameters = construction_options[0], construction_options[1]
+        self.graph = graph_factory(**make_parameters())
 
     def _peripheral_nodes(self):
         return xrange(1, self.size)
@@ -265,7 +265,7 @@ class TestStarUndirected(_AbstractStarGraph, paramunittest.ParametrizedTestCase)
     (NxGraph, nx.DiGraph))
 class TestNXExport(paramunittest.ParametrizedTestCase):
     def setParameters(self, graph_type, nx_graph):
-        self.graph = graph_type(nx_graph)
+        self.graph = graph_type(nx_graph())
         self.nx_graph = self.graph.nx_graph
 
     def setUp(self):
@@ -291,3 +291,4 @@ class TestNXExport(paramunittest.ParametrizedTestCase):
         self.assertEqual(self.size, self.graph.number_of_nodes())
         other_graph.add_edge(self.new_node, 0)
         self.assertEqual(self.size - 1, self.graph.number_of_edges())
+

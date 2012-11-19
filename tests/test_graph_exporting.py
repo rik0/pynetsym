@@ -6,16 +6,16 @@ import networkx as nx
 
 
 class TGraphExportingBase():
-    def setParameters(self, factory, arguments):
+    def setParameters(self, factory, make_parameters):
         self.factory = factory
-        self.arguments = arguments
+        self.make_parameters = make_parameters
 
     def setUp(self):
         self.formats = ['csr', 'csc', 'dok', 'lil', 'coo']
         self.removed_node = 3
         self.number_of_initial_nodes = 5
 
-        self.graph = self.factory(*self.arguments)
+        self.graph = self.factory(**self.make_parameters())
         self.graph.add_nodes(self.number_of_initial_nodes)
         for target in xrange(1, self.number_of_initial_nodes):
             self.graph.add_edge(0, target)
@@ -109,8 +109,8 @@ class TGraphExportingBase():
             matrix)
 
 @paramunittest.parametrized(
-    (ScipyGraph, (12, )),
-    (NxGraph, ())
+    (ScipyGraph, lambda: dict(max_nodes=12)),
+    (NxGraph, lambda: dict(graph=nx.Graph()))
 )
 class TestGraphExporting(TGraphExportingBase, paramunittest.ParametrizedTestCase):
     def setUp(self):
@@ -129,8 +129,8 @@ class TestGraphExporting(TGraphExportingBase, paramunittest.ParametrizedTestCase
              [1, 0, 0, 0]], dtype=bool)
 
 @paramunittest.parametrized(
-    (DirectedScipyGraph, (12, )),
-    (NxGraph, (nx.DiGraph, ))
+    (DirectedScipyGraph, lambda: dict(max_nodes=12)),
+    (NxGraph, lambda: dict(graph=nx.DiGraph()))
 )
 class TestGraphExportingDirected(TGraphExportingBase, paramunittest.ParametrizedTestCase):
     def setUp(self):

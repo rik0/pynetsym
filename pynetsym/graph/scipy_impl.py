@@ -11,6 +11,7 @@ from .interface import IGraph
 from ._abstract import AbstractGraph
 from pynetsym.graph import GraphError, has
 from pynetsym.graph.random_selector import IRandomSelector, RepeatedNodesRandomSelector
+from pynetsym.util import classproperty
 
 class ScipyRandomSelector(RepeatedNodesRandomSelector):
     implements(IRandomSelector)
@@ -58,12 +59,13 @@ class ScipyGraph(AbstractGraph):
     def _max_nodes(self):
         return self.matrix.shape[0]
 
-    def __init__(self, max_nodes=None, **kwargs):
-        matrix = kwargs.pop('matrix', None)
-        nodes = kwargs.pop('nodes', None)
-        self.random_selector = kwargs.pop('random_selector',
-                                          self.random_selector_factory(graph_container=self))
+    @classproperty
+    def parameters(self):
+        return {}
 
+    def __init__(self, max_nodes=None, matrix=None, nodes=None, random_selector=None):
+        self.random_selector = (self.random_selector_factory(graph_container=self)
+                                if random_selector is None else random_selector)
         if matrix is not None:
             self.matrix = matrix
             self.matrix_factory = type(matrix)
@@ -78,8 +80,7 @@ class ScipyGraph(AbstractGraph):
             self.matrix = self.matrix_factory(
                 (max_nodes, max_nodes), dtype=bool)
         else:
-            raise ValueError('Bad parameters %s, %s' % (max_nodes, kwargs))
-        super(ScipyGraph, self).__init__(**kwargs)
+            raise ValueError('Bad parameters %s' % (locals(), ))
 
     def add_node(self):
         node_index = self.index_store.take()

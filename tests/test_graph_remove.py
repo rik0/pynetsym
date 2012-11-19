@@ -3,18 +3,18 @@ import networkx
 from pynetsym.graph import ScipyGraph, NxGraph
 
 @paramunittest.parametrized(
-    (ScipyGraph, (12, )),
-    (NxGraph, ()),
-    (NxGraph, (networkx.DiGraph, ))
+    (ScipyGraph, lambda: dict(max_nodes=12, )),
+    (NxGraph, lambda: dict(graph=networkx.Graph())),
+    (NxGraph, lambda: dict(graph=networkx.DiGraph()))
 )
 class TestGraphRemoveNode(paramunittest.ParametrizedTestCase):
-    def setParameters(self, factory, arguments):
+    def setParameters(self, factory, make_parameters):
         self.factory = factory
-        self.arguments = arguments
+        self.make_parameters = make_parameters
 
     def setUp(self):
         self.number_of_initial_nodes = 5
-        self.graph = self.factory(*self.arguments)
+        self.graph = self.factory(**self.make_parameters())
         self.graph.add_nodes(self.number_of_initial_nodes)
         for target in xrange(1, self.number_of_initial_nodes):
             self.graph.add_edge(0, target)

@@ -96,7 +96,7 @@ class TestNxRandomSelector(AbstractTestRandomSelector, TestCase):
     def setUp(self):
         self.nodes = 10
         star = nx.star_graph(self.nodes-1)
-        self.graph = NxGraph(data=star.edges())
+        self.graph = NxGraph(nx.Graph(data=star.edges()))
         self.random_selector = self.graph.random_selector
 
 class TestScipyRandomSelector(AbstractTestRandomSelector, TestCase):
