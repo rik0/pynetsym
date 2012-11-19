@@ -194,9 +194,8 @@ class Simulation(object):
 
     @classmethod
     def gather_additional_agents(cls):
-        full_additional_agents = gather_from_ancestors(
-            cls, 'additional_agents', acc_type=list)
-        return full_additional_agents
+        return gather_from_ancestors(
+            cls, 'additional_agents', acc_type=set)
 
     def setup(self):
         graph_options = getattr(self, 'graph_options', {})
@@ -258,7 +257,6 @@ class Simulation(object):
         for (additional_agent_factory, args, kwargs) in additional_agents:
             additional_agent = additional_agent_factory(*args, **kwargs)
             additional_agent.start(self.address_book, self.node_db)
-
 
     def start_simulation(self):
         self.clock.start_clock()

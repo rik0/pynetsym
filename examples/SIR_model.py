@@ -20,7 +20,6 @@ class Recorder(Agent):
                   'register_observer', name=self.name)
 
     def ticked(self):
-        self.send_log('[%d] ticked' % self.current_time)
         self.current_time += 1
 
     def node_infected(self, node):

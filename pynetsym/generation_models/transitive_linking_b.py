@@ -1,8 +1,8 @@
 import random
 import itertools as it
 
+from pynetsym import BasicConfigurator
 from pynetsym.generation_models import transitive_linking
-from pynetsym import Node, Simulation, BasicConfigurator
 
 
 class Node(transitive_linking.Node):
