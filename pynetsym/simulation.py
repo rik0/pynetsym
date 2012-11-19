@@ -1,22 +1,33 @@
+import copy
+import sys
+import operator
+
 import gevent
 from gevent.greenlet import LinkedCompleted
-from traits.trait_types import Int
-from pynetsym import addressing, graph
+
+from traits.api import Int
+from traits.api import List
+from traits.api import true
+from traits.api import false
+
+from pynetsym import addressing
+from pynetsym import graph
 from pynetsym import agent_db
 from pynetsym import configuration
 from pynetsym import core
 from pynetsym import termination
 from pynetsym import timing
+
+from pynetsym.util import extract_subdictionary
+from pynetsym.util import SequenceAsyncResult
+from pynetsym.util import gather_from_ancestors
+from pynetsym.util import classproperty
+
 from pynetsym.agent_db import PythonPickler
-
 from pynetsym.node_manager import NodeManager
+from pynetsym.termination import TerminationChecker
 
-import copy
-import sys
-import operator
 
-import traits.api as t
-from pynetsym.util import extract_subdictionary, SequenceAsyncResult, gather_from_ancestors, classproperty
 
 __all__ = [
     'Simulation',
@@ -207,10 +218,8 @@ class Simulation(object):
         self.create_node_db()
         self.create_address_book()
         self.create_logger()
-        self.termination_checker =\
-        termination.TerminationChecker(self.graph,
-                                       termination.count_down(self.steps)
-        )
+        self.termination_checker = TerminationChecker(self.graph,
+           termination.count_down(self.steps))
         self.configurator = self.configurator_type(
             **self._simulation_parameters)
         self.node_manager = NodeManager(self.graph)
@@ -341,11 +350,9 @@ class Activator(core.Agent):
         self.destroy_nodes()
         self.create_nodes()
         self.activate_nodes()
-        # FIXME 'should-terminate' is not used anymore.
-        return self.should_terminate()
 
-    def should_terminate(self):
-        return False
+    def signal_termination(self):
+        self.send(TerminationChecker.name, 'require_termination').get()
 
     def nodes_to_activate(self):
         return [self.graph.random_selector.random_node()]
@@ -372,10 +379,10 @@ class SyncActivator(Activator):
 
 class BaseClock(core.Agent):
     name = 'clock'
-    activator_can_terminate = t.false()
+    activator_can_terminate = false()
 
-    active = t.true(transient=True)
-    observers = t.List
+    active = true(transient=True)
+    observers = List
 
     def register_observer(self, name):
         self.observers.append(name)
