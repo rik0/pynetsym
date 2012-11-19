@@ -10,7 +10,7 @@ class TerminationChecker(core.Agent):
         self.active = True
 
     def add_condition(self, condition):
-        self.condition.append(condition)
+        self.conditions.append(condition)
 
     def check(self, requester):
         for condition in self.conditions:
