@@ -1,6 +1,6 @@
 import collections
 import numpy as np
-from numpy import ndarray, fromiter
+from numpy import ndarray
 from pynetsym.util import sna
 import networkx as nx
 
