@@ -21,6 +21,8 @@ def gather_from_ancestors(child_obj, attr_name, acc_type=set):
         acc_method = values.extend
     for parent in reverted_mro:
         new_value = parent.__dict__.get(attr_name, acc_type())
+        if isinstance(new_value, property):
+            new_value = new_value.fget(child_obj)
         acc_method(new_value)
     return values
 
