@@ -312,6 +312,10 @@ class Simulation(object):
     def handle(self):
         return self.graph.handle
 
+    @property
+    def motive(self):
+        return self.termination_checker.motive
+
 
 class Activator(core.Agent):
     """
@@ -363,8 +367,9 @@ class Activator(core.Agent):
         self.create_nodes()
         self.activate_nodes()
 
-    def signal_termination(self):
-        self.send(TerminationChecker.name, 'require_termination').get()
+    def signal_termination(self, reason):
+        self.send(TerminationChecker.name, 'require_termination',
+                reason=reason).get()
 
     def nodes_to_activate(self):
         return [self.graph.random_selector.random_node()]

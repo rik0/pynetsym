@@ -1,10 +1,15 @@
 import random
 import networkx
 from traits.trait_types import Enum, Int, Float, Set
-from pynetsym import Simulation, Node, Activator, Agent
-from pynetsym.configurators import NXGraphConfigurator
-from pynetsym.simulation import BaseClock
 
+from pynetsym import Simulation
+from pynetsym import Node
+from pynetsym import Activator
+from pynetsym import Agent
+
+from pynetsym.simulation import BaseClock
+from pynetsym.configurators import NXGraphConfigurator
+from pynetsym.termination.conditions import always_true
 
 class Recorder(Agent):
     name = 'recorder'
@@ -35,7 +40,7 @@ class Activator(Activator):
         if self.infected_nodes:
             super(Activator, self).tick()
         else:
-            exit(0)
+            self.signal_termination('No more infected')
 
     def infected(self, node):
         self.infected_nodes.add(node)
@@ -98,6 +103,10 @@ class Simulation(Simulation):
         (Recorder, (), {}),
     )
 
+    class termination_checker_type(Simulation.termination_checker_type):
+        def require_termination(self, reason):
+            self.add_condition(always_true(reason))
+
     command_line_options = (
         ('-p', '--infection-probability',
             dict(default=default_infection_probability, type=float)),
@@ -123,3 +132,5 @@ if __name__ == '__main__':
     graph = networkx.powerlaw_cluster_graph(100, 5, 0.1)
     sim = Simulation()
     sim.run(starting_graph=graph)
+
+    assert sim.motive == 'No more infected'

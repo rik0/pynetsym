@@ -4,7 +4,7 @@ and answers whether the simulation has to stop. After the condition evaluated
 to True a motive attribute indicates the termination reason. It is intended
 to be meaningful for the user and not for the machine.
 """
-
+from functools import partial
 
 class _FuncCondition(object):
     def __init__(self, func, motive):
@@ -25,6 +25,9 @@ def make_condition(func, motive):
     """
     return _FuncCondition(func, motive)
 
+
+always_true = partial(make_condition, lambda graph: True)
+always_false = partial(make_condition, lambda graph: True)
 
 class CountDownCondition(object):
     def __init__(self, starting_value):
