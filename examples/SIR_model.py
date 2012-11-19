@@ -1,6 +1,6 @@
 import random
 import networkx
-from traits.trait_types import Enum, Int, Float, Set, Instance
+from traits.trait_types import Enum, Int, Float, Set
 from pynetsym import Simulation, Node, Activator, Agent
 from pynetsym.configurators import NXGraphConfigurator
 from pynetsym.simulation import BaseClock
@@ -15,27 +15,35 @@ class Recorder(Agent):
                   'register_observer', name=self.name)
 
     def ticked(self):
-        self.send_log('ticked [%d]' % self.current_time)
+        self.send_log('[%d] ticked' % self.current_time)
         self.current_time += 1
 
-    def node_infected(self):
-        self.send_log('infected [%d]' % self.current_time)
+    def node_infected(self, node):
+        self.send_log('[%d] infected %s' % (
+            self.current_time, node))
 
-    def node_recovered(self):
-        self.send_log('recovered [%d]' % self.current_time)
+    def node_recovered(self, node):
+        self.send_log('[%d] recovered %s' % (
+            self.current_time, node))
 
 
 
 class Activator(Activator):
     infected_nodes = Set(Int)
 
+    def tick(self):
+        if self.infected_nodes:
+            super(Activator, self).tick()
+        else:
+            exit(0)
+
     def infected(self, node):
         self.infected_nodes.add(node)
-        self.send(Recorder.name, 'node_infected')
+        self.send(Recorder.name, 'node_infected', node=node)
 
     def not_infected(self, node):
         self.infected_nodes.remove(node)
-        self.send(Recorder.name, 'node_recovered')
+        self.send(Recorder.name, 'node_recovered', node=node)
 
     def nodes_to_activate(self):
         return self.infected_nodes
@@ -48,7 +56,10 @@ class Specimen(Node):
     infection_length = Int
     infected_fraction = Float
 
+    # DEBUG_SEND = True
+
     def initialize(self):
+        self.state = 'S'
         if random.random() < self.infected_fraction:
             self.infect()
 
@@ -62,7 +73,7 @@ class Specimen(Node):
         if (self.state == 'I'
             and self.infection_time > 0):
             for node in self.neighbors():
-                if random.random() < self.infection_time:
+                if random.random() < self.infection_probability:
                     self.send(node, 'infect')
             self.infection_time -= 1
         elif (self.state == 'I'
@@ -101,7 +112,10 @@ class Simulation(Simulation):
 
     class configurator_type(NXGraphConfigurator):
         node_cls = Specimen
-        node_options = {'infection_probability', 'infection_length', 'infected_fraction'}
+        node_options = {
+                'infection_probability',
+                'infection_length',
+                'infected_fraction'}
         initialize_nodes = True
 
 
