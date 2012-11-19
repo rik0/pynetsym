@@ -34,36 +34,42 @@ class ComponentCreator(object):
             raise ComponentError('Cannot create component %s' % (
                 self.component_name, ))
 
-    def process_arg_spec(self, arg_spec):
-        arg_names, more_arg_name, kw_name, defaults = arg_spec
-        if (more_arg_name is not None or
-             kw_name is not None):
-            raise ComponentError("Cannot use introspection with varargs or keyword args.")
-        return arg_names
+    def factory_signature(self, factory):
+        if inspect.isfunction(factory):
+            return inspect.getargspec(factory)
+        elif hasattr(factory, '__init__'):
+            return inspect.getargspec(factory.__init__)
+        else:
+            raise ComponentError("Invalid factory.")
 
     def options(self, factory):
+        has_kw = False
         try:
-            return copy.copy(factory.options)
+            options = factory.options
         except AttributeError:
             try:
-                return copy.copy(getattr(self.context, self.options_name))
+                options = getattr(self.context, self.options_name)
             except AttributeError:
-                if inspect.isfunction(factory):
-                    arg_spec = inspect.getargspec(factory)
-                elif hasattr(factory, '__init__'):
-                    arg_spec = inspect.getargspec(factory.__init__)
-                else:
-                    raise ComponentError(
-                            'Cannot find options for %s' % (
-                                self.component_name, ))
-                return copy.copy(self.process_arg_spec(arg_spec))
+                (options, additional_arguments_name,
+                 kw_name, _defaults) = self.factory_signature(factory)
+                if additional_arguments_name is not None:
+                    raise ComponentError("Cannot use introspection with varargs.")
+                if kw_name is not None:
+                    has_kw = True
+        return copy.copy(options), has_kw
 
-    def parameters(self, options, simulation_parameters):
+
+
+
+    def parameters(self, options, overriding_parameters, has_kw):
         program_specified_parameters = copy.deepcopy(getattr(self.context,
                 self.parameters_name, {}))
-        overriding_parameters = extract_subdictionary(
-                simulation_parameters, options)
-        program_specified_parameters.update(overriding_parameters)
+        if has_kw:
+            reduced_parameters = overriding_parameters
+        else:
+            reduced_parameters = extract_subdictionary(
+                    overriding_parameters, options)
+        program_specified_parameters.update(reduced_parameters)
         return program_specified_parameters
 
 
@@ -71,8 +77,8 @@ class ComponentCreator(object):
     def build(self, parameters=None, set_=False):
         parameters = {} if parameters is None else parameters
         factory = self.factory()
-        options = self.options(factory)
-        parameters = self.parameters(options, parameters)
+        options, has_kw = self.options(factory)
+        parameters = self.parameters(options, parameters, has_kw)
         try:
             instance = factory(**parameters)
         except TypeError as e:

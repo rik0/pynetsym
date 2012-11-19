@@ -127,23 +127,19 @@ class TestComponentCreatorAdditional(unittest.TestCase):
     def override_options(self):
         return dict(zip(self.options, self.values))
 
-class TestComponentCreatorKeyword(unittest.TestCase):
+class TestComponentCreatorKeyword(AbstractComponentCreatorT, unittest.TestCase):
     def setUp(self):
         self.component_name = 'foo'
         self.options = ['a', 'b']
         self.values = [1, 2]
 
         class SomeClass(AttrMock):
-            def __init__(self, a, **b):
-                super(SomeClass, self).__init__(a=a, b=b)
+            def __init__(self, a, **kw):
+                super(SomeClass, self).__init__(a=a, **kw)
 
         self.context = AttrMock(foo_type=SomeClass)
         self.component_creator = ComponentCreator(
             self.context, self.component_name)
-
-    def test_component_creator(self):
-        self.assertRaises(ComponentError, self.component_creator.build,
-                          self.override_options())
 
     def override_options(self):
         return dict(zip(self.options, self.values))
