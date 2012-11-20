@@ -116,7 +116,7 @@ class Simulation(Simulation):
     )
 
     activator_type = Activator
-    activator_options = {}
+    options = {}
 
     class configurator_type(NXGraphConfigurator):
         node_type = Specimen

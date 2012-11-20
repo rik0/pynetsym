@@ -19,7 +19,7 @@ class Node(Node):
 
 
 class Activator(Activator):
-    activator_options = {'starting_edges'}
+    options = {'starting_edges'}
 
     def nodes_to_activate(self):
         return self.fresh_nodes

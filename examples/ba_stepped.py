@@ -62,7 +62,7 @@ class Node(Node):
 
 
 class Activator(simulation.Activator):
-    activator_options = {'stepper'}
+    options = {'stepper'}
 
     def nodes_to_activate(self):
         return self.fresh_nodes

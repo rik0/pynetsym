@@ -77,7 +77,7 @@ class BPA(Simulation):
         node_type = Node
         node_options = {'probability', 'gamma'}
 
-    activator_options = {'edges'}
+    options = {'edges'}
 
     command_line_options = (
         ('-n', '--starting-network-size', dict(default=100, type=int)),

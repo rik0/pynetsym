@@ -212,7 +212,7 @@ class BittorrentNode(Node):
 
 
 class Activator(simulation.Activator):
-    activator_options = {'generation_probability', 'update_probability'}
+    options = {'generation_probability', 'update_probability'}
     separator = object()
 
     def setup(self):

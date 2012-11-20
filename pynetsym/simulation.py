@@ -19,10 +19,8 @@ from pynetsym import core
 from pynetsym import termination
 from pynetsym import timing
 
-from pynetsym.util import extract_subdictionary
 from pynetsym.util import SequenceAsyncResult
 from pynetsym.util import gather_from_ancestors
-from pynetsym.util import classproperty
 
 from pynetsym.agent_db import PythonPickler
 from pynetsym.node_manager import NodeManager
@@ -50,15 +48,6 @@ class Activator(core.Agent):
     """
     name = 'activator'
     activator_options = {'graph'}
-
-    def __init__(self, graph, **additional_arguments):
-        activator_options = gather_from_ancestors(
-            self, 'activator_options')
-        activator_arguments = extract_subdictionary(
-            additional_arguments,
-            activator_options)
-        self.graph = graph
-        vars(self).update(activator_arguments)
 
     def activate_nodes(self):
         node_ids = self.nodes_to_activate()
@@ -228,7 +217,7 @@ class Simulation(object):
             class configurator_type(generation.BasicConfigurator):
                 node_type = Node
                 node_options = {...}
-                activator_options = {...}
+                options = {...}
 
             command_line_options = (
                 ('-b', '--bar', dict(default=..., type=...))
@@ -379,12 +368,17 @@ class Simulation(object):
         self.link_node_manager_with_configurator()
 
 
+    def create_activator(self):
+        activator_builder = ComponentBuilder(
+            self, 'activator', gather_from_ancestors=True)
+        activator_builder.build(self._simulation_parameters,
+                                set_=True, graph=self.graph)
+
     def create_simulation_agents(self):
         self.termination_checker.start(self.address_book, self.node_db)
         self.node_manager.start(self.address_book, self.node_db)
-        self.activator = self.activator_type(
-            self.graph,
-            **self._simulation_parameters)
+
+        self.create_activator()
         self.activator.start(self.address_book, self.node_db)
         self.clock = self.clock_type(
             **getattr(self, 'clock_options', {}))

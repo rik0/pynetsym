@@ -31,7 +31,7 @@ class Node(Node):
 
 
 class Activator(Activator):
-    activator_options = {'starting_network_size'}
+    options = {'starting_network_size'}
 
     to_choose = Int(0, allow_none=False)
 
@@ -56,7 +56,7 @@ class WS(Simulation):
                 "rewiring_probability",
                 "lattice_connections",
                 "starting_network_size"}
-        activator_options = {"lattice_connections"}
+        #options = {"lattice_connections"}
 
 if __name__ == '__main__':
     sim = WS()

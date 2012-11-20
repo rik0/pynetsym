@@ -27,7 +27,7 @@ class Activator(simulation.Activator):
     #DEBUG_SEND = True
     #DEBUG_RECEIVE = True
 
-    activator_options = {'starting_network_size'}
+    options = {'starting_network_size'}
 
     def setup(self):
         self.next_node = 0
