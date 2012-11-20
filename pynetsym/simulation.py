@@ -389,21 +389,26 @@ class Simulation(object):
             set_=True,
             full_parameters=self._simulation_parameters)
 
+    def create_node_manager(self):
+        self.node_manager = NodeManager(self.graph)
+
     def create_service_agents(self):
         self.create_node_db()
         self.create_address_book()
         self.create_logger()
         self.create_termination_checker()
         self.create_configurator()
+        self.create_node_manager()
 
-        self.node_manager = NodeManager(self.graph)
-
-    def pre_configure_network(self):
-        self.configurator.start(self.address_book, self.node_db)
+    def link_node_manager_with_configurator(self):
         # FIXME: clean this code! Too much dependence from internals!
         self.node_manager._greenlet.link(self.configurator._greeenlet)
         self.configurator.join()
         self.node_manager._greenlet.unlink(self.configurator._greeenlet)
+
+    def pre_configure_network(self):
+        self.configurator.start(self.address_book, self.node_db)
+        self.link_node_manager_with_configurator()
 
 
     def create_simulation_agents(self):
