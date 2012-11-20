@@ -187,6 +187,7 @@ class Clock(BaseClock):
         else:
             self.simulation_end()
 
+
 class Simulation(object):
     """
     A subclass of Simulation describes a specific kind of simulation.
@@ -244,34 +245,11 @@ class Simulation(object):
 
     additional_agents = ()
 
-    @classproperty
-    def activator_type(self):
-        """
-        Factory used to create the Activator.
-        @rtype: callable(graph, address_book)
-        """
-        return Activator
-
-    @classproperty
-    def graph_type(self):
-        """
-        Returns the factory used to build the graph.
-        @rtype: callable
-        """
-        return graph.default_graph
-
-    @classproperty
-    def clock_type(self):
-        """
-        Factory used to create the clock_type.
-        @rtype: callable(int steps, address_book) -> core.Clock
-        """
-        return Clock
-
-
-    @classproperty
-    def termination_checker_type(self):
-        return TerminationChecker
+    activator_type = Activator
+    graph_type = graph.default_graph
+    clock_type = Clock
+    termination_checker_type = TerminationChecker
+    configurator_type = None
 
     @property
     def termination_checker_conditions(self):
@@ -282,16 +260,6 @@ class Simulation(object):
         return dict(
             graph=self.graph,
             conditions=self.termination_checker_conditions)
-
-
-
-
-    @classproperty
-    def configurator_type(self):
-        """
-        Returns the builder of the Configurator to be passed to NodeManager
-        @rtype: callable
-        """
 
     def __init__(self):
         """
@@ -481,5 +449,3 @@ class Simulation(object):
     @property
     def motive(self):
         return self.termination_checker.motive
-
-
