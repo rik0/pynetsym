@@ -50,7 +50,7 @@ class BA_InterruptingNode_SyncClock(barabasi_albert.BA):
     activator_type = InterruptingNodeActivator
 
     class configurator_type(BasicConfigurator):
-        node_cls = InterruptingNode
+        node_type = InterruptingNode
         node_options = {'starting_edges'}
 
 
@@ -63,7 +63,7 @@ class BA_InterruptingNode_AsyncClock(barabasi_albert.BA):
         return dict(remaining_ticks=self.steps)
 
     class configurator_type(BasicConfigurator):
-        node_cls = InterruptingNode
+        node_type = InterruptingNode
         node_options = {'starting_edges'}
 
 

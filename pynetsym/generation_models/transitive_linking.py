@@ -64,7 +64,7 @@ class TL(Simulation):
             default='uniform')))
 
     class configurator_type(BasicConfigurator):
-        node_cls = Node
+        node_type = Node
         node_options = {"death_probability", "criterion"}
 
 #    class clock_type(Clock):

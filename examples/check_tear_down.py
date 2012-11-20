@@ -73,7 +73,7 @@ class Sim(simulation.Simulation):
     activator_type = Activator
 
     class configurator_type(BasicConfigurator):
-        node_cls = Node
+        node_type = Node
         node_options = {'starting_network_size'}
 
 

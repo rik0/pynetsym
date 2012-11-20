@@ -25,7 +25,7 @@ class Node(transitive_linking.Node):
 
 class TL(transitive_linking.TL):
     class configurator_type(BasicConfigurator):
-        node_cls = Node
+        node_type = Node
         node_options = {"death_probability", "criterion"}
 
 

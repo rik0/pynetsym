@@ -119,7 +119,7 @@ class Simulation(Simulation):
     activator_options = {}
 
     class configurator_type(NXGraphConfigurator):
-        node_cls = Specimen
+        node_type = Specimen
         node_options = {
                 'infection_probability',
                 'infection_length',

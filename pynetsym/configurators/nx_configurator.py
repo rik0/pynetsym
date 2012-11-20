@@ -1,18 +1,19 @@
-from traits.trait_types import Instance, Class
+from traits.trait_types import Instance, Class, Type
 from pynetsym import node_manager
+
 
 import itertools
 import networkx as nx
-from pynetsym.graph import IGraph
 
 from pynetsym.util import extract_subdictionary, SequenceAsyncResult
 from .basic import AbstractConfigurator
 
 class NXGraphConfigurator(AbstractConfigurator):
-    configurator_options = {'starting_graph'}
+    options = {'starting_graph'}
 
     starting_graph = Instance(nx.Graph, allow_none=False)
-    node_cls = Class
+
+    node_type = Type
     node_options = Instance(set)
 
     def create_edges(self):
@@ -24,7 +25,7 @@ class NXGraphConfigurator(AbstractConfigurator):
 
     def create_nodes(self):
         self.node_arguments = extract_subdictionary(
-                self.additional_arguments, self.node_options)
+                self.full_parameters, self.node_options)
         node_manager_id = node_manager.NodeManager.name
         graph = self.starting_graph
         assert isinstance(graph, nx.Graph)
@@ -33,7 +34,7 @@ class NXGraphConfigurator(AbstractConfigurator):
         # create all the nodes
         nit_1, nit_2 = itertools.tee(graph.nodes_iter())
         answers = [self.send(node_manager_id, 'create_node',
-                       cls=self.node_cls, parameters=self.node_arguments)
+                       cls=self.node_type, parameters=self.node_arguments)
                        for _node in nit_1]
         self.node_map = {node: identifier for node, identifier
             in itertools.izip(nit_2,

@@ -74,7 +74,7 @@ class Node(Node):
 
 class BPA(Simulation):
     class configurator_type(BasicConfigurator):
-        node_cls = Node
+        node_type = Node
         node_options = {'probability', 'gamma'}
 
     activator_options = {'edges'}

@@ -225,7 +225,7 @@ class Simulation(object):
                 # ...
 
             class configurator_type(generation.BasicConfigurator):
-                node_cls = Node
+                node_type = Node
                 node_options = {...}
                 activator_options = {...}
 
@@ -385,8 +385,13 @@ class Simulation(object):
             self, 'termination_checker')
         termination_checker_creator.build(set_=True)
 
-        self.configurator = self.configurator_type(
-            **self._simulation_parameters)
+        configurator_creator = ComponentCreator(
+            self, 'configurator', gather_from_ancestors=True)
+        configurator_creator.build(
+            self._simulation_parameters,
+            set_=True,
+            full_parameters=self._simulation_parameters)
+
         self.node_manager = NodeManager(self.graph)
 
     def pre_configure_network(self):

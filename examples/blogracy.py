@@ -275,7 +275,7 @@ class Simulation(simulation.Simulation):
 
     class configurator_type(configurators.FromFile):
         initialize = True
-        node_cls = Either(Node, BittorrentNode, 0.77)
+        node_type = Either(Node, BittorrentNode, 0.77)
         node_options = {}
 
 

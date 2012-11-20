@@ -42,7 +42,7 @@ class BA(Simulation):
 #    graph_options = dict(graph=igraph.Graph(0))
 
     class configurator_type(BasicConfigurator):
-        node_cls = Node
+        node_type = Node
         node_options = {'starting_edges'}
 
 if __name__ == '__main__':

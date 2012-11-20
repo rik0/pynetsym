@@ -39,7 +39,7 @@ class BA(Simulation):
     activator_type = Activator
 
     class configurator_type(BasicConfigurator):
-        node_cls = Node
+        node_type = Node
         node_options = {'starting_edges'}
 
 if __name__ == '__main__':

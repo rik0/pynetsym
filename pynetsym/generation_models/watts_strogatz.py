@@ -51,7 +51,7 @@ class WS(Simulation):
 
     class configurator_type(BasicConfigurator):
         initialize_nodes = True
-        node_cls = Node
+        node_type = Node
         node_options = {
                 "rewiring_probability",
                 "lattice_connections",

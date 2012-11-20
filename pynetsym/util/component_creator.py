@@ -3,16 +3,18 @@ import inspect
 
 from pynetsym import error
 from .dictionary import extract_subdictionary
-
+from pynetsym.util import gather_from_ancestors
 
 
 class ComponentError(error.PyNetSymError):
     pass
 
 class ComponentCreator(object):
-    def __init__(self, context, component_name):
+    def __init__(self, context, component_name,
+        gather_from_ancestors=False):
         self.context = context
         self.component_name = component_name
+        self.gather_from_ancestors = gather_from_ancestors
 
     @property
     def factory_name(self):
@@ -42,10 +44,16 @@ class ComponentCreator(object):
         else:
             raise ComponentError("Invalid factory.")
 
+    def _from_factory(self, factory):
+        if self.gather_from_ancestors:
+            return gather_from_ancestors(factory, 'options', set)
+        else:
+            return factory.options
+
     def options(self, factory):
         has_kw = False
         try:
-            options = factory.options
+            options = self._from_factory(factory)
         except AttributeError:
             try:
                 options = getattr(self.context, self.options_name)
@@ -67,7 +75,7 @@ class ComponentCreator(object):
                 overriding_parameters, options)
         return reduced_parameters
 
-    def parameters(self, factory, options, overriding_parameters, has_kw):
+    def parameters(self, factory, options, overriding_parameters, has_kw, **more_parameters):
         try:
             parameters = factory.parameters
         except AttributeError:
@@ -76,13 +84,14 @@ class ComponentCreator(object):
         reduced_parameters = self.compute_overriding_parameters(
             has_kw, options, overriding_parameters)
         parameters.update(reduced_parameters)
+        parameters.update(more_parameters)
         return parameters
 
-    def build(self, parameters=None, set_=False):
+    def build(self, parameters=None, set_=False, **more_parameters):
         parameters = {} if parameters is None else parameters
         factory = self.factory()
         options, has_kw = self.options(factory)
-        parameters = self.parameters(factory, options, parameters, has_kw)
+        parameters = self.parameters(factory, options, parameters, has_kw, **more_parameters)
         try:
             instance = factory(**parameters)
         except TypeError as e:

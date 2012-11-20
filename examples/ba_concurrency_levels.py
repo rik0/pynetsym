@@ -64,7 +64,7 @@ class BA2(BA):
     activator_type = Activator2
 
     class configurator_type(BasicConfigurator):
-        node_cls = Node2
+        node_type = Node2
         node_options = {'starting_edges'}
 
 DPI = 1000
