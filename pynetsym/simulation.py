@@ -324,8 +324,8 @@ class Simulation(object):
             cls, 'additional_agents', acc_type=set)
 
     def setup(self):
-        graph_creator = ComponentBuilder(self, 'graph')
-        graph_creator.build(set_=True)
+        graph_builder = ComponentBuilder(self, 'graph')
+        graph_builder.build(set_=True)
 
     def create_node_db(self):
         self.node_db = agent_db.AgentDB(PythonPickler(), dict())
@@ -345,14 +345,14 @@ class Simulation(object):
             self.address_book, self.node_db, sys.stderr)
 
     def create_termination_checker(self):
-        termination_checker_creator = ComponentBuilder(
+        termination_checker_builder = ComponentBuilder(
             self, 'termination_checker')
-        termination_checker_creator.build(set_=True)
+        termination_checker_builder.build(set_=True)
 
     def create_configurator(self):
-        configurator_creator = ComponentBuilder(
+        configurator_builder = ComponentBuilder(
             self, 'configurator', gather_from_ancestors=True)
-        configurator_creator.build(
+        configurator_builder.build(
             self._simulation_parameters,
             set_=True,
             full_parameters=self._simulation_parameters)
