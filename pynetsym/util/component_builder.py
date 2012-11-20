@@ -9,7 +9,7 @@ from pynetsym.util import gather_from_ancestors
 class ComponentError(error.PyNetSymError):
     pass
 
-class ComponentCreator(object):
+class ComponentBuilder(object):
     def __init__(self, context, component_name,
         gather_from_ancestors=False):
         self.context = context

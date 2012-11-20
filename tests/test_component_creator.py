@@ -1,5 +1,5 @@
 import unittest
-from pynetsym.util.component_creator import ComponentCreator, ComponentError
+from pynetsym.util.component_builder import ComponentBuilder, ComponentError
 
 class AttrMock(object):
     def __init__(self, **kwargs):
@@ -37,7 +37,7 @@ class TestComponentCreatorOptionsInContext(AbstractComponentCreatorT, unittest.T
         self.context = AttrMock(
                 foo_options=self.options[:],
                 foo_type=AttrMock)
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
                 self.context,
                 self.component_name)
 
@@ -48,7 +48,7 @@ class TestComponentCreatorOptionsInObject(AbstractComponentCreatorT, unittest.Te
             options = self.options[:]
 
         self.context = AttrMock(foo_type=SomeClass)
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
                 self.context,
                 self.component_name)
 
@@ -63,7 +63,7 @@ class TestComponentCreatorOptionsSomeStatic(AbstractComponentCreatorT, unittest.
         self.context = AttrMock(
                 foo_type=SomeClass,
                 foo_parameters=dict(zip(self.options[:-1], self.values)))
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
                 self.context,
                 self.component_name)
         self.values[1:] = (3, 4)
@@ -80,7 +80,7 @@ class TestComponentCreatorIntrospection(AbstractComponentCreatorT, unittest.Test
                 super(SomeClass, self).__init__(a=a, b=b)
 
         self.context = AttrMock(foo_type=SomeClass)
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
             self.context, self.component_name)
 
 
@@ -96,7 +96,7 @@ class TestComponentCreatorNotEnoughArguments(unittest.TestCase):
                 super(SomeClass, self).__init__(a=a, b=b, c=c)
 
         self.context = AttrMock(foo_type=SomeClass)
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
             self.context, self.component_name)
 
     def test_component_creator(self):
@@ -117,7 +117,7 @@ class TestComponentCreatorAdditional(unittest.TestCase):
                 super(SomeClass, self).__init__(a=a, b=b)
 
         self.context = AttrMock(foo_type=SomeClass)
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
             self.context, self.component_name)
 
     def test_component_creator(self):
@@ -138,7 +138,7 @@ class TestComponentCreatorKeyword(AbstractComponentCreatorT, unittest.TestCase):
                 super(SomeClass, self).__init__(a=a, **kw)
 
         self.context = AttrMock(foo_type=SomeClass)
-        self.component_creator = ComponentCreator(
+        self.component_creator = ComponentBuilder(
             self.context, self.component_name)
 
     def override_options(self):

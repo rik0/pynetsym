@@ -27,7 +27,7 @@ from pynetsym.util import classproperty
 from pynetsym.agent_db import PythonPickler
 from pynetsym.node_manager import NodeManager
 from pynetsym.termination import TerminationChecker
-from pynetsym.util.component_creator import ComponentCreator
+from pynetsym.util.component_builder import ComponentBuilder
 
 
 __all__ = [
@@ -356,7 +356,7 @@ class Simulation(object):
             cls, 'additional_agents', acc_type=set)
 
     def setup(self):
-        graph_creator = ComponentCreator(self, 'graph')
+        graph_creator = ComponentBuilder(self, 'graph')
         graph_creator.build(set_=True)
 
     def create_node_db(self):
@@ -381,11 +381,11 @@ class Simulation(object):
         self.create_address_book()
         self.create_logger()
 
-        termination_checker_creator = ComponentCreator(
+        termination_checker_creator = ComponentBuilder(
             self, 'termination_checker')
         termination_checker_creator.build(set_=True)
 
-        configurator_creator = ComponentCreator(
+        configurator_creator = ComponentBuilder(
             self, 'configurator', gather_from_ancestors=True)
         configurator_creator.build(
             self._simulation_parameters,
