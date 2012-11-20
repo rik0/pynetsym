@@ -376,21 +376,25 @@ class Simulation(object):
         self.logger = core.get_logger(
             self.address_book, self.node_db, sys.stderr)
 
-    def create_service_agents(self):
-        self.create_node_db()
-        self.create_address_book()
-        self.create_logger()
-
+    def create_termination_checker(self):
         termination_checker_creator = ComponentBuilder(
             self, 'termination_checker')
         termination_checker_creator.build(set_=True)
 
+    def create_configurator(self):
         configurator_creator = ComponentBuilder(
             self, 'configurator', gather_from_ancestors=True)
         configurator_creator.build(
             self._simulation_parameters,
             set_=True,
             full_parameters=self._simulation_parameters)
+
+    def create_service_agents(self):
+        self.create_node_db()
+        self.create_address_book()
+        self.create_logger()
+        self.create_termination_checker()
+        self.create_configurator()
 
         self.node_manager = NodeManager(self.graph)
 
