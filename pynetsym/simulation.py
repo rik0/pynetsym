@@ -9,7 +9,7 @@ from traits.api import Int
 from traits.api import List
 from traits.api import true
 from traits.api import false
-from traits.trait_types import Instance
+from traits.api import Instance
 
 from pynetsym import addressing
 from pynetsym import graph
@@ -49,7 +49,7 @@ class Activator(core.Agent):
     implementations.
     """
     name = 'activator'
-    activator_options = {}
+    activator_options = {'graph'}
 
     def __init__(self, graph, **additional_arguments):
         activator_options = gather_from_ancestors(
