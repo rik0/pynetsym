@@ -9,6 +9,7 @@ from traits.api import Int
 from traits.api import List
 from traits.api import true
 from traits.api import false
+from traits.trait_types import Instance
 
 from pynetsym import addressing
 from pynetsym import graph
@@ -395,6 +396,7 @@ class SyncActivator(Activator):
 class BaseClock(core.Agent):
     name = 'clock'
     activator_can_terminate = false()
+    clock_loop_g = Instance(gevent.Greenlet)
 
     active = true(transient=True)
     observers = List
@@ -411,16 +413,16 @@ class BaseClock(core.Agent):
         except LinkedCompleted:
             return True
 
-
     def start_clock(self):
         """
         Here the clock actually starts ticking.
         """
         self.active = True
-        self.clock_loop = gevent.spawn_link(self.clock_loop)
+        self.clock_loop_g = gevent.spawn_link(self.clock_loop)
 
-    def stop_clock(self, motive):
-        self.active = False
+    def positive_termination(self, originator, motive):
+        if originator == TerminationChecker.name:
+            self.clock_loop_g.join()
 
     def clock_loop(self):
         raise NotImplementedError()
@@ -434,6 +436,7 @@ class BaseClock(core.Agent):
         return self.send(Activator.name, 'simulation_ended')
 
     def simulation_end(self):
+        print 'simulation -end'
         self.active = False
         self.send_simulation_ended().get()
 
@@ -459,7 +462,7 @@ class Clock(BaseClock):
         while self.active:
             waiting = self.send_tick()
             waiting.get()
-            waiting = self.ask_to_terminate()
-            waiting.get()
+            should_terminate = self.ask_to_terminate()
+            self.active = not should_terminate.get()
         else:
             self.simulation_end()
