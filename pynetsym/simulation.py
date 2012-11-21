@@ -436,7 +436,6 @@ class BaseClock(core.Agent):
         return self.send(Activator.name, 'simulation_ended')
 
     def simulation_end(self):
-        print 'simulation -end'
         self.active = False
         self.send_simulation_ended().get()
 
