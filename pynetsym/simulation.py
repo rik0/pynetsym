@@ -453,10 +453,6 @@ class AsyncClock(BaseClock):
         else:
             self.simulation_end()
 
-    def ask_to_terminate(self):
-        print self.value
-        super(AsyncClock, self).ask_to_terminate()
-
 
 class Clock(BaseClock):
     def clock_loop(self):
