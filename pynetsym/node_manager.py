@@ -58,8 +58,6 @@ class NodeManager(core.Agent):
         return identifier
 
     def simulation_ended(self):
-        message = 'SIMULATION ENDED: REMAINING %d NODES.' % len(self.group)
-        self.send_log(message)
         self.group.join()
 
 
