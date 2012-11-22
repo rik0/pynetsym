@@ -33,7 +33,7 @@ class ComponentBuilder(object):
         if factory is not None:
             return factory
         else:
-            raise ComponentError('Cannot create component %s' % (
+            raise ComponentError('Cannot create component %s: missing factory' % (
                 self.component_name, ))
 
     def factory_signature(self, factory):

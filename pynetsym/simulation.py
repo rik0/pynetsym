@@ -10,7 +10,7 @@ from traits.api import true
 from traits.api import false
 from traits.api import Instance
 
-from pynetsym import addressing
+from pynetsym import addressing, Logger
 from pynetsym import graph
 from pynetsym import agent_db
 from pynetsym import configuration
@@ -236,6 +236,7 @@ class Simulation(object):
     activator_type = Activator
     graph_type = graph.default_graph
     clock_type = Clock
+    logger_type = Logger
     termination_checker_type = TerminationChecker
     configurator_type = None
 
@@ -324,8 +325,10 @@ class Simulation(object):
                                        lambda o: isinstance(o, basestring))
 
     def create_logger(self):
-        self.logger = core.get_logger(
-            self.address_book, self.node_db, sys.stderr)
+        logger_builder = ComponentBuilder(self, 'logger')
+        logger_builder.build(stream=sys.stderr)\
+            .start(self.address_book, self.node_db)
+
 
     def create_termination_checker(self):
         termination_checker_builder = ComponentBuilder(
