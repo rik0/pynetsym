@@ -270,6 +270,13 @@ class Simulation(object):
     logger_type = Logger
     termination_checker_type = TerminationChecker
     configurator_type = None
+    agent_db_type = agent_db.AgentDB
+
+    @property
+    def agent_db_parameters(self):
+        return dict(
+            pickling_module=PythonPickler(),
+            storage=dict())
 
     @property
     def termination_checker_conditions(self):
@@ -343,8 +350,8 @@ class Simulation(object):
         graph_builder.build(set_=True)
 
     def create_node_db(self):
-        self.agent_db = agent_db.AgentDB(PythonPickler(), dict())
-
+        agent_db_builder = ComponentBuilder(self, 'agent_db')
+        agent_db_builder.build(set_=True)
 
     def create_address_book(self):
         node_address_book = addressing.FlatAddressBook()
