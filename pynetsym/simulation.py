@@ -306,11 +306,6 @@ class Simulation(object):
         cli_args_dict = configuration_manager.process()
         return cli_args_dict
 
-    @classmethod
-    def gather_additional_agents(cls):
-        return gather_from_ancestors(
-            cls, 'additional_agents', acc_type=set)
-
     def setup(self):
         graph_builder = ComponentBuilder(self, 'graph')
         graph_builder.build(set_=True)
@@ -336,6 +331,7 @@ class Simulation(object):
         termination_checker_builder = ComponentBuilder(
             self, 'termination_checker')
         termination_checker_builder.build(set_=True)
+        self.termination_checker.start(self.address_book, self.node_db)
 
     def create_configurator(self):
         configurator_builder = ComponentBuilder(
@@ -382,18 +378,51 @@ class Simulation(object):
         clock_builder.build(set_=True)
         self.clock.start(self.address_book, self.node_db)
 
-    def create_simulation_agents(self):
-        self.termination_checker.start(self.address_book, self.node_db)
 
+    def parse_additional_agent_line(self, additional_agent_line):
+        try:
+            (component_name, gfa,
+             start_after_clock) = additional_agent_line
+        except TypeError:
+            component_name = additional_agent_line
+            start_after_clock = False
+            gfa = False
+        except ValueError:
+            if len(additional_agent_line) == 2:
+                (component_name, gfa) = additional_agent_line
+                start_after_clock = False
+            else:
+                component_name = additional_agent_line
+                start_after_clock = False
+                gfa = False
+        return component_name, gfa, start_after_clock
+
+    def create_additional_agents(self):
+        additional_agents = gather_from_ancestors(
+                    self, 'additional_agents', acc_type=set)
+        self.late_start = []
+        for additional_agent_line in additional_agents:
+            component_name, gfa, start_after_clock = \
+                self.parse_additional_agent_line(additional_agent_line)
+
+            component_builder = ComponentBuilder(
+                self, component_name, gfa)
+            component = component_builder.build(
+                parameters=self._simulation_parameters, set_=True)
+            if start_after_clock:
+                self.late_start.append(component)
+            else:
+                component.start(self.address_book, self.node_db)
+
+    def create_simulation_agents(self):
         self.create_activator()
         self.create_clock()
-        additional_agents = self.gather_additional_agents()
-        for (additional_agent_factory, args, kwargs) in additional_agents:
-            additional_agent = additional_agent_factory(*args, **kwargs)
-            additional_agent.start(self.address_book, self.node_db)
+        self.create_additional_agents()
 
     def start_simulation(self):
         self.clock.start_clock()
+        for component in self.late_start:
+            component.start(self.address_book, self.node_db)
 
     def run(self, args=None, force_cli=False, **kwargs):
         """

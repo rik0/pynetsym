@@ -98,9 +98,10 @@ class Simulation(Simulation):
 
     steps = 1000
 
-    additional_agents = (
-        (Recorder, (), {}),
-    )
+    recorder_type = Recorder
+    recorder_options = {}
+
+    additional_agents = ('recorder', )
 
     class termination_checker_type(Simulation.termination_checker_type):
         def require_termination(self, reason):

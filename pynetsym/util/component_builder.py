@@ -100,8 +100,7 @@ class ComponentBuilder(object):
             raise ComponentError(e)
         if set_:
             setattr(self.context, self.component_name, instance)
-        else:
-            return instance
+        return instance
 
 
 
