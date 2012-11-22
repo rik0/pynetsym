@@ -478,9 +478,6 @@ class Simulation(object):
     def exception_hook(self, node):
         raise node.exception
 
-    def output_processor(self, processor, *additional_arguments):
-        self.graph.output_processor(processor, *additional_arguments)
-
     @property
     def handle(self):
         return self.graph.handle
