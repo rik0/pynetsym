@@ -39,10 +39,12 @@ class ComponentBuilder(object):
     def factory_signature(self, factory):
         if inspect.isfunction(factory):
             return inspect.getargspec(factory)
-        elif hasattr(factory, '__init__'):
+        try:
             return inspect.getargspec(factory.__init__)
-        else:
-            raise ComponentError("Invalid factory.")
+        except AttributeError as e:
+            raise ComponentError(e, "Invalid factory.")
+        except TypeError:
+            return (), None, None, ()
 
     def _from_factory(self, factory):
         if self.gather_from_ancestors:

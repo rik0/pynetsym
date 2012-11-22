@@ -363,6 +363,8 @@ class Simulation(object):
         self.node_manager._greenlet.unlink(self.configurator._greeenlet)
 
     def pre_configure_network(self):
+        self.node_manager.start(self.address_book, self.node_db)
+
         self.configurator.start(self.address_book, self.node_db)
         self.link_node_manager_with_configurator()
 
@@ -372,16 +374,19 @@ class Simulation(object):
             self, 'activator', gather_from_ancestors=True)
         activator_builder.build(self._simulation_parameters,
                                 set_=True, graph=self.graph)
+        self.activator.start(self.address_book, self.node_db)
+
+    def create_clock(self):
+        clock_builder = ComponentBuilder(
+            self, 'clock')
+        clock_builder.build(set_=True)
+        self.clock.start(self.address_book, self.node_db)
 
     def create_simulation_agents(self):
         self.termination_checker.start(self.address_book, self.node_db)
-        self.node_manager.start(self.address_book, self.node_db)
 
         self.create_activator()
-        self.activator.start(self.address_book, self.node_db)
-        self.clock = self.clock_type(
-            **getattr(self, 'clock_options', {}))
-        self.clock.start(self.address_book, self.node_db)
+        self.create_clock()
         additional_agents = self.gather_additional_agents()
         for (additional_agent_factory, args, kwargs) in additional_agents:
             additional_agent = additional_agent_factory(*args, **kwargs)
