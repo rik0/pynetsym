@@ -22,7 +22,7 @@ from .agent_db import MissingNode, AgentDB
 from .node_manager import NodeManager
 from .nodes import Node
 from .simulation import Simulation
-from .simulation import Activator
 from .simulation import Clock, AsyncClock
 from .configurators import IConfigurator, AbstractConfigurator, BasicConfigurator, Either
 from .error import PyNetSymError
+from .activator import Activator

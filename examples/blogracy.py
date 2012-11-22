@@ -1,4 +1,4 @@
-from pynetsym import core, configurators, simulation
+from pynetsym import core, configurators, simulation, Activator
 from pynetsym.configurators.predicates import Either
 from scipy import stats
 import numpy as np
@@ -211,7 +211,7 @@ class BittorrentNode(Node):
         pass
 
 
-class Activator(simulation.Activator):
+class Activator(Activator):
     activator_options = {'generation_probability', 'update_probability'}
     separator = object()
 

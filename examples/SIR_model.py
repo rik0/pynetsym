@@ -4,8 +4,8 @@ from traits.trait_types import Enum, Int, Float, Set
 
 from pynetsym import Simulation
 from pynetsym import Node
-from pynetsym import Activator
 from pynetsym import Agent
+from pynetsym.activator import Activator
 
 from pynetsym.simulation import BaseClock
 from pynetsym.configurators import NXGraphConfigurator

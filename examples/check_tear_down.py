@@ -5,7 +5,7 @@ import networkx as nx
 
 import traits.api as t
 
-from pynetsym import simulation, BasicConfigurator
+from pynetsym import simulation, BasicConfigurator, Activator
 from pynetsym import node_manager
 from pynetsym.nodes import Node
 
@@ -37,7 +37,7 @@ class Node(Node):
 
 
 
-class Activator(simulation.Activator):
+class Activator(Activator):
 
     DEBUG_SENT = True
     DEBUG_RECEIVED = True

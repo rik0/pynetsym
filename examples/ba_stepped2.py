@@ -1,6 +1,6 @@
 from networkx.generators.classic import empty_graph
 from networkx.generators.random_graphs import _random_subset
-from pynetsym import core, BasicConfigurator
+from pynetsym import core, BasicConfigurator, Activator
 from pynetsym import node_manager
 from pynetsym import simulation
 import networkx as nx
@@ -65,7 +65,7 @@ class Node(Node):
                 self.link_to(candidate)
 
 
-class Activator(simulation.Activator):
+class Activator(Activator):
     activator_options = {'stepper'}
 
     def nodes_to_activate(self):

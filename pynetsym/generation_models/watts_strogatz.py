@@ -1,7 +1,8 @@
 import random
 
 from traits.api import Range, Int
-from pynetsym import Node, Activator, Simulation, BasicConfigurator
+from pynetsym import Node, Simulation, BasicConfigurator
+from pynetsym.activator import Activator
 
 
 class Node(Node):

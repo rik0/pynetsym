@@ -1,7 +1,7 @@
 import random
 import networkx as nx
 
-from pynetsym import core, BasicConfigurator
+from pynetsym import core, BasicConfigurator, Activator
 from pynetsym import simulation
 from pynetsym import node_manager
 from pynetsym.nodes import Node
@@ -23,7 +23,7 @@ class Node(Node):
         for node in nodes:
             self.link_to(node)
 
-class Activator(simulation.Activator):
+class Activator(Activator):
     #DEBUG_SEND = True
     #DEBUG_RECEIVE = True
 
