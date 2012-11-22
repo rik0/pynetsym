@@ -17,12 +17,11 @@ __all__ = [
 __all__.extend(configurators.__all__)
 
 from .core import Agent, AgentError, MinimalAgentRuntime, Logger, get_logger
+from .clock import AsyncClock, Clock
 from .addressing import AddressingError
 from .agent_db import MissingNode, AgentDB
 from .node_manager import NodeManager
 from .nodes import Node
 from .simulation import Simulation
-from .simulation import Clock, AsyncClock
-from .configurators import IConfigurator, AbstractConfigurator, BasicConfigurator, Either
 from .error import PyNetSymError
 from .activator import Activator

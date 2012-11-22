@@ -5,6 +5,7 @@ from pynetsym import core
 from pynetsym import simulation
 
 from matplotlib import pyplot as plt
+from pynetsym.clock import Clock
 from pynetsym.util import sna, degrees_to_hist
 
 
@@ -20,7 +21,7 @@ class AnimationMaker(core.Agent):
         os.mkdir(self.directory)
 
     def register_to_clock(self):
-        self.send(simulation.Clock.name, 'register_observer', self.id)
+        self.send(Clock.name, 'register_observer', self.id)
 
     def ticked(self):
         filename = 'frame%d.png' % self.counter

@@ -1,13 +1,12 @@
-import collections
 from traits.has_traits import implements
 from traits.trait_types import Dict, Str, Int, Any
 
-from .. import core
+from ..core import Agent
 from ..util import gather_from_ancestors, extract_subdictionary, SequenceAsyncResult
 from ..node_manager import NodeManager
 from .interface import IConfigurator
 
-class AbstractConfigurator(core.Agent):
+class AbstractConfigurator(Agent):
     implements(IConfigurator)
 
     name = 'configurator'

@@ -6,8 +6,8 @@ from pynetsym import Simulation
 from pynetsym import Node
 from pynetsym import Agent
 from pynetsym.activator import Activator
+from pynetsym.clock import BaseClock
 
-from pynetsym.simulation import BaseClock
 from pynetsym.configurators import NXGraphConfigurator
 from pynetsym.termination.conditions import always_true
 

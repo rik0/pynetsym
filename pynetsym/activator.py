@@ -1,8 +1,9 @@
-from pynetsym import core, NodeManager
-from pynetsym.termination import TerminationChecker
-from pynetsym.util import gather_from_ancestors, extract_subdictionary, SequenceAsyncResult
+from .core import Agent
+from .node_manager import NodeManager
+from .termination import TerminationChecker
+from .util import gather_from_ancestors, extract_subdictionary, SequenceAsyncResult
 
-class Activator(core.Agent):
+class Activator(Agent):
     """
     The Activator chooses what happens at each step of the simulation.
 
