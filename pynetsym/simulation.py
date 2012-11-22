@@ -176,6 +176,37 @@ class Clock(BaseClock):
             self.simulation_end()
 
 
+
+
+class AdditionalAgentComponentBuilder(ComponentBuilder):
+    def __init__(self, context, additional_agent_line):
+        (component_name, gfa, start_after_clock) =\
+            self.parse_additional_agent_line(additional_agent_line)
+        self.start_after_clock = start_after_clock
+        super(AdditionalAgentComponentBuilder, self).__init__(
+            context, component_name, gfa)
+
+    def parse_additional_agent_line(self, additional_agent_line):
+        try:
+            (component_name, gfa,
+             start_after_clock) = additional_agent_line
+        except TypeError:
+            component_name = additional_agent_line
+            start_after_clock = False
+            gfa = False
+        except ValueError:
+            if len(additional_agent_line) == 2:
+                (component_name, gfa) = additional_agent_line
+                start_after_clock = False
+            else:
+                component_name = additional_agent_line
+                start_after_clock = False
+                gfa = False
+        return component_name, gfa, start_after_clock
+
+
+
+
 class Simulation(object):
     """
     A subclass of Simulation describes a specific kind of simulation.
@@ -381,38 +412,16 @@ class Simulation(object):
         clock_builder.build(set_=True)
         self.clock.start(self.address_book, self.node_db)
 
-
-    def parse_additional_agent_line(self, additional_agent_line):
-        try:
-            (component_name, gfa,
-             start_after_clock) = additional_agent_line
-        except TypeError:
-            component_name = additional_agent_line
-            start_after_clock = False
-            gfa = False
-        except ValueError:
-            if len(additional_agent_line) == 2:
-                (component_name, gfa) = additional_agent_line
-                start_after_clock = False
-            else:
-                component_name = additional_agent_line
-                start_after_clock = False
-                gfa = False
-        return component_name, gfa, start_after_clock
-
     def create_additional_agents(self):
         additional_agents = gather_from_ancestors(
                     self, 'additional_agents', acc_type=set)
         self.late_start = []
         for additional_agent_line in additional_agents:
-            component_name, gfa, start_after_clock = \
-                self.parse_additional_agent_line(additional_agent_line)
-
-            component_builder = ComponentBuilder(
-                self, component_name, gfa)
+            component_builder = AdditionalAgentComponentBuilder(
+                self, additional_agent_line)
             component = component_builder.build(
                 parameters=self._simulation_parameters, set_=True)
-            if start_after_clock:
+            if component_builder.start_after_clock:
                 self.late_start.append(component)
             else:
                 component.start(self.address_book, self.node_db)
