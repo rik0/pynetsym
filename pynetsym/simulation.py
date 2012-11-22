@@ -343,7 +343,7 @@ class Simulation(object):
         graph_builder.build(set_=True)
 
     def create_node_db(self):
-        self.node_db = agent_db.AgentDB(PythonPickler(), dict())
+        self.agent_db = agent_db.AgentDB(PythonPickler(), dict())
 
 
     def create_address_book(self):
@@ -358,14 +358,14 @@ class Simulation(object):
     def create_logger(self):
         logger_builder = ComponentBuilder(self, 'logger')
         logger_builder.build(stream=sys.stderr)\
-            .start(self.address_book, self.node_db)
+            .start(self.address_book, self.agent_db)
 
 
     def create_termination_checker(self):
         termination_checker_builder = ComponentBuilder(
             self, 'termination_checker')
         termination_checker_builder.build(set_=True)
-        self.termination_checker.start(self.address_book, self.node_db)
+        self.termination_checker.start(self.address_book, self.agent_db)
 
     def create_configurator(self):
         configurator_builder = ComponentBuilder(
@@ -393,9 +393,9 @@ class Simulation(object):
         self.node_manager._greenlet.unlink(self.configurator._greeenlet)
 
     def pre_configure_network(self):
-        self.node_manager.start(self.address_book, self.node_db)
+        self.node_manager.start(self.address_book, self.agent_db)
 
-        self.configurator.start(self.address_book, self.node_db)
+        self.configurator.start(self.address_book, self.agent_db)
         self.link_node_manager_with_configurator()
 
 
@@ -404,13 +404,13 @@ class Simulation(object):
             self, 'activator', gather_from_ancestors=True)
         activator_builder.build(self._simulation_parameters,
                                 set_=True, graph=self.graph)
-        self.activator.start(self.address_book, self.node_db)
+        self.activator.start(self.address_book, self.agent_db)
 
     def create_clock(self):
         clock_builder = ComponentBuilder(
             self, 'clock')
         clock_builder.build(set_=True)
-        self.clock.start(self.address_book, self.node_db)
+        self.clock.start(self.address_book, self.agent_db)
 
     def create_additional_agents(self):
         additional_agents = gather_from_ancestors(
@@ -424,7 +424,7 @@ class Simulation(object):
             if component_builder.start_after_clock:
                 self.late_start.append(component)
             else:
-                component.start(self.address_book, self.node_db)
+                component.start(self.address_book, self.agent_db)
 
     def create_simulation_agents(self):
         self.create_activator()
@@ -434,7 +434,7 @@ class Simulation(object):
     def start_simulation(self):
         self.clock.start_clock()
         for component in self.late_start:
-            component.start(self.address_book, self.node_db)
+            component.start(self.address_book, self.agent_db)
 
     def run(self, args=None, force_cli=False, **kwargs):
         """
