@@ -14,7 +14,6 @@ from pynetsym.termination.conditions import always_true
 
 import pandas as pd
 import numpy as np
-from pynetsym.util import SequenceAsyncResult
 
 def nans(shape, dtype=float):
     a = np.empty(shape, dtype)
@@ -27,13 +26,15 @@ class Recorder(Agent):
 
     def setup(self):
         self.distributions = pd.DataFrame(
-            data=nans((self.steps, 2)),
+            data=nans((self.steps +1, 2)),
             columns=['infected', 'recovered'])
         self.distributions.ix[self.current_time] = 0
         self.send(BaseClock.name,
                   'register_observer', name=self.name)
 
     def ticked(self):
+#        self.send_log('[%d] ticked.' % (
+#            self.current_time, ))
         self.current_time += 1
         self.distributions.ix[self.current_time] =\
         self.distributions.ix[self.current_time - 1]
@@ -50,6 +51,44 @@ class Recorder(Agent):
         self.distributions.infected[self.current_time] -= 1
         self.distributions.recovered[self.current_time] += 1
 
+    def _save_infected_ratio(self):
+        df = self.distributions.dropna()
+        full_df = pd.concat(
+            [df, pd.DataFrame(data=-(df.infected + df.recovered) + network_size,
+                              columns=['susceptible'])],
+            axis=1)
+        full_df.to_csv('SIR_model.csv', index_label='step')
+
+    def save_statistic(self):
+        self._save_infected_ratio()
+
+class AdvancedRecorder(Recorder):
+    def setup(self):
+        super(AdvancedRecorder, self).setup()
+        number_of_nodes = 1000
+        self.infection_times = pd.DataFrame(
+            data=nans((number_of_nodes, 2)),
+            columns=['infection', 'recovery'])
+
+    def node_infected(self, node):
+        super(AdvancedRecorder, self).node_infected(node)
+        self.infection_times.infection[node] = self.current_time
+
+    def node_recovered(self, node):
+        super(AdvancedRecorder, self).node_recovered(node)
+        self.infection_times.recovery[node] = self.current_time
+
+    def _save_infection_times(self):
+        df = self.infection_times.dropna()
+        full_df = pd.concat(
+            [df, pd.DataFrame(data=df.recovery - df.infection, columns=['duration']),
+             tmp_solution.dropna()],
+            axis=1)
+        full_df.to_csv('SIR_model_infection_rates.csv', index_label='node')
+
+    def save_statistic(self):
+        super(AdvancedRecorder, self).save_statistic()
+        self._save_infection_times()
 
 class Activator(Activator):
     infected_nodes = Set(Int)
@@ -72,17 +111,27 @@ class Activator(Activator):
         return self.infected_nodes
 
 
+
+tmp_solution = pd.DataFrame(
+            data=nans((1000, 1)),
+            columns=['tduration'])
+
 class Specimen(Node):
     state =  Enum('S', 'I', 'R')
     remaining_infection_time = Int(-1)
     infection_probability = Float
-    infection_length = Int
+    average_infection_length = Int
+
+    std_infection_length = Int(3)
     infected_fraction = Float
 
     # DEBUG_SEND = True
 
     def infection_time(self):
-        return self.infection_length
+        value = int(random.gauss(self.average_infection_length,
+                            self.std_infection_length))
+        tmp_solution.tduration[self.id] = value
+        return value
 
     def initialize(self, state):
         self.state = state
@@ -116,12 +165,10 @@ class Specimen(Node):
 
 class Simulation(Simulation):
     default_infection_probability = 1.
-    default_infection_length = 10
+    default_average_infection_length = 10
     default_infected_fraction = 0.01
 
-    steps = 1000
-
-    recorder_type = Recorder
+    recorder_type = AdvancedRecorder
     recorder_options = {'steps'}
 
     additional_agents = ('recorder', )
@@ -133,8 +180,8 @@ class Simulation(Simulation):
     command_line_options = (
         ('-p', '--infection-probability',
          dict(default=default_infection_probability, type=float)),
-        ('-t', '--infection-length',
-         dict(default=default_infection_length, type=int)),
+        ('-t', '--average-infection-length',
+         dict(default=default_average_infection_length, type=int)),
         ('-f', '--infected-fraction',
          dict(default=default_infected_fraction, type=float)),
         )
@@ -146,7 +193,7 @@ class Simulation(Simulation):
         node_type = Specimen
         node_options = {
             'infection_probability',
-            'infection_length',
+            'average_infection_length',
             'infected_fraction'}
 
         def initialize_nodes(self):
@@ -165,16 +212,7 @@ if __name__ == '__main__':
     sim = Simulation()
     sim.run(starting_graph=graph)
 
-    assert sim.motive == 'No more infected'
+    print sim.motive
 
     network_size = sim.graph.number_of_nodes()
-    df = sim.recorder.distributions.dropna()
-
-    full_df = pd.concat(
-        [df, pd.DataFrame(data=-(df.infected + df.recovered) + network_size,
-                          columns=['susceptible'])],
-        axis=1)
-    assert isinstance(full_df, pd.DataFrame)
-    print full_df.describe()
-
-    full_df.to_csv('SIR_model.csv', index_label='step')
+    sim.recorder.save_statistic()
