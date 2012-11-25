@@ -256,8 +256,8 @@ class Agent(t.HasTraits):
             result = self._handle_message(message, receiver)
             return result
 
-    def sync_send(self, receiver_id, message_name, **additional_parameters):
-        return self.send(receiver_id, message_name, **additional_parameters).get()
+    def sync_send(self, receiver_id, message_name, timeout=None, **additional_parameters):
+        return self.send(receiver_id, message_name, **additional_parameters).get(timeout=timeout)
 
     def _send_all_fixed_params(self, additional_parameters, message_name, receivers):
         message = Message(self.id, message_name, additional_parameters)
