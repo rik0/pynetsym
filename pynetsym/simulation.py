@@ -147,6 +147,8 @@ class BaseClock(core.Agent):
     def simulation_end(self):
         self.active = False
         self.send_simulation_ended().get()
+        self.send(Logger.name, 'stop_receiving')
+
 
     def ask_to_terminate(self):
         return self.send(
@@ -252,6 +254,7 @@ class Simulation(object):
             command_line_options = (
                 ('-b', '--bar', dict(default=..., type=...))
     """
+
 
     command_line_options = (
         ("-s", "--steps", dict(default=100, type=int)),
@@ -364,7 +367,7 @@ class Simulation(object):
 
     def create_logger(self):
         logger_builder = ComponentBuilder(self, 'logger')
-        logger_builder.build(stream=sys.stderr)\
+        logger_builder.build(stream=sys.stderr, set_=True)\
             .start(self.address_book, self.agent_db)
 
 
@@ -480,6 +483,8 @@ class Simulation(object):
         with timing.Timer(self.callback):
             self.start_simulation()
             self.clock.join()
+
+            self.logger.join()
             return self
 
     def exception_hook(self, node):

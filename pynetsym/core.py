@@ -410,6 +410,16 @@ class Logger(Agent, t.SingletonHasTraits):
                           dict(sender=sender, text=text))
         self.deliver(message, result)
 
+    def stop_receiving(self):
+        while 1:
+            try:
+                message, result = self.read(timeout=0.01)
+                self.process(message, result)
+                del message, result
+            except NoMessage:
+                break
+        self.kill()
+
     def error_message(self, sender, text):
         ss = StringIO()
         ss.write('=' * 10)
