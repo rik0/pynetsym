@@ -74,35 +74,38 @@ class Activator(Activator):
 
 class Specimen(Node):
     state =  Enum('S', 'I', 'R')
-    infection_time = Int(-1)
+    remaining_infection_time = Int(-1)
     infection_probability = Float
     infection_length = Int
     infected_fraction = Float
 
     # DEBUG_SEND = True
 
+    def infection_time(self):
+        return self.infection_length
+
     def initialize(self, state):
         self.state = state
         if state == 'I':
-            self.infection_time = self.infection_length
+            self.remaining_infection_time = self.infection_time()
             self.send(Activator.name, 'infected', node=self.id)
 
     def infect(self):
         if self.state == 'S':
             self.state = 'I'
-            self.infection_time = self.infection_length
+            self.remaining_infection_time = self.infection_time()
             self.send(Activator.name, 'infected', node=self.id)
 
     def activate(self):
         if (self.state == 'I'
-            and self.infection_time > 0):
+            and self.remaining_infection_time > 0):
             for node in self.neighbors():
                 if random.random() < self.infection_probability:
                     self.send(node, 'infect')
-            self.infection_time -= 1
+            self.remaining_infection_time -= 1
         elif (self.state == 'I'
-              and self.infection_time == 0):
-            self.infection_time -= 1
+              and self.remaining_infection_time == 0):
+            self.remaining_infection_time -= 1
             self.state = 'R'
             self.send(Activator.name, 'not_infected', node=self.id)
         elif self.state in ('R', 'S'):
