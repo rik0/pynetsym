@@ -1,4 +1,5 @@
 import random
+import math
 import networkx
 from traits.trait_types import Enum, Int, Float, Set
 
@@ -11,25 +12,43 @@ from pynetsym.simulation import BaseClock
 from pynetsym.configurators import NXGraphConfigurator
 from pynetsym.termination.conditions import always_true
 
+import pandas as pd
+import numpy as np
+from pynetsym.util import SequenceAsyncResult
+
+def nans(shape, dtype=float):
+    a = np.empty(shape, dtype)
+    a.fill(np.nan)
+    return a
+
 class Recorder(Agent):
     name = 'recorder'
     current_time = Int(0)
 
     def setup(self):
+        self.distributions = pd.DataFrame(
+            data=nans((self.steps, 2)),
+            columns=['infected', 'recovered'])
+        self.distributions.ix[self.current_time] = 0
         self.send(BaseClock.name,
                   'register_observer', name=self.name)
 
     def ticked(self):
         self.current_time += 1
+        self.distributions.ix[self.current_time] =\
+        self.distributions.ix[self.current_time - 1]
+
 
     def node_infected(self, node):
         self.send_log('[%d] infected %s' % (
             self.current_time, node))
+        self.distributions.infected[self.current_time] += 1
 
     def node_recovered(self, node):
         self.send_log('[%d] recovered %s' % (
             self.current_time, node))
-
+        self.distributions.infected[self.current_time] -= 1
+        self.distributions.recovered[self.current_time] += 1
 
 
 class Activator(Activator):
@@ -54,7 +73,7 @@ class Activator(Activator):
 
 
 class Specimen(Node):
-    state = Enum('S', 'I', 'R')
+    state =  Enum('S', 'I', 'R')
     infection_time = Int(-1)
     infection_probability = Float
     infection_length = Int
@@ -62,10 +81,11 @@ class Specimen(Node):
 
     # DEBUG_SEND = True
 
-    def initialize(self):
-        self.state = 'S'
-        if random.random() < self.infected_fraction:
-            self.infect()
+    def initialize(self, state):
+        self.state = state
+        if state == 'I':
+            self.infection_time = self.infection_length
+            self.send(Activator.name, 'infected', node=self.id)
 
     def infect(self):
         if self.state == 'S':
@@ -92,14 +112,14 @@ class Specimen(Node):
 
 
 class Simulation(Simulation):
-    default_infection_probability = 0.1
+    default_infection_probability = 1.
     default_infection_length = 10
-    default_infected_fraction = 0.5
+    default_infected_fraction = 0.01
 
     steps = 1000
 
     recorder_type = Recorder
-    recorder_options = {}
+    recorder_options = {'steps'}
 
     additional_agents = ('recorder', )
 
@@ -109,12 +129,12 @@ class Simulation(Simulation):
 
     command_line_options = (
         ('-p', '--infection-probability',
-            dict(default=default_infection_probability, type=float)),
+         dict(default=default_infection_probability, type=float)),
         ('-t', '--infection-length',
-            dict(default=default_infection_length, type=int)),
+         dict(default=default_infection_length, type=int)),
         ('-f', '--infected-fraction',
-            dict(default=default_infected_fraction, type=float)),
-    )
+         dict(default=default_infected_fraction, type=float)),
+        )
 
     activator_type = Activator
     options = {}
@@ -122,10 +142,19 @@ class Simulation(Simulation):
     class configurator_type(NXGraphConfigurator):
         node_type = Specimen
         node_options = {
-                'infection_probability',
-                'infection_length',
-                'infected_fraction'}
-        initialize_nodes = True
+            'infection_probability',
+            'infection_length',
+            'infected_fraction'}
+
+        def initialize_nodes(self):
+            infected_fraction = self.full_parameters['infected_fraction']
+            infected_population_size = int(
+                math.ceil(len(self.node_identifiers) * infected_fraction))
+            infected_nodes = set(random.sample(self.node_identifiers, infected_population_size))
+
+            self.sync_send_all(self.node_identifiers, 'initialize',
+                          state=lambda rid: 'I' if (rid in infected_nodes) else 'S')
+
 
 
 if __name__ == '__main__':
@@ -134,3 +163,15 @@ if __name__ == '__main__':
     sim.run(starting_graph=graph)
 
     assert sim.motive == 'No more infected'
+
+    network_size = sim.graph.number_of_nodes()
+    df = sim.recorder.distributions.dropna()
+
+    full_df = pd.concat(
+        [df, pd.DataFrame(data=-(df.infected + df.recovered) + network_size,
+                          columns=['susceptible'])],
+        axis=1)
+    assert isinstance(full_df, pd.DataFrame)
+    print full_df.describe()
+
+    full_df.to_csv('SIR_model.csv', index_label='step')
