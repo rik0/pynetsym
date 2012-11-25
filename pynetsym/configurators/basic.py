@@ -11,17 +11,6 @@ class AbstractConfigurator(core.Agent):
 
     name = 'configurator'
 
-    initialize_nodes = false
-    """
-    When all the nodes are created, if the initialize_nodes attribute
-    is set to true, all the nodes are sent an initialize message.
-    Such attribute can be both set as a configurator_option
-    or directly in the class like::
-
-        class SomeSimulation(simulation.Simulation):
-            class configurator(node_manager.BasicConfigurator):
-                initialize = True
-    """
     options = {"full_parameters"}
     """
     Here we specify the names of the options for the configurator.
@@ -35,8 +24,7 @@ class AbstractConfigurator(core.Agent):
     def _start(self):
         self.create_nodes()
         self.create_edges()
-        if self.initialize_nodes:
-           self.do_initialization()
+        self.initialize_nodes()
 
     def create_nodes(self):
         raise NotImplementedError()
@@ -44,9 +32,14 @@ class AbstractConfigurator(core.Agent):
     def create_edges(self):
         raise NotImplementedError()
 
-    def do_initialization(self):
+    def do_initialize(self):
         for identifier in self.node_identifiers:
             self.send(identifier, 'initialize')
+
+    def do_not_initialize(self):
+        pass
+
+    initialize_nodes = do_not_initialize
 
 
 class BasicConfigurator(AbstractConfigurator):

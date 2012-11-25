@@ -1,4 +1,5 @@
-from traits.has_traits import Interface
+from traits.api import Interface
+from traits.api import Method
 
 class IConfigurator(Interface):
     def create_nodes(self):
@@ -7,9 +8,4 @@ class IConfigurator(Interface):
     def create_edges(self):
         pass
 
-    def do_initialize_nodes(self):
-        pass
-
-    @property
-    def initialize_node(self):
-        pass
+    initialize_nodes = Method

@@ -50,7 +50,7 @@ class WS(Simulation):
     activator_type = Activator
 
     class configurator_type(BasicConfigurator):
-        initialize_nodes = True
+        initialize_nodes = BasicConfigurator.do_initialize
         node_type = Node
         node_options = {
                 "rewiring_probability",
