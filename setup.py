@@ -36,7 +36,6 @@ setup(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     # scripts=find_generation_models(),
     install_requires=[
-        'decorator',
         'pytest',
         'gevent',
         'networkx',
