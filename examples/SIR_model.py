@@ -1,5 +1,6 @@
 import random
 import math
+from gevent import Timeout
 import networkx
 from traits.trait_types import Enum, Int, Float, Set
 
@@ -8,7 +9,7 @@ from pynetsym import Node
 from pynetsym import Activator
 from pynetsym import Agent
 
-from pynetsym.simulation import BaseClock
+from pynetsym.simulation import BaseClock, SyncActivator
 from pynetsym.configurators import NXGraphConfigurator
 from pynetsym.termination.conditions import always_true
 
@@ -90,7 +91,7 @@ class AdvancedRecorder(Recorder):
         super(AdvancedRecorder, self).save_statistic()
         self._save_infection_times()
 
-class Activator(Activator):
+class Activator(SyncActivator):
     infected_nodes = Set(Int)
 
     def tick(self):
