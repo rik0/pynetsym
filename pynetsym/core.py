@@ -1,3 +1,4 @@
+import copy
 from pynetsym import addressing
 from pynetsym import agent_db
 
@@ -255,7 +256,10 @@ class Agent(t.HasTraits):
             result = self._handle_message(message, receiver)
             return result
 
-    def send_all(self, receivers, message_name, **additional_parameters):
+    def sync_send(self, receiver_id, message_name, **additional_parameters):
+        return self.send(receiver_id, message_name, **additional_parameters).get()
+
+    def _send_all_fixed_params(self, additional_parameters, message_name, receivers):
         message = Message(self.id, message_name, additional_parameters)
         result_sequence = []
         for receiver_id in receivers:
@@ -268,6 +272,31 @@ class Agent(t.HasTraits):
             result_sequence.append(result)
         else:
             return SequenceAsyncResult(result_sequence)
+
+    def _send_all_multi_params(self, additional_parameters, message_name, receivers):
+        callable_stuff = {name: func
+                          for name, func in additional_parameters.items()
+                          if callable(func)}
+        result_sequence = []
+        for receiver_id in receivers:
+            parameters = copy.copy(additional_parameters)
+            parameters.update({name: func(receiver_id)
+                               for name, func in callable_stuff.items()})
+            result = self.send(receiver_id, message_name, **parameters)
+            result_sequence.append(result)
+        return SequenceAsyncResult(result_sequence)
+
+    def send_all(self, receivers, message_name, **additional_parameters):
+        if any(callable(param)
+            for param in additional_parameters.values()):
+            return self._send_all_multi_params(
+                additional_parameters, message_name, receivers)
+        else:
+            return self._send_all_fixed_params(
+                additional_parameters, message_name, receivers)
+
+    def sync_send_all(self, receivers, message_name, **additional_parameters):
+        return self.send_all(receivers, message_name, **additional_parameters).get()
 
 
     def process(self, message, result):

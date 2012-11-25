@@ -15,6 +15,10 @@ class SequenceAsyncResult(object):
             print "xxx", gevent.getcurrent()
             raise e
 
+    def wait(self, timeout=0):
+        for value in self.seq:
+            value.wait(timeout=timeout)
+
     def flatten(self):
         items = self.get()
         return list(itertools.chain.from_iterable(items))
