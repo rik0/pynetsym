@@ -199,11 +199,6 @@ class Agent(t.HasTraits):
             message = "RECV %s" % (msg,)
         self.send_log(message)
 
-    def send_all(self, receivers, message, **additional_parameters):
-        return SequenceAsyncResult(
-            [self.send(receiver_id, message, **additional_parameters)
-             for receiver_id in receivers])
-
     def _awaken_agent(self, identifier):
         agent = self._node_db.recover(identifier)
         agent.start(self._address_book, self._node_db, identifier)
@@ -224,6 +219,20 @@ class Agent(t.HasTraits):
         return receiver
 
 
+    def _handle_message(self, message, receiver):
+        if getattr(self, 'DEBUG_SEND', False):
+            self.log_sent(str(message), receiver)
+        result = event.AsyncResult()
+        receiver.deliver(message, result)
+        return result
+
+    def _handle_no_receiver(self, e):
+        logger = self._get_logger()
+        logger.put_log(self, e.message)
+        result = event.AsyncResult()
+        result.set_exception(e)
+        return result
+
     def send(self, receiver_id, message_name, **additional_parameters):
         """
         Send a message to the specified agent.
@@ -238,19 +247,28 @@ class Agent(t.HasTraits):
         try:
             receiver = self._resolve(receiver_id)
         except addressing.AddressingError as e:
-            logger = self._get_logger()
-            logger.put_log(self, e.message)
-            result = event.AsyncResult()
-            result.set_exception(e)
+            result = self._handle_no_receiver(e)
             return result
         else:
             # FIXME: no true message passing semantics!
             message = Message(self.id, message_name, additional_parameters)
-            if getattr(self, 'DEBUG_SEND', False):
-                self.log_sent(str(message), receiver)
-            result = event.AsyncResult()
-            receiver.deliver(message, result)
+            result = self._handle_message(message, receiver)
             return result
+
+    def send_all(self, receivers, message_name, **additional_parameters):
+        message = Message(self.id, message_name, additional_parameters)
+        result_sequence = []
+        for receiver_id in receivers:
+            try:
+                receiver = self._resolve(receiver_id)
+            except addressing.AddressingError as e:
+                result = self._handle_no_receiver(e)
+            else:
+                result = self._handle_message(message, receiver)
+            result_sequence.append(result)
+        else:
+            return SequenceAsyncResult(result_sequence)
+
 
     def process(self, message, result):
         """
