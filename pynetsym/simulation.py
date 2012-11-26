@@ -46,46 +46,50 @@ class Activator(core.Agent):
     implementations.
     """
     name = 'activator'
+    #FIXME!
     activator_options = {'graph'}
 
-    def activate_nodes(self):
-        node_ids = self.nodes_to_activate()
+    def activate_nodes(self, time):
+        node_ids = self.nodes_to_activate(time)
         for node_id in node_ids:
-            self.send(node_id, 'activate')
+            self.send(node_id, 'activate', time=time)
 
-    def destroy_nodes(self):
-        self.dying_nodes = self.nodes_to_destroy()
+    def destroy_nodes(self, time):
+        self.dying_nodes = self.nodes_to_destroy(time)
         for node_id in self.dying_nodes:
             # notice: this is "beautifully" queued
-            self.send(node_id, 'kill')
+            self.send(node_id, 'kill', time=time)
 
-    def create_nodes(self):
-        to_create = self.nodes_to_create()
+    def create_nodes(self, time):
+        to_create = self.nodes_to_create(time)
         node_ids = SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',
-                       cls=node_class, parameters=node_parameters)
+                       time=time,
+                       cls=node_class,
+                       parameters=node_parameters)
              for node_class, node_parameters in to_create])
         self.fresh_nodes = node_ids.get()
 
-    def simulation_ended(self):
-        return self.send(NodeManager.name, 'simulation_ended').get()
+    def simulation_ended(self, time):
+        return self.send(NodeManager.name,
+                         'simulation_ended', time=time).get()
 
-    def tick(self):
-        self.destroy_nodes()
-        self.create_nodes()
-        self.activate_nodes()
+    def tick(self, time):
+        self.destroy_nodes(time)
+        self.create_nodes(time)
+        self.activate_nodes(time)
 
     def signal_termination(self, reason):
         self.send(TerminationChecker.name, 'require_termination',
-                reason=reason).get()
+                  reason=reason).get()
 
-    def nodes_to_activate(self):
+    def nodes_to_activate(self, time):
         return [self.graph.random_selector.random_node()]
 
-    def nodes_to_destroy(self):
+    def nodes_to_destroy(self, time):
         return {}
 
-    def nodes_to_create(self):
+    def nodes_to_create(self, time):
         return {}
 
 
@@ -95,16 +99,19 @@ class SyncActivator(Activator):
     activate message, thus making it essentially serial.
     """
 
-    def activate_nodes(self):
-        node_ids = self.nodes_to_activate()
+    def activate_nodes(self, time):
+        node_ids = self.nodes_to_activate(time)
         for node_id in node_ids:
-            done = self.send(node_id, 'activate')
+            done = self.send(node_id, 'activate', time=time)
             done.get()
 
 
 class BaseClock(core.Agent):
     name = 'clock'
+    options = {'steps'}
+
     activator_can_terminate = false()
+    current_time = Int
     clock_loop_g = Instance(gevent.Greenlet)
 
     active = true(transient=True)
@@ -137,12 +144,15 @@ class BaseClock(core.Agent):
         raise NotImplementedError()
 
     def send_tick(self):
-        for observer in self.observers:
-            self.send(observer, 'ticked')
-        return self.send(Activator.name, 'tick')
+        self.send_all(self.observers, 'ticked', time=self.current_time)
+        return self.send(Activator.name, 'tick', time=self.current_time)
+
+    def sync_send_tick(self):
+        return self.send_tick().get()
 
     def send_simulation_ended(self):
-        return self.send(Activator.name, 'simulation_ended')
+        return self.send(Activator.name,
+                         'simulation_ended', time=self.current_time)
 
     def simulation_end(self):
         self.active = False
@@ -150,40 +160,30 @@ class BaseClock(core.Agent):
         self.send(Logger.name, 'stop_receiving')
 
 
-    def ask_to_terminate(self):
-        return self.send(
-            termination.TerminationChecker.name, 'check',
-            requester=self.name)
-
-
 class AsyncClock(BaseClock):
-    remaining_ticks = Int
-
     def clock_loop(self):
-        while self.remaining_ticks:
+        while (self.active and
+               self.current_time < self.steps):
             self.send_tick()
-            self.remaining_ticks -= 1
+            self.current_time += 1
         else:
             self.simulation_end()
 
 
 class Clock(BaseClock):
     def clock_loop(self):
-        while self.active:
-            waiting = self.send_tick()
-            waiting.get()
-            should_terminate = self.ask_to_terminate()
-            self.active = not should_terminate.get()
+        while (self.active and
+               self.current_time < self.steps):
+            self.sync_send_tick()
+            self.current_time += 1
         else:
             self.simulation_end()
-
-
 
 
 class AdditionalAgentComponentBuilder(ComponentBuilder):
     def __init__(self, context, additional_agent_line):
         (component_name, gfa, start_after_clock) =\
-            self.parse_additional_agent_line(additional_agent_line)
+        self.parse_additional_agent_line(additional_agent_line)
         self.start_after_clock = start_after_clock
         super(AdditionalAgentComponentBuilder, self).__init__(
             context, component_name, gfa)
@@ -205,8 +205,6 @@ class AdditionalAgentComponentBuilder(ComponentBuilder):
                 start_after_clock = False
                 gfa = False
         return component_name, gfa, start_after_clock
-
-
 
 
 class Simulation(object):
@@ -255,7 +253,6 @@ class Simulation(object):
                 ('-b', '--bar', dict(default=..., type=...))
     """
 
-
     command_line_options = (
         ("-s", "--steps", dict(default=100, type=int)),
         )
@@ -283,7 +280,7 @@ class Simulation(object):
 
     @property
     def termination_checker_conditions(self):
-        return [termination.count_down(self.steps)]
+        return []
 
     @property
     def termination_checker_parameters(self):
@@ -368,7 +365,7 @@ class Simulation(object):
     def create_logger(self):
         logger_builder = ComponentBuilder(self, 'logger')
         logger_builder.build(stream=sys.stderr, set_=True)\
-            .start(self.address_book, self.agent_db)
+        .start(self.address_book, self.agent_db)
 
 
     def create_termination_checker(self):
@@ -419,12 +416,13 @@ class Simulation(object):
     def create_clock(self):
         clock_builder = ComponentBuilder(
             self, 'clock')
-        clock_builder.build(set_=True)
+        clock_builder.build(self._simulation_parameters,
+                            set_=True)
         self.clock.start(self.address_book, self.agent_db)
 
     def create_additional_agents(self):
         additional_agents = gather_from_ancestors(
-                    self, 'additional_agents', acc_type=set)
+            self, 'additional_agents', acc_type=set)
         self.late_start = []
         for additional_agent_line in additional_agents:
             component_builder = AdditionalAgentComponentBuilder(
@@ -496,4 +494,7 @@ class Simulation(object):
 
     @property
     def motive(self):
-        return self.termination_checker.motive
+        try:
+            return self.termination_checker.motive
+        except AttributeError:
+            return 'Clock Ended'
