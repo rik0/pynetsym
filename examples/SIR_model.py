@@ -44,14 +44,14 @@ class Recorder(Agent):
 
 
     def node_infected(self, node):
-        self.send_log('[%d] infected %s' % (
-            self.current_time, node))
+#        self.send_log('[%d] infected %s' % (
+#            self.current_time, node))
         self.distributions.infected[self.current_time] += 1
         self.distributions.susceptible[self.current_time] -= 1
 
     def node_recovered(self, node):
-        self.send_log('[%d] recovered %s' % (
-            self.current_time, node))
+#        self.send_log('[%d] recovered %s' % (
+#            self.current_time, node))
         self.distributions.infected[self.current_time] -= 1
         self.distributions.recovered[self.current_time] += 1
 
@@ -183,14 +183,13 @@ class Simulation(Simulation):
             infected_population_size = int(
                 math.ceil(len(self.node_identifiers) * infected_fraction))
             infected_nodes = set(random.sample(self.node_identifiers, infected_population_size))
-
             self.sync_send_all(self.node_identifiers, 'initialize',
                           state=lambda rid: 'I' if (rid in infected_nodes) else 'S')
 
 
 
 if __name__ == '__main__':
-    graph = networkx.powerlaw_cluster_graph(1000, 50, 0.1)
+    graph = networkx.powerlaw_cluster_graph(1000, 50, 0.2)
     sim = Simulation()
     sim.run(starting_graph=graph, force_cli=True)
 
