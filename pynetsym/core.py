@@ -47,6 +47,8 @@ class Message(_M):
     __str__ = __repr__
 
 
+
+
 class Agent(t.HasTraits):
     """
     An Agent is the basic class of the simulation. Agents communicate
@@ -86,7 +88,12 @@ class Agent(t.HasTraits):
         gevent.sleep()
 
     def join(self):
-        return self._greenlet.join()
+        try:
+            return self._greenlet.join()
+        except (KeyboardInterrupt, SystemExit) as e:
+            print "[%s] I was caught with the hands in the jam!" % self.id
+            print self._create_error_text(self._greenlet)
+            raise AgentError(e)
 
     def sleep(self, seconds):
         gevent.sleep(seconds)
