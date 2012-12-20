@@ -133,15 +133,12 @@ class Specimen(Node):
 
     def activate(self):
         if self.state == 'I':
+            for node in self.neighbors():
+                if random.random() < self.infection_rate:
+                    self.send(node, 'infect')
             if random.random() < self.recovery_rate:
                 self.state = 'R'
                 self.send(Activator.name, 'not_infected', node=self.id)
-            else:
-                # still infected
-                for node in self.neighbors():
-                    if random.random() < self.infection_rate:
-                        self.send(node, 'infect')
-                self.remaining_infection_time -= 1
         elif self.state in ('R', 'S'):
             pass
         else:
@@ -193,7 +190,7 @@ class Simulation(Simulation):
 
 
 if __name__ == '__main__':
-    graph = networkx.powerlaw_cluster_graph(100, 5, 0.1)
+    graph = networkx.powerlaw_cluster_graph(1000, 50, 0.1)
     sim = Simulation()
     sim.run(starting_graph=graph, force_cli=True)
 
