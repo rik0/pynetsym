@@ -1,7 +1,6 @@
 import random
-import math
-from gevent import Timeout
 import networkx
+from numpy import arange
 from traits.trait_types import Enum, Int, Float, Set
 
 from pynetsym import Simulation
@@ -23,13 +22,14 @@ def nans(shape, dtype=float):
 
 class Recorder(Agent):
     name = 'recorder'
-    current_time = Int(0)
+    current_time = Int(-1)
 
     def setup(self):
         self.number_of_nodes = 1000
         self.distributions = pd.DataFrame(
-            data=nans((self.steps +1, 3)),
-            columns=['susceptible', 'infected', 'recovered'])
+            data=nans((self.steps + 1, 3)),
+            columns=['susceptible', 'infected', 'recovered'],
+            index=arange(-1, self.steps))
         self.distributions.ix[self.current_time] = 0
         self.distributions.susceptible.ix[self.current_time] = self.number_of_nodes
         self.send(BaseClock.name,
