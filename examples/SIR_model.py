@@ -211,7 +211,7 @@ class Simulation(Simulation):
 if __name__ == '__main__':
     graph = networkx.powerlaw_cluster_graph(100, 5, 0.1)
     sim = Simulation()
-    sim.run(starting_graph=graph)
+    sim.run(starting_graph=graph, force_cli=True)
 
     print sim.motive
 
