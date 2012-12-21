@@ -1,3 +1,4 @@
+import math
 import random
 import networkx
 from numpy import arange
@@ -20,6 +21,7 @@ def nans(shape, dtype=float):
     a.fill(np.nan)
     return a
 
+
 class Recorder(Agent):
     name = 'recorder'
     current_time = Int(-1)
@@ -36,22 +38,16 @@ class Recorder(Agent):
                   'register_observer', name=self.name)
 
     def ticked(self):
-#        self.send_log('[%d] ticked.' % (
-#            self.current_time, ))
         self.current_time += 1
         self.distributions.ix[self.current_time] =\
         self.distributions.ix[self.current_time - 1]
 
 
     def node_infected(self, node):
-#        self.send_log('[%d] infected %s' % (
-#            self.current_time, node))
         self.distributions.infected[self.current_time] += 1
         self.distributions.susceptible[self.current_time] -= 1
 
     def node_recovered(self, node):
-#        self.send_log('[%d] recovered %s' % (
-#            self.current_time, node))
         self.distributions.infected[self.current_time] -= 1
         self.distributions.recovered[self.current_time] += 1
 
@@ -61,6 +57,7 @@ class Recorder(Agent):
 
     def save_statistic(self):
         self._save_infected_ratio()
+
 
 class AdvancedRecorder(Recorder):
     def setup(self):
@@ -87,6 +84,7 @@ class AdvancedRecorder(Recorder):
         super(AdvancedRecorder, self).save_statistic()
         self._save_infection_times()
 
+
 class Activator(SyncActivator):
     infected_nodes = Set(Int)
 
@@ -108,12 +106,8 @@ class Activator(SyncActivator):
         return self.infected_nodes
 
 
-tmp_solution = pd.DataFrame(
-            data=nans((1000, 1)),
-            columns=['tduration'])
-
 class Specimen(Node):
-    state =  Enum('S', 'I', 'R')
+    state = Enum('S', 'I', 'R')
     recovery_rate = Float(1.0)
     infection_rate = Float(1.0)
 
@@ -184,8 +178,7 @@ class Simulation(Simulation):
                 math.ceil(len(self.node_identifiers) * infected_fraction))
             infected_nodes = set(random.sample(self.node_identifiers, infected_population_size))
             self.sync_send_all(self.node_identifiers, 'initialize',
-                          state=lambda rid: 'I' if (rid in infected_nodes) else 'S')
-
+                               state=lambda rid: 'I' if (rid in infected_nodes) else 'S')
 
 
 if __name__ == '__main__':
