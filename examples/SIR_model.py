@@ -9,7 +9,7 @@ from pynetsym import Node
 from pynetsym import Activator
 from pynetsym import Agent
 
-from pynetsym.simulation import BaseClock, SyncActivator
+from pynetsym.simulation import BaseClock, Activator
 from pynetsym.configurators import NXGraphConfigurator
 from pynetsym.termination.conditions import always_true
 
@@ -85,7 +85,7 @@ class AdvancedRecorder(Recorder):
         self._save_infection_times()
 
 
-class Activator(SyncActivator):
+class Activator(Activator):
     infected_nodes = Set(Int)
 
     def tick(self):
