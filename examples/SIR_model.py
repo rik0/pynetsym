@@ -1,6 +1,5 @@
 import math
 import random
-import networkx
 from numpy import arange
 from traits.trait_types import Enum, Int, CInt, Float, Set
 
@@ -29,7 +28,7 @@ class Recorder(Agent):
     current_time = Int(-1)
 
     def setup(self):
-        self.number_of_nodes = 1000
+        self.number_of_nodes = 100000
         self.distributions = pd.DataFrame(
             data=nans((self.steps + 1, 3)),
             columns=['susceptible', 'infected', 'recovered'],
@@ -165,7 +164,7 @@ class Simulation(pynetsym.Simulation):
 
     activator_type = Activator
     activator_options = {}
-    
+
     graph_type = BasicH5Graph
     graph_options = {'h5_file', }
 
@@ -187,7 +186,7 @@ class Simulation(pynetsym.Simulation):
 
 if __name__ == '__main__':
     sim = Simulation()
-    sim.run(h5_file='G1K.hd5', force_cli=True)
+    sim.run(force_cli=True)
 
     print sim.motive
 
