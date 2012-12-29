@@ -21,7 +21,7 @@ from pynetsym import timing
 from pynetsym.util import SequenceAsyncResult
 from pynetsym.util import gather_from_ancestors
 
-from pynetsym.agent_db import PythonPickler
+from pynetsym.agent_db import PythonPickler, JSONPickler
 from pynetsym.node_manager import NodeManager
 from pynetsym.termination import TerminationChecker
 from pynetsym.util.component_builder import ComponentBuilder
@@ -278,7 +278,7 @@ class Simulation(object):
     @property
     def agent_db_parameters(self):
         return dict(
-            pickling_module=PythonPickler(),
+            pickling_module=JSONPickler(),
             storage=dict())
 
     @property

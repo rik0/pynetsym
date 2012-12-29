@@ -9,7 +9,7 @@ __all__ = [
     "MissingNode",
     "ISerialize",
     "PythonPickler",
-    "JSONPickle",
+    "JSONPickler",
     "IAgentStorage",
     "NodeDB"
 ]
@@ -60,26 +60,61 @@ class PythonPickler(SingletonHasStrictTraits):
         except TypeError as e:
             raise SerializationError(e)
 
+try:
+    import jsonpickle
+except ImportError:
+    __all__.remove("JSONPickler")
+else:
+    class NumpyFloatHandler(jsonpickle.handlers.BaseHandler):
+        """
+        Automatic conversion of numpy float  to python floats
+        Required for jsonpickle to work correctly
+        """
+        def flatten(self, obj, data):
+            """
+            Converts and rounds a Numpy.float* to Python float
+            """
+            return round(obj,6)
 
-class JSONPickle(SingletonHasStrictTraits):
-    implements(ISerialize)
-    pickle_module = Module
+    jsonpickle.handlers.registry.register(numpy.float, NumpyFloatHandler)
+    jsonpickle.handlers.registry.register(numpy.float32, NumpyFloatHandler)
+    jsonpickle.handlers.registry.register(numpy.float64, NumpyFloatHandler)
 
-    def __init__(self):
-        import jsonpickle
-        self.pickle_module = jsonpickle
+    class NumpyIntHandler(jsonpickle.handlers.BaseHandler):
+        """
+        Automatic conversion of numpy float  to python floats
+        Required for jsonpickle to work correctly
+        """
+        def flatten(self, obj, data):
+            """
+            Converts and rounds a Numpy.float* to Python float
+            """
+            return int(obj)
 
-    def loads(self, pickled_representation):
-        try:
-            return self.pickle_module.decode(pickled_representation)
-        except Exception as e:
-            raise SerializationError(e)
+    jsonpickle.handlers.registry.register(numpy.int8,  NumpyIntHandler)
+    jsonpickle.handlers.registry.register(numpy.int16, NumpyIntHandler)
+    jsonpickle.handlers.registry.register(numpy.int32, NumpyIntHandler)
+    jsonpickle.handlers.registry.register(numpy.int64, NumpyIntHandler)
+    jsonpickle.handlers.registry.register(numpy.int_,  NumpyIntHandler)
 
-    def dumps(self, obj):
-        try:
-            return self.pickle_module.encode(obj)
-        except Exception as e:
-            raise SerializationError(e)
+    class JSONPickler(SingletonHasStrictTraits):
+        implements(ISerialize)
+        pickle_module = Module
+
+        def __init__(self):
+            self.pickle_module = jsonpickle
+
+        def loads(self, pickled_representation):
+            try:
+                return self.pickle_module.decode(pickled_representation)
+            except Exception as e:
+                raise SerializationError(e)
+
+        def dumps(self, obj):
+            try:
+                return self.pickle_module.encode(obj)
+            except Exception as e:
+                raise SerializationError(e)
 
 
 class IAgentStorage(Interface):
