@@ -97,7 +97,7 @@ class ComponentBuilder(object):
         try:
             instance = factory(**parameters)
         except TypeError as e:
-            raise ComponentError(e)
+            raise ComponentError(self.component_name + '.' + e.message)
         if set_:
             setattr(self.context, self.component_name, instance)
         return instance

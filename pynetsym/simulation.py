@@ -350,7 +350,9 @@ class Simulation(object):
 
     def setup(self):
         graph_builder = ComponentBuilder(self, 'graph')
-        graph_builder.build(set_=True)
+        graph_builder.build(
+            self._simulation_parameters,
+            set_=True)
 
     def create_node_db(self):
         agent_db_builder = ComponentBuilder(self, 'agent_db')

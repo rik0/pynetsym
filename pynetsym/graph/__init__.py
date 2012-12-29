@@ -5,7 +5,7 @@ __all__ = ['IGraph', 'GraphError', 'can_test', 'has']
 from .interface import IGraph
 from .error import GraphError
 from ._plugin import has, can_test, register
-
+from .basic_io_impl import BasicH5Graph
 try:
     import networkx
     del networkx

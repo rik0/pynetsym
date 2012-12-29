@@ -2,7 +2,7 @@ import math
 import random
 import networkx
 from numpy import arange
-from traits.trait_types import Enum, Int, Float, Set
+from traits.trait_types import Enum, Int, CInt, Float, Set
 
 from pynetsym import Simulation
 from pynetsym import Activator
@@ -11,8 +11,9 @@ from pynetsym import Agent
 import pynetsym
 
 from pynetsym.simulation import BaseClock, Activator
-from pynetsym.configurators import NXGraphConfigurator
+from pynetsym.configurators import BasicH5Configurator
 from pynetsym.termination.conditions import always_true
+from pynetsym.graph import BasicH5Graph
 
 import pandas as pd
 import numpy as np
@@ -87,7 +88,7 @@ class AdvancedRecorder(Recorder):
 
 
 class Activator(pynetsym.Activator):
-    infected_nodes = Set(Int)
+    infected_nodes = Set(CInt)
 
     def tick(self):
         if self.infected_nodes:
@@ -159,12 +160,16 @@ class Simulation(pynetsym.Simulation):
          dict(default=default_recovery_rate, type=float)),
         ('-f', '--initial-infected-fraction',
          dict(default=default_infected_fraction, type=float)),
+        ('--h5-file', dict(default='', type=str)),
         )
 
     activator_type = Activator
-    options = {}
+    activator_options = {}
+    
+    graph_type = BasicH5Graph
+    graph_options = {'h5_file', }
 
-    class configurator_type(NXGraphConfigurator):
+    class configurator_type(BasicH5Configurator):
         node_type = Node
         node_options = {
             'infection_rate',
@@ -181,9 +186,8 @@ class Simulation(pynetsym.Simulation):
 
 
 if __name__ == '__main__':
-    graph = networkx.powerlaw_cluster_graph(1000, 50, 0.2)
     sim = Simulation()
-    sim.run(starting_graph=graph, force_cli=True)
+    sim.run(h5_file='G1K.hd5', force_cli=True)
 
     print sim.motive
 

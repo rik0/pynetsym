@@ -11,8 +11,8 @@ traits.has_traits.CHECK_INTERFACES = 2
 class BasicH5Graph(HasTraits):
     implements(IGraph)
 
-    def __init__(self, filename):
-        self.h5 = h5py.File(filename)
+    def __init__(self, h5_file):
+        self.h5 = h5py.File(h5_file)
         self.indices = self.h5['indices']
         self.indptr = self.h5['indptr']
 
@@ -27,6 +27,7 @@ class BasicH5Graph(HasTraits):
         self._added_nodes += 1
         if self._added_nodes == self.indptr.len():
             raise GraphError("Too many agents!")
+        return self._added_nodes - 1
 
 
     def add_nodes(self, how_many):
@@ -113,7 +114,7 @@ class BasicH5Graph(HasTraits):
         @rtype: bool
         @raise ValueError: if identifier is not convertible to a non negative integer.
         """
-        pass
+        return target in self.neighbors(source)
 
     def neighbors(self, node):
         """
@@ -121,7 +122,7 @@ class BasicH5Graph(HasTraits):
         @return: the neighbors
         @rtype: list
         """
-        pass
+        return self.indices[self.indptr[node]:self.indptr[node+1]]
 
     def successors(self, node):
         """

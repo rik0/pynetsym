@@ -1,7 +1,9 @@
+import numpy
 from traits.api import Interface, HasTraits, SingletonHasStrictTraits
-from traits.api import Instance, Module, Dict, Either, Int, Str
+from traits.api import Instance, Module, Dict, Either, CInt, Str
 from traits.api import implements
 from pynetsym.error import PyNetSymError
+
 
 __all__ = [
     "MissingNode",
@@ -98,7 +100,7 @@ class AgentDB(HasTraits):
     implements(IAgentStorage)
 
     pickling_module = Instance(ISerialize, allow_none=False)
-    storage = Dict(key_trait=Either(Int, Str),
+    storage = Dict(key_trait=Either(CInt, Str),
                    value_trait=Str, allow_none=False)
 
     def __init__(self, pickling_module, storage):

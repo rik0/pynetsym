@@ -2,7 +2,8 @@ __all__ = [
     'Either',
     'IConfigurator',
     'AbstractConfigurator',
-    'BasicConfigurator'
+    'BasicConfigurator',
+    'BasicH5Configurator',
 ]
 
 
@@ -10,7 +11,7 @@ __all__ = [
 from .predicates import Either
 from .interface import IConfigurator
 from .basic import AbstractConfigurator, BasicConfigurator
-
+from .h5_configurator import BasicH5Configurator
 try:
     import networkx
     del networkx
