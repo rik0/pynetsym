@@ -5,9 +5,10 @@ from numpy import arange
 from traits.trait_types import Enum, Int, Float, Set
 
 from pynetsym import Simulation
-from pynetsym import Node
 from pynetsym import Activator
 from pynetsym import Agent
+
+import pynetsym
 
 from pynetsym.simulation import BaseClock, Activator
 from pynetsym.configurators import NXGraphConfigurator
@@ -85,7 +86,7 @@ class AdvancedRecorder(Recorder):
         self._save_infection_times()
 
 
-class Activator(Activator):
+class Activator(pynetsym.Activator):
     infected_nodes = Set(Int)
 
     def tick(self):
@@ -106,14 +107,12 @@ class Activator(Activator):
         return self.infected_nodes
 
 
-class Specimen(Node):
+class Node(pynetsym.Node):
     state = Enum('S', 'I', 'R')
     recovery_rate = Float(1.0)
     infection_rate = Float(1.0)
 
     infected_fraction = Float
-
-    # DEBUG_SEND = True
 
     def initialize(self, state):
         self.state = state
@@ -139,7 +138,7 @@ class Specimen(Node):
             self.send_log('I should not get here.')
 
 
-class Simulation(Simulation):
+class Simulation(pynetsym.Simulation):
     default_infection_rate = 1.
     default_recovery_rate = 1.
     default_infected_fraction = 0.01
@@ -166,7 +165,7 @@ class Simulation(Simulation):
     options = {}
 
     class configurator_type(NXGraphConfigurator):
-        node_type = Specimen
+        node_type = Node
         node_options = {
             'infection_rate',
             'recovery_rate',
