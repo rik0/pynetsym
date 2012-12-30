@@ -3,6 +3,7 @@ import random
 from numpy import arange
 from traits.trait_types import Enum, Int, CInt, Float, Set
 
+import gevent
 from pynetsym import Simulation
 from pynetsym import Activator
 from pynetsym import Agent
@@ -13,6 +14,7 @@ from pynetsym.simulation import BaseClock, Activator
 from pynetsym.configurators import BasicH5Configurator
 from pynetsym.termination.conditions import always_true
 from pynetsym.graph import BasicH5Graph
+from pynetsym.agent_db import MongoAgentDB
 
 import pandas as pd
 import numpy as np
@@ -97,11 +99,11 @@ class Activator(pynetsym.Activator):
 
     def infected(self, node):
         self.infected_nodes.add(node)
-        self.send(Recorder.name, 'node_infected', node=node)
+        # self.send(Recorder.name, 'node_infected', node=node)
 
     def not_infected(self, node):
         self.infected_nodes.remove(node)
-        self.send(Recorder.name, 'node_recovered', node=node)
+        # self.send(Recorder.name, 'node_recovered', node=node)
 
     def nodes_to_activate(self):
         return self.infected_nodes
@@ -143,10 +145,14 @@ class Simulation(pynetsym.Simulation):
     default_recovery_rate = 1.
     default_infected_fraction = 0.01
 
+    agent_db_type = MongoAgentDB
+    agent_db_parameters = {}
+
+
     recorder_type = AdvancedRecorder
     recorder_options = {'steps'}
 
-    additional_agents = ('recorder', )
+    # additional_agents = ('recorder', )
 
     class termination_checker_type(Simulation.termination_checker_type):
         def require_termination(self, reason):
@@ -183,9 +189,21 @@ class Simulation(pynetsym.Simulation):
             self.sync_send_all(self.node_identifiers, 'initialize',
                                state=lambda rid: 'I' if (rid in infected_nodes) else 'S')
 
+def bench_mem(timeout, filename='meliae-dump-'):
+    try:
+        from meliae import scanner
+        import time
+    except ImportError:
+        pass
+    else:
+        gevent.sleep(timeout)
+        scanner.dump_all_objects(
+                '%s%d.json' % (filename, time.clock()))
 
 if __name__ == '__main__':
     sim = Simulation()
+
+    gevent.spawn(bench_mem, 15.0)
     sim.run(force_cli=True)
 
     print sim.motive

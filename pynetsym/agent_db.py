@@ -160,3 +160,54 @@ class AgentDB(HasTraits):
     def store(self, node):
         s = self.pickling_module.dumps(node)
         self.storage[node.id] = s
+
+try:
+    import jsonpickle
+    from pymongo import MongoClient
+except ImportError:
+    pass
+else:
+    def runmongo(dbfile, port=27017, host='localhost'):
+        import subprocess
+        p = subprocess.Popen(['mongod',
+            '--port', port,
+            '--host', host,
+            '--dbpath', dbfile])
+        return p
+
+    class MongoAgentDB(HasTraits):
+        implements(IAgentStorage)
+
+        db_name = 'pynetsym_agents'
+
+        def __init__(self):
+            self.client = MongoClient()
+            self.client.drop_database(self.db_name)
+            self.agents_db = self.client[self.db_name].agents
+
+        def _mktypename(self, obj):
+            cls = type(obj)
+            return '%s.%s' % (cls.__module__, cls.__name__)
+
+        def store(self, node):
+            state = node.__getstate__()
+            del state['__traits_version__']
+            state['_id'] = int(state['id'])
+            state['id'] = int(state['id'])
+            state['__agenttype__'] = self._mktypename(node)
+            self.agents_db.insert(state)
+
+        def recover(self, identifier):
+            identifier = int(identifier)
+            state = self.agents_db.find_one({'_id': identifier})
+            agent_type = \
+                jsonpickle.unpickler.loadclass(state.pop('__agenttype__'))
+            del state['_id']
+            self.agents_db.remove({'_id': identifier})
+            return agent_type(**state)
+
+
+
+
+
+

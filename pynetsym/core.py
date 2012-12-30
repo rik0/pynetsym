@@ -65,7 +65,7 @@ class Agent(t.HasTraits):
     _greenlet = t.Instance(
         gevent.Greenlet, transient=True, allow_none=False)
     _node_db = t.Instance(
-        agent_db.AgentDB, transient=True, allow_none=False)
+        agent_db.IAgentStorage, transient=True, allow_none=False)
 
     id = t.Either(t.Int, t.Str)
 
