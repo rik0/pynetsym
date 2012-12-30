@@ -82,7 +82,7 @@ class ComponentBuilder(object):
             parameters = factory.parameters
         except AttributeError:
             parameters = getattr(self.context, self.parameters_name, {})
-        parameters = copy.deepcopy(parameters)
+        parameters = copy.copy(parameters)
         reduced_parameters = self.compute_overriding_parameters(
             has_kw, options, overriding_parameters)
         parameters.update(reduced_parameters)

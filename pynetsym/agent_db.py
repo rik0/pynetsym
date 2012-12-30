@@ -180,8 +180,8 @@ else:
 
         db_name = 'pynetsym_agents'
 
-        def __init__(self):
-            self.client = MongoClient()
+        def __init__(self, mongo_client):
+            self.client = mongo_client
             self.client.drop_database(self.db_name)
             self.agents_db = self.client[self.db_name].agents
 

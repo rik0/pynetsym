@@ -136,8 +136,10 @@ class Simulation(pynetsym.Simulation):
     default_recovery_rate = 1.
     default_infected_fraction = 0.01
 
+    mongo_client = MongoClient()
+
     agent_db_type = MongoAgentDB
-    agent_db_parameters = {}
+    agent_db_parameters = {'mongo_client': mongo_client}
 
 
     recorder_type = AdvancedRecorder
@@ -169,7 +171,8 @@ class Simulation(pynetsym.Simulation):
         node_options = {
             'infection_rate',
             'recovery_rate',
-            'initial_infected_fraction'}
+            'initial_infected_fraction',
+            'mongo_client'}
 
         def initialize_nodes(self):
             infected_fraction = self.full_parameters[
