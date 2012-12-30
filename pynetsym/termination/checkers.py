@@ -18,9 +18,10 @@ class TerminationChecker(core.Agent):
             if check:
                 self.motive = condition.motive
                 self.active = False
-                self.send(requester, 'positive_termination',
-                          originator=self.name,
-                          motive=self.motive)
+                self.send_all({requester, 'clock'},
+                              'positive_termination',
+                              originator=self.name,
+                              motive=self.motive)
                 return True
         else:
             return False

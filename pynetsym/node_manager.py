@@ -39,7 +39,7 @@ class NodeManager(core.Agent):
             self.graph.remove_node(node.id)
             print 'Removing', node.id
 
-    def create_node(self, cls, parameters):
+    def create_node(self, cls, parameters, time=None):
         """
         Creates a new node.
 
@@ -57,7 +57,7 @@ class NodeManager(core.Agent):
         node.start(self._address_book, self._node_db, identifier)
         return identifier
 
-    def simulation_ended(self):
+    def simulation_ended(self, time):
         self.group.join()
 
 

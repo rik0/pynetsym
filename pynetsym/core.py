@@ -160,7 +160,7 @@ class Agent(t.HasTraits):
         text = self._create_error_text(source)
         self._get_logger().put_error(self, text)
 
-    def kill(self):
+    def kill(self, time=None):
         return self._greenlet.kill()
 
 

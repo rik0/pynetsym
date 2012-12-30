@@ -11,6 +11,7 @@ import pynetsym
 
 from pynetsym.simulation import BaseClock, Activator
 from pynetsym.configurators import BasicH5Configurator
+
 from pynetsym.termination.conditions import always_true
 from pynetsym.graph import BasicH5Graph
 from pynetsym.agent_db import MongoAgentDB
@@ -44,9 +45,10 @@ class Recorder(Agent):
         self.send(BaseClock.name,
                   'register_observer', name=self.name)
 
-    def ticked(self):
+    def ticked(self, time):
         self.distributions.insert({
             'current_time': self.current_time,
+            'real_time': time,
             'susceptible': self.susceptible,
             'infected': self.infected,
             'recovered': self.recovered})
@@ -66,37 +68,40 @@ class AdvancedRecorder(Recorder):
         super(AdvancedRecorder, self).setup()
         self.infections = self.db.infections
 
-    def node_infected(self, node):
+    def node_infected(self, node, time):
         super(AdvancedRecorder, self).node_infected(node)
         self.infections.insert(dict(
             node=int(node),
+            true_start=time,
             start=self.current_time,
-            end=None))
+            end=None,
+            true_end=None))
 
-    def node_recovered(self, node):
+    def node_recovered(self, node, time):
         super(AdvancedRecorder, self).node_recovered(node)
         self.infections.update(
                 dict(node=int(node)),
-                {'$set': dict(end=self.current_time)})
+                {'$set': dict(end=self.current_time,
+                              true_end=time)})
 
 class Activator(pynetsym.Activator):
     infected_nodes = Set(CInt)
 
-    def tick(self):
+    def tick(self, time):
         if self.infected_nodes:
-            super(Activator, self).tick()
+            super(Activator, self).tick(time)
         else:
             self.signal_termination('No more infected')
 
-    def infected(self, node):
+    def infected(self, node, time):
         self.infected_nodes.add(node)
-        self.send(Recorder.name, 'node_infected', node=node)
+        self.send(Recorder.name, 'node_infected', node=node, time=time)
 
-    def not_infected(self, node):
+    def not_infected(self, node, time):
         self.infected_nodes.remove(node)
-        self.send(Recorder.name, 'node_recovered', node=node)
+        self.send(Recorder.name, 'node_recovered', node=node, time=time)
 
-    def nodes_to_activate(self):
+    def nodes_to_activate(self, time):
         return self.infected_nodes
 
 
@@ -112,22 +117,25 @@ class Node(pynetsym.Node):
     def initialize(self, state):
         self.state = state
         if state == 'I':
-            self.send(Activator.name, 'infected', node=self.id)
+            self.send(Activator.name, 'infected',
+                    node=self.id, time=0)
 
-    def infect(self):
+    def infect(self, time):
         self.mongo_client
         if self.state == 'S':
             self.state = 'I'
-            self.send(Activator.name, 'infected', node=self.id)
+            self.send(Activator.name, 'infected', node=self.id,
+                    time=time)
 
-    def activate(self):
+    def activate(self, time):
         if self.state == 'I':
             for node in self.neighbors():
                 if random.random() < self.infection_rate:
-                    self.send(node, 'infect')
+                    self.send(node, 'infect', time=time)
             if random.random() < self.recovery_rate:
                 self.state = 'R'
-                self.send(Activator.name, 'not_infected', node=self.id)
+                self.send(Activator.name, 'not_infected', node=self.id,
+                        time=time)
         elif self.state in ('R', 'S'):
             pass
         else:
