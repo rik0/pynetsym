@@ -1,6 +1,6 @@
 import math
 import random
-from traits.trait_types import Enum, Int, CInt, Float, Set
+from traits.trait_types import Enum, Int, CInt, Float, Set, Instance
 
 import gevent
 from pynetsym import Simulation
@@ -105,6 +105,8 @@ class Node(pynetsym.Node):
     recovery_rate = Float(1.0)
     infection_rate = Float(1.0)
 
+    mongo_client = Instance(MongoClient, transient=True)
+
     infected_fraction = Float
 
     def initialize(self, state):
@@ -113,6 +115,7 @@ class Node(pynetsym.Node):
             self.send(Activator.name, 'infected', node=self.id)
 
     def infect(self):
+        self.mongo_client
         if self.state == 'S':
             self.state = 'I'
             self.send(Activator.name, 'infected', node=self.id)

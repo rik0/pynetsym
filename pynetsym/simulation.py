@@ -300,7 +300,8 @@ class Simulation(object):
         """
         self.direct_setattr(
                 '_simulation_parameters',
-                {'graph': None})
+                {'graph': None,
+                 'mongo_client': self.mongo_client})
         self._set_parameters = False
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
