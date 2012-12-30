@@ -21,7 +21,7 @@ from pynetsym import timing
 from pynetsym.util import SequenceAsyncResult
 from pynetsym.util import gather_from_ancestors
 
-from pynetsym.agent_db import PythonPickler, JSONPickler
+from pynetsym.agent_db import JSONPickler
 from pynetsym.node_manager import NodeManager
 from pynetsym.termination import TerminationChecker
 from pynetsym.util.component_builder import ComponentBuilder
@@ -298,9 +298,10 @@ class Simulation(object):
         graph_type setting the attribute graph_options to a dictionary.
         @return:
         """
-        object.__setattr__(self, '_simulation_parameters', {})
+        self.direct_setattr(
+                '_simulation_parameters',
+                {'graph': None})
         self._set_parameters = False
-        self.graph = None
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
@@ -322,9 +323,16 @@ class Simulation(object):
         except KeyError, e:
             raise AttributeError(e.message)
 
+    def direct_setattr(self, name, value):
+        object.__setattr__(self, name, value)
+
     def __setattr__(self, name, value):
         if name in self._simulation_parameters:
-            raise AttributeError('Read only attribute %s.' % name)
+            if self._simulation_parameters[name] is None:
+                self._simulation_parameters[name] = value
+            else:
+                raise AttributeError(
+                        'Read only attribute %s.' % name)
         else:
             object.__setattr__(self, name, value)
 

@@ -29,8 +29,10 @@ class Recorder(Agent):
     name = 'recorder'
     current_time = Int(-1)
 
+    options = {'steps', 'graph', }
+
     def setup(self):
-        self.number_of_nodes = 100000
+        self.number_of_nodes = self.graph.number_of_nodes()
         self.distributions = pd.DataFrame(
             data=nans((self.steps + 1, 3)),
             columns=['susceptible', 'infected', 'recovered'],
@@ -150,9 +152,8 @@ class Simulation(pynetsym.Simulation):
 
 
     recorder_type = AdvancedRecorder
-    recorder_options = {'steps'}
 
-    # additional_agents = ('recorder', )
+    additional_agents = ('recorder', )
 
     class termination_checker_type(Simulation.termination_checker_type):
         def require_termination(self, reason):
@@ -182,12 +183,19 @@ class Simulation(pynetsym.Simulation):
             'initial_infected_fraction'}
 
         def initialize_nodes(self):
-            infected_fraction = self.full_parameters['initial_infected_fraction']
+            infected_fraction = self.full_parameters[
+                    'initial_infected_fraction']
             infected_population_size = int(
-                math.ceil(len(self.node_identifiers) * infected_fraction))
-            infected_nodes = set(random.sample(self.node_identifiers, infected_population_size))
-            self.sync_send_all(self.node_identifiers, 'initialize',
-                               state=lambda rid: 'I' if (rid in infected_nodes) else 'S')
+                math.ceil(
+                    len(self.node_identifiers) * infected_fraction))
+            infected_nodes = set(
+                    random.sample(
+                        self.node_identifiers,
+                        infected_population_size))
+            self.sync_send_all(
+                   self.node_identifiers, 'initialize',
+                   state=lambda rid: ('I' if (rid in infected_nodes)
+                                            else 'S'))
 
 def bench_mem(timeout, filename='meliae-dump-'):
     try:
@@ -203,10 +211,10 @@ def bench_mem(timeout, filename='meliae-dump-'):
 if __name__ == '__main__':
     sim = Simulation()
 
-    gevent.spawn(bench_mem, 15.0)
+    # gevent.spawn(bench_mem, 15.0)
     sim.run(force_cli=True)
 
     print sim.motive
 
     network_size = sim.graph.number_of_nodes()
-    sim.recorder.save_statistic()
+    # sim.recorder.save_statistic()
