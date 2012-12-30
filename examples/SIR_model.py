@@ -101,11 +101,11 @@ class Activator(pynetsym.Activator):
 
     def infected(self, node):
         self.infected_nodes.add(node)
-        # self.send(Recorder.name, 'node_infected', node=node)
+        self.send(Recorder.name, 'node_infected', node=node)
 
     def not_infected(self, node):
         self.infected_nodes.remove(node)
-        # self.send(Recorder.name, 'node_recovered', node=node)
+        self.send(Recorder.name, 'node_recovered', node=node)
 
     def nodes_to_activate(self):
         return self.infected_nodes
