@@ -190,10 +190,10 @@ else:
             return '%s.%s' % (cls.__module__, cls.__name__)
 
         def store(self, node):
+            node.id = int(node.id)
             state = node.__getstate__()
             del state['__traits_version__']
-            state['_id'] = int(state['id'])
-            state['id'] = int(state['id'])
+            state['_id'] = state['id']
             state['__agenttype__'] = self._mktypename(node)
             self.agents_db.insert(state)
 
