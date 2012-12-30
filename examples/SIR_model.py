@@ -1,6 +1,5 @@
 import math
 import random
-from numpy import arange
 from traits.trait_types import Enum, Int, CInt, Float, Set
 
 import gevent
@@ -16,7 +15,6 @@ from pynetsym.termination.conditions import always_true
 from pynetsym.graph import BasicH5Graph
 from pynetsym.agent_db import MongoAgentDB
 
-import pandas as pd
 import numpy as np
 from pymongo import MongoClient
 
