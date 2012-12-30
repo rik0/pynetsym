@@ -175,8 +175,8 @@ class BasicH5Graph(HasTraits):
         @rtype: int
         @warning: the default implementation is not efficient, as it calls self.nodes()
         """
-        # return self.indptr.len() - 1
-        return self._added_nodes
+        return self.indptr.len() - 1
+        # return self._added_nodes
 
     def number_of_edges(self):
         """
@@ -259,7 +259,7 @@ class BasicH5Graph(HasTraits):
           stopped.
         """
         raise NotImplementedError()
-        
+
     def to_scipy(self, sparse_type=None, minimize=False):
         """
         Return corresponding NetworkX graph.
@@ -294,7 +294,7 @@ class BasicH5Graph(HasTraits):
         indices = np.array(self.indices.shape, dtype=self.indices.shape)
         self.indices.read_direct(indices)
         data = ones(self.indices.shape, dtype=np.int8)
-        M = sparse.csr_matrix((data, indices, indptr), 
+        M = sparse.csr_matrix((data, indices, indptr),
             shape=(self.number_of_nodes, self.number_of_nodes))
         return M.asformat(sparse_type)
 
@@ -314,7 +314,7 @@ class BasicH5Graph(HasTraits):
         return self.to_scipy(
             sparse_type='csr',
             minimize=minimize).tolil().toarray()
-        
+
 
     def apply(self, func, *args, **kwargs):
         """
@@ -324,7 +324,7 @@ class BasicH5Graph(HasTraits):
         @return the value of the function call.
         """
         raise NotImplementedError()
-        
+
 
     @property
     def handle(self):

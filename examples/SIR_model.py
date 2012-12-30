@@ -18,6 +18,7 @@ from pynetsym.agent_db import MongoAgentDB
 
 import pandas as pd
 import numpy as np
+from pymongo import MongoClient
 
 def nans(shape, dtype=float):
     a = np.empty(shape, dtype)
@@ -33,62 +34,52 @@ class Recorder(Agent):
 
     def setup(self):
         self.number_of_nodes = self.graph.number_of_nodes()
-        self.distributions = pd.DataFrame(
-            data=nans((self.steps + 1, 3)),
-            columns=['susceptible', 'infected', 'recovered'],
-            index=arange(-1, self.steps))
-        self.distributions.ix[self.current_time] = 0
-        self.distributions.susceptible.ix[self.current_time] = self.number_of_nodes
+        self.susceptible = self.number_of_nodes
+        self.infected = 0
+        self.recovered = 0
+
+        self.client = MongoClient()
+        self.client.drop_database('stats')
+        self.db = self.client.stats
+        self.distributions = self.db.distributions
+
         self.send(BaseClock.name,
                   'register_observer', name=self.name)
 
     def ticked(self):
+        self.distributions.insert({
+            'current_time': self.current_time,
+            'susceptible': self.susceptible,
+            'infected': self.infected,
+            'recovered': self.recovered})
         self.current_time += 1
-        self.distributions.ix[self.current_time] =\
-        self.distributions.ix[self.current_time - 1]
-
 
     def node_infected(self, node):
-        self.distributions.infected[self.current_time] += 1
-        self.distributions.susceptible[self.current_time] -= 1
+        self.susceptible -= 1
+        self.infected += 1
 
     def node_recovered(self, node):
-        self.distributions.infected[self.current_time] -= 1
-        self.distributions.recovered[self.current_time] += 1
-
-    def _save_infected_ratio(self):
-        df = self.distributions.dropna()
-        df.to_csv('SIR_model.csv', index_label='step')
-
-    def save_statistic(self):
-        self._save_infected_ratio()
+        self.infected -= 1
+        self.recovered += 1
 
 
 class AdvancedRecorder(Recorder):
     def setup(self):
         super(AdvancedRecorder, self).setup()
-
-        self.infection_times = pd.DataFrame(
-            data=nans((self.number_of_nodes, 2)),
-            columns=['infection', 'recovery'])
+        self.infections = self.db.infections
 
     def node_infected(self, node):
         super(AdvancedRecorder, self).node_infected(node)
-        self.infection_times.infection[node] = self.current_time
+        self.infections.insert(dict(
+            node=int(node),
+            start=self.current_time,
+            end=None))
 
     def node_recovered(self, node):
         super(AdvancedRecorder, self).node_recovered(node)
-        self.infection_times.recovery[node] = self.current_time
-
-    def _save_infection_times(self):
-        df = self.infection_times.dropna()
-        df['duration'] = (df.recovery - df.infection)
-        df.to_csv('SIR_model_infection_rates.csv', index_label='node')
-
-    def save_statistic(self):
-        super(AdvancedRecorder, self).save_statistic()
-        self._save_infection_times()
-
+        self.infections.update(
+                dict(node=int(node)),
+                {'$set': dict(end=self.current_time)})
 
 class Activator(pynetsym.Activator):
     infected_nodes = Set(CInt)
