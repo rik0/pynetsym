@@ -193,9 +193,11 @@ else:
             node.id = int(node.id)
             state = node.__getstate__()
             del state['__traits_version__']
-            state['_id'] = state['id']
             state['__agenttype__'] = self._mktypename(node)
-            self.agents_db.insert(state)
+            self.agents_db.update(
+                    dict(_id=node.id),
+                    {'$set': state},
+                    upsert=True)
 
         def recover(self, identifier):
             identifier = int(identifier)
@@ -203,7 +205,6 @@ else:
             agent_type = \
                 jsonpickle.unpickler.loadclass(state.pop('__agenttype__'))
             del state['_id']
-            self.agents_db.remove({'_id': identifier})
             return agent_type(**state)
 
 
