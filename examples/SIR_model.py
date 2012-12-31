@@ -4,7 +4,6 @@ from traits.trait_types import Enum, Int, CInt, Float, Set
 
 import gevent
 from pynetsym import Simulation
-from pynetsym import Activator
 from pynetsym import Agent
 
 import pynetsym
