@@ -394,7 +394,7 @@ class Simulation(object):
             full_parameters=self._simulation_parameters)
 
     def create_node_manager(self):
-        self.node_manager = NodeManager(self.graph)
+        self.node_manager = NodeManager(self.graph, self.mongo_client)
 
     def create_service_agents(self):
         self.create_node_db()
