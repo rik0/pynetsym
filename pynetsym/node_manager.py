@@ -15,7 +15,7 @@ class NodeManager(core.Agent):
     the registered name in the L{address book<AddressBook>}
     """
 
-    def __init__(self, graph):
+    def __init__(self, graph, mongo_client):
         """
         Creates a new node_manager
 
@@ -23,16 +23,21 @@ class NodeManager(core.Agent):
         @type graph: storage.GraphWrapper
         """
         self.graph = graph
+        self.mongo_client = mongo_client
         self.failures = []
         self.group = Group()
 
     def setup_node(self, node, greenlet):
         greenlet.link_value(node.deactivate_node)
         node.graph = self.graph
+        node.mongo_client = self.mongo_client
         self.group.add(greenlet)
+        if hasattr(node, 'setup_mongo'):
+            node.setup_mongo()
 
     def unset_node(self, node, greenlet):
         del node.graph
+        del node.mongo_client
         self.group.discard(greenlet)
 
         if isinstance(greenlet.value, core.GreenletExit):
