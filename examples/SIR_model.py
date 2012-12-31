@@ -1,8 +1,11 @@
+
+import gevent
+from gevent import monkey; monkey.patch_all()
+
 import math
 import random
 from traits.trait_types import Enum, CInt, Float, Set, Instance
 
-import gevent
 from pynetsym import Simulation
 
 import pynetsym
