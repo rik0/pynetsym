@@ -9,20 +9,13 @@ from pynetsym import Agent
 
 import pynetsym
 
-from pynetsym.simulation import BaseClock, Activator
+from pynetsym.simulation import BaseClock
 from pynetsym.configurators import BasicH5Configurator
 from pynetsym.termination.conditions import always_true
 from pynetsym.graph import BasicH5Graph
 from pynetsym.agent_db import MongoAgentDB
 
-import numpy as np
 from pymongo import MongoClient
-
-def nans(shape, dtype=float):
-    a = np.empty(shape, dtype)
-    a.fill(np.nan)
-    return a
-
 
 class Recorder(Agent):
     name = 'recorder'
