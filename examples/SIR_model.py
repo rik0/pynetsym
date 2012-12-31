@@ -96,6 +96,7 @@ class Node(pynetsym.Node):
     state = Enum('S', 'I', 'R')
     recovery_rate = Float(1.0)
     infection_rate = Float(1.0)
+    spread_out = False
 
     infected_fraction = Float
 
@@ -111,9 +112,11 @@ class Node(pynetsym.Node):
 
     def activate(self):
         if self.state == 'I':
-            for node in self.neighbors():
-                if random.random() < self.infection_rate:
-                    self.send(node, 'infect')
+            if not self.spread_out or self.infection_rate < 1.0:
+                for node in self.neighbors():
+                    if random.random() < self.infection_rate:
+                        self.send(node, 'infect')
+                self.spread_out = True
             if random.random() < self.recovery_rate:
                 self.state = 'R'
                 self.send(Activator.name, 'not_infected', node=self.id)
