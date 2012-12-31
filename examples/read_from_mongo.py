@@ -13,7 +13,11 @@ def load_data(mon, db, collection, columns, selection={}):
     return df
 
 def load_durations(mon):
-    durations_columns = ['node', 'start', 'end']
+    durations_columns = [
+            'node',
+            'true_start', 'start',
+            'end', 'true_end'
+    ]
     df = load_data(mon, 'stats', 'infections', durations_columns)
     df = df.set_index('node')
     df.index.name = 'node'
@@ -22,7 +26,7 @@ def load_durations(mon):
 
 def load_evolution(mon):
     distributions_columns = [
-        'current_time', 'susceptible',
+        'current_time', 'real_time', 'susceptible',
         'infected', 'recovered']
     df = load_data(mon, 'stats', 'distributions',
             distributions_columns)
