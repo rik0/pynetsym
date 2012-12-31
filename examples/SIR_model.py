@@ -4,7 +4,6 @@ from traits.trait_types import Enum, CInt, Float, Set, Instance
 
 import gevent
 from pynetsym import Simulation
-from pynetsym import Agent
 
 import pynetsym
 
@@ -54,10 +53,10 @@ class Activator(pynetsym.Activator):
         else:
             self.signal_termination('No more infected')
 
-    def infected(self, node, time):
+    def infected(self, node):
         self.infected_nodes.add(node)
 
-    def not_infected(self, node, time):
+    def not_infected(self, node):
         self.infected_nodes.remove(node)
 
     def nodes_to_activate(self, time):
@@ -76,13 +75,13 @@ class Node(pynetsym.Node):
     def setup_mongo(self):
         self._db = self.mongo_client.stats
         self._distributions = self._db.distributions
-        self._stats = self._db.infections
+        self._infections = self._db.infections
 
     def mark_infected(self, time):
         self._distributions.update(
                 {'current_time': time},
                 {'$inc': {'infected': 1, 'susceptible': -1}})
-        self._stats.insert({
+        self._infections.insert({
             'node': int(self.id),
             'start': time,
             'end': None,
@@ -92,7 +91,7 @@ class Node(pynetsym.Node):
         self._distributions.update(
                 {'current_time': time},
                 {'$inc': {'infected': -1, 'recovered': 1}})
-        self._stats.update(
+        self._infections.update(
                 {'node': int(self.id)},
                 {'$set': {'end': time}})
 
@@ -104,12 +103,10 @@ class Node(pynetsym.Node):
             self.mark_infected(0)
 
     def infect(self, time):
-        self.mongo_client
         if self.state == 'S':
             self.state = 'I'
-            self.send(Activator.name, 'infected', node=self.id,
-                    time=time)
-            self.mark_infected(time)
+            self.send(Activator.name, 'infected', node=self.id)
+            self.mark_infected(time+1)
 
     def activate(self, time):
         if self.state == 'I':
@@ -118,9 +115,8 @@ class Node(pynetsym.Node):
                     self.send(node, 'infect', time=time)
             if random.random() < self.recovery_rate:
                 self.state = 'R'
-                self.send(Activator.name, 'not_infected', node=self.id,
-                        time=time)
-                self.mark_recovered(time)
+                self.send(Activator.name, 'not_infected', node=self.id)
+                self.mark_recovered(time+1)
         elif self.state in ('R', 'S'):
             pass
         else:
