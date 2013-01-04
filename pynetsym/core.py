@@ -67,7 +67,7 @@ class Agent(t.HasTraits):
     _node_db = t.Instance(
         agent_db.IAgentStorage, transient=True, allow_none=False)
 
-    id = t.Either(t.Int, t.Str)
+    id = t.Either(t.CInt, t.Str)
 
     __ = t.PythonValue(transient=True)
 

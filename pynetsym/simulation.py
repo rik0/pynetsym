@@ -487,9 +487,13 @@ class Simulation(object):
 
         self.setup()
 
+        print 'Initial setup...'
         self.create_service_agents()
         self.create_simulation_agents()
-        self.pre_configure_network()
+        print 'Configuring network...'
+        with timing.Timer(self.callback):
+            self.pre_configure_network()
+        print 'Starting simulation...'
         with timing.Timer(self.callback):
             self.start_simulation()
             self.clock.join()

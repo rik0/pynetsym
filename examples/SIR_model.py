@@ -195,7 +195,7 @@ def bench_mem(timeout, filename='meliae-dump-'):
 if __name__ == '__main__':
     sim = Simulation()
 
-    # gevent.spawn(bench_mem, 15.0)
+    gevent.spawn(bench_mem, 60.0 * 30.0)
     sim.run(force_cli=True)
 
     print sim.motive
