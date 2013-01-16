@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from os import path
+from traits.trait_types import Int
 from pynetsym import node_manager, BasicConfigurator
 from pynetsym.generation_models import nx_barabasi_albert as barabasi_albert
 import networkx as nx
@@ -19,17 +20,14 @@ def plot_simulation(sim, ccdf_axes, pdf_axes, color, marker, linestyle):
     steps = sim.steps
     starting_edges = sim.starting_edges
     starting_networks_size = sim.starting_network_size
-    graph = sim.graph.handle
-    del sim
-    gc.collect()
-    sim_ccdf, sim_pdf = make_distributions(graph)
-    del graph
-    ccdf_axes.loglog(arange(starting_edges - 1, len(sim_ccdf)), sim_ccdf[starting_edges - 1:], color=color, linestyle=linestyle)
-    pdf_axes.loglog(arange(starting_edges, len(sim_pdf)), sim_pdf[starting_edges:], color=color, marker=marker, linestyle='')
-    del sim_ccdf
-    del sim_pdf
-    gc.collect()
-    return steps, starting_edges
+    with sim.graph.handle as graph:
+        del sim
+        gc.collect()
+        sim_ccdf, sim_pdf = make_distributions(graph)
+        del graph
+        ccdf_axes.loglog(arange(starting_edges - 1, len(sim_ccdf)), sim_ccdf[starting_edges - 1:], color=color, linestyle=linestyle)
+        pdf_axes.loglog(arange(starting_edges, len(sim_pdf)), sim_pdf[starting_edges:], color=color, marker=marker, linestyle='')
+        return steps, starting_edges, sim_ccdf, sim_pdf
 
 def make_distributions(graph):
     bins = np.bincount(graph.degree().values())
@@ -43,16 +41,20 @@ BA = barabasi_albert.BA
 
 
 class Node2(Node):
+    starting_edges = Int
+
     def activate(self):
         forbidden = set()
         forbidden.add(self.id)
+        rs = self.graph.random_selector
         while self.starting_edges:
-            random_node = self.graph.preferential_attachment_node()
+            random_node = rs.preferential_attachment()
             if random_node not in forbidden:
                 self.link_to(random_node)
                 forbidden.add(random_node)
                 self.starting_edges -= 1
-            self.cooperate()
+                self.cooperate()
+
 
 class Activator2(Activator):
 
@@ -99,9 +101,9 @@ if __name__ == '__main__':
 
 
     sim = BA()
-    steps, starting_edges = plot_simulation(sim, ccdf_axes, pdf_axes, 'blue', 'o', '-')
+    steps, starting_edges, sim_ccdf, sim_pdf  = plot_simulation(sim, ccdf_axes, pdf_axes, 'blue', 'o', '-')
     sim2 = BA2()
-    plot_simulation(sim2, ccdf_axes, pdf_axes, 'red', '+', '--')
+    steps2, starting_edges2, sim_ccdf2, sim_pdf2  = plot_simulation(sim2, ccdf_axes, pdf_axes, 'red', '+', '--')
 
     ccdf_axes.set_title('CCDF BA(%d, %d)' % (steps, starting_edges))
     ccdf_axes.legend(('Not-Interruptible Handler', 'Interruptible Handler'), loc='best')
@@ -128,3 +130,13 @@ if __name__ == '__main__':
                       dpi=DPI, format=format)
 
 
+    import pandas as pd
+    ccdf_df = pd.DataFrame({'Frequency in Non-Interruptible Handler Approach': pd.Series(sim_ccdf, index=arange(len(sim_ccdf))),
+                            'Frequency in Interruptible Handler Approach': pd.Series(sim_ccdf2, index=arange(len(sim_ccdf2))),})
+    ccdf_df.index.name = 'Node degree'
+    ccdf_df.to_csv(path.join(os.curdir, directory_name, 'nni-ccdf.csv'))
+
+    pdf_df = pd.DataFrame({'Frequency in Non-Interruptible Handler Approach': pd.Series(sim_pdf, index=arange(len(sim_pdf))),
+                           'Frequency in Interruptible Handler Approach': pd.Series(sim_pdf2, index=arange(len(sim_pdf2))),})
+    pdf_df.to_csv(path.join(os.curdir, directory_name, 'nni-pdf.csv'))
+    pdf_df.index.name = 'Node degree'

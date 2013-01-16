@@ -29,7 +29,7 @@ class NxGraph(AbstractGraph):
         return dict(graph=nx.Graph())
 
     def __init__(self, graph, random_selector=None):
-        self.nx_graph = graph
+        self.nx_graph = nx.Graph() if graph is None else graph
         self.random_selector = (NxRandomSelector(graph_container=self)
                                 if random_selector is None else random_selector)
 

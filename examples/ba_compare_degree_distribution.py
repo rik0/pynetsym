@@ -50,7 +50,7 @@ if __name__ == '__main__':
     F_ccdf = plt.figure()
 
     sim = BA()
-    sim.setup_parameters(starting_edges=11, starting_network_size=11, steps=5000)
+    sim.setup_parameters(starting_edges=11, starting_network_size=11, steps=100000)
     sim.run()
 
     steps = sim.steps
@@ -67,10 +67,6 @@ if __name__ == '__main__':
         ccdf_axes.loglog(arange(starting_edges-1, len(sim_ccdf)), sim_ccdf[starting_edges-1:], color='blue')
         pdf_axes.loglog(arange(starting_edges, len(sim_pdf)), sim_pdf[starting_edges:], color='blue', marker='o', linestyle='')
 
-    del sim_ccdf
-    del sim_pdf
-    gc.collect()
-
     ba_graph = nx.barabasi_albert_graph(
         steps + starting_networks_size,
         starting_edges)
@@ -79,11 +75,6 @@ if __name__ == '__main__':
 
     ccdf_axes.loglog(arange(starting_edges-1, len(ba_ccdf)), ba_ccdf[starting_edges-1:], color='red', linestyle='--')
     pdf_axes.loglog(arange(starting_edges, len(ba_pdf)), ba_pdf[starting_edges:], color='red', marker='+', linestyle='')
-
-    del ba_graph
-    del ba_ccdf
-    del ba_pdf
-    gc.collect()
 
     ccdf_axes.set_title('CCDF BA(%d, %d)' % (steps, starting_edges))
     ccdf_axes.legend(('Agent-Based', 'NetworkX'), loc='best')
@@ -108,5 +99,14 @@ if __name__ == '__main__':
                        dpi=DPI, format=format)
         F_pdf.savefig(path.join(os.curdir, directory_name, 'ba-pdf.%s' % format),
                       dpi=DPI, format=format)
+
+    import pandas as pd
+    ccdf_df = pd.DataFrame({'Agent-based simulation': pd.Series(sim_ccdf, index=arange(len(sim_ccdf))),
+                           'Traditional simulation': pd.Series(ba_ccdf, index=arange(len(ba_ccdf))),})
+    ccdf_df.to_csv(path.join(os.curdir, directory_name, 'ba-ccdf.csv'))
+
+    pdf_df = pd.DataFrame({'Agent-based simulation': pd.Series(sim_pdf, index=arange(len(sim_pdf))),
+                           'Traditional simulation': pd.Series(ba_pdf, index=arange(len(ba_pdf))),})
+    pdf_df.to_csv(path.join(os.curdir, directory_name, 'ba-pdf.csv'))
 
 
