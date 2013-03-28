@@ -98,8 +98,6 @@ class Node(pynetsym.Node):
     infection_rate = Float(1.0)
     spread_out = False
 
-    infected_fraction = Float
-
     def initialize(self, state):
         self.state = state
         if state == 'I':
@@ -129,7 +127,7 @@ class Node(pynetsym.Node):
 class Simulation(pynetsym.Simulation):
     default_infection_rate = 1.
     default_recovery_rate = 1.
-    default_infected_fraction = 0.01
+    default_infected_rate = 0.01
 
     agent_db_type = MongoAgentDB
     agent_db_parameters = {}
@@ -148,8 +146,8 @@ class Simulation(pynetsym.Simulation):
          dict(default=default_infection_rate, type=float)),
         ('-r', '--recovery-rate',
          dict(default=default_recovery_rate, type=float)),
-        ('-f', '--initial-infected-fraction',
-         dict(default=default_infected_fraction, type=float)),
+        ('-f', '--initial-infected-rate',
+         dict(default=default_infected_rate, type=float)),
         ('--h5-file', dict(default='', type=str)),
         )
 
@@ -163,15 +161,14 @@ class Simulation(pynetsym.Simulation):
         node_type = Node
         node_options = {
             'infection_rate',
-            'recovery_rate',
-            'initial_infected_fraction'}
+            'recovery_rate',}
 
         def initialize_nodes(self):
-            infected_fraction = self.full_parameters[
-                    'initial_infected_fraction']
+            infected_rate = self.full_parameters[
+                    'initial_infected_rate']
             infected_population_size = int(
                 math.ceil(
-                    len(self.node_identifiers) * infected_fraction))
+                    len(self.node_identifiers) * infected_rate))
             infected_nodes = set(
                     random.sample(
                         self.node_identifiers,
@@ -195,7 +192,7 @@ def bench_mem(timeout, filename='meliae-dump-'):
 if __name__ == '__main__':
     sim = Simulation()
 
-    gevent.spawn(bench_mem, 60.0 * 30.0)
+    #gevent.spawn(bench_mem, 60.0 * 30.0)
     sim.run(force_cli=True)
 
     print sim.motive
