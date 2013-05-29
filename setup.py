@@ -41,6 +41,6 @@ setup(
         'networkx',
         'jsonpickle',
         'traits',
-        'ParamUnittest >= 0.2',
+        'ParamUnittest >= 0.2', 'pymongo',
     ],
 )

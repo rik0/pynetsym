@@ -135,7 +135,6 @@ class Simulation(pynetsym.Simulation):
     agent_db_type = MongoAgentDB
     agent_db_parameters = {}
 
-
     recorder_type = AdvancedRecorder
 
     additional_agents = ('recorder', )
