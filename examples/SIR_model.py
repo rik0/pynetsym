@@ -16,6 +16,14 @@ from pynetsym.agent_db import MongoAgentDB
 
 from pymongo import MongoClient
 
+
+# To run this you need a MongoDB active!
+# I usually just do:
+# $ mongod --dbpath=mdb&
+# where mdb is the directory where mongo stuff is placed.
+# I retrieve the data with the script "read_from_mongo.py" with
+# the appropriate options.
+
 class Recorder(Agent):
     name = 'recorder'
     current_time = Int(-1)
@@ -118,11 +126,6 @@ class Node(pynetsym.Node):
             if random.random() < self.recovery_rate:
                 self.state = 'R'
                 self.send(Activator.name, 'not_infected', node=self.id)
-        elif self.state in ('R', 'S'):
-            pass
-        else:
-            self.send_log('I should not get here.')
-
 
 class Simulation(pynetsym.Simulation):
     default_infection_rate = 1.
@@ -149,7 +152,7 @@ class Simulation(pynetsym.Simulation):
         ('-f', '--initial-infected-rate',
          dict(default=default_infected_rate, type=float)),
         ('--h5-file', dict(default='', type=str)),
-        )
+    )
 
     activator_type = Activator
     activator_options = {}
