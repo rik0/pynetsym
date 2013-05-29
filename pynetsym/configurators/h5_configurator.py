@@ -10,6 +10,14 @@ from pynetsym.util import extract_subdictionary, SequenceAsyncResult
 from .basic import AbstractConfigurator
 
 class BasicH5Configurator(AbstractConfigurator):
+    """
+    BasicH5Configurator reads the starting network from
+     an HD5 file.
+
+    It receives the path of the file from the simulation
+    option 'h5_file', which has to be specified in the
+    command line option description.
+    """
     options = {'h5_file'}
 
     starting_graph = Instance(h5py.File, allow_none=False)
