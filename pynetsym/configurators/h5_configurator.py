@@ -1,8 +1,5 @@
-from traits.trait_types import Instance, Class, Type
+from traits.trait_types import Instance, Type
 from pynetsym import node_manager
-
-import itertools
-import networkx as nx
 
 import h5py
 
