@@ -1,4 +1,3 @@
-import numpy
 from . import configurators
 
 __all__ = [
