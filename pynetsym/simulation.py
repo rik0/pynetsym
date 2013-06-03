@@ -1,5 +1,6 @@
 import sys
 import operator
+import cStringIO
 
 import gevent
 from gevent.greenlet import LinkedCompleted
@@ -262,10 +263,53 @@ class AdditionalAgentComponentBuilder(ComponentBuilder):
         return component_name, gfa, start_after_clock
 
 
-class _SimulationMeta(type):
+def create_configuration_manager(args, force_cli, kwargs, options):
+    configuration_manager = configuration.ConfigurationManager(options)
+    if (args is None and not kwargs) or force_cli:
+        configuration_manager.consider_command_line()
+    configuration_manager.consider(args)
+    configuration_manager.consider(kwargs)
+    return configuration_manager
+
+
+def build_help_docs(options):
+    parser = configuration.ParserBuilder(options).parser
+    return parser.format_help()
+
+
+class _SimulationBaseStub(object):
     pass
 
-class Simulation(object):
+
+def cString():
+    pass
+
+
+class _SimulationMeta(type):
+    def __new__(mcs, name, bases, dct):
+        cls = super(_SimulationMeta, mcs).__new__(mcs, name, bases, dct)
+        if bases[0] is not _SimulationBaseStub:
+            options = gather_from_ancestors(cls, 'command_line_options', list)
+
+            old_doc = getattr(cls, '__doc__', None)
+            doc_builder = cStringIO.StringIO()
+            if old_doc:
+                doc_builder.write(str(old_doc))
+                doc_builder.write('\n')
+            doc_builder.write('Command Line Usage:\n')
+
+            help_string = build_help_docs(options)
+            for line in help_string.split('\n'):
+                line.strip()
+                if line:
+                    doc_builder.write('    %s\n' % line)
+            doc_builder.write('\n')
+
+            cls.__doc__ = doc_builder.getvalue()
+        return cls
+
+
+class Simulation(_SimulationBaseStub):
     """
     A subclass of Simulation describes a specific kind of simulation.
 
@@ -403,11 +447,8 @@ class Simulation(object):
     def build_parameters(cls, args, force_cli, kwargs):
         options = gather_from_ancestors(
             cls, 'command_line_options', list)
-        configuration_manager = configuration.ConfigurationManager(options)
-        if (args is None and not kwargs) or force_cli:
-            configuration_manager.consider_command_line()
-        configuration_manager.consider(args)
-        configuration_manager.consider(kwargs)
+        configuration_manager = create_configuration_manager(
+            args, force_cli, kwargs, options)
         cli_args_dict = configuration_manager.process()
         return cli_args_dict
 
