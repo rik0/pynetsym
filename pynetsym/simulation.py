@@ -262,6 +262,9 @@ class AdditionalAgentComponentBuilder(ComponentBuilder):
         return component_name, gfa, start_after_clock
 
 
+class _SimulationMeta(type):
+    pass
+
 class Simulation(object):
     """
     A subclass of Simulation describes a specific kind of simulation.
@@ -307,6 +310,8 @@ class Simulation(object):
                 ('-b', '--bar', dict(default=..., type=...))
 
     """
+
+    __metaclass__ = _SimulationMeta
 
     command_line_options = (
         ("-s", "--steps", dict(default=100, type=int)),
