@@ -2,6 +2,9 @@ from pynetsym import core
 
 
 class TerminationChecker(core.Agent):
+    """
+    Agent that monitors the termination of the simulation.
+    """
     name = 'termination_checker'
 
     def __init__(self, graph, conditions):
@@ -10,9 +13,19 @@ class TerminationChecker(core.Agent):
         self.active = True
 
     def add_condition(self, condition):
+        """
+        Add a condition to monitor.
+
+        :param condition: the condition to monitor.
+        :type condition: :class:`pynetsym.termination.conditions.ICondition`
+        """
         self.conditions.append(condition)
 
     def check(self, requester):
+        """
+        An agent can send a message to require that the conditions for
+        termination are met.
+        """
         for condition in self.conditions:
             check = condition.check(self.graph)
             if check:

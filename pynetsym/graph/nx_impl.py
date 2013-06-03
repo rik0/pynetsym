@@ -20,6 +20,10 @@ from .import interface
 
 
 class NxGraph(AbstractGraph):
+    """
+    Default wrapper for an NetworkX Graph.
+    """
+
     implements(interface.IGraph)
 
     nx_graph = Instance(nx.Graph, allow_none=False)

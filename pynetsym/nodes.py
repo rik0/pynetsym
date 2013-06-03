@@ -22,9 +22,9 @@ class Node(core.Agent):
     def __init__(self, **attributes):
         """
         Create a Node in the network.
-        @param graph: the graph backing the social network
-        @type graph: storage.GraphWrapper
-        @return: the Node
+        :param graph: the graph backing the social network
+        :type graph: storage.GraphWrapper
+        :return: the Node
         """
         self.set(**attributes)
 
@@ -44,11 +44,11 @@ class Node(core.Agent):
         """
         Sends an 'accept_link' message to the specified node.
 
-        @param criterion_or_node: The node to link may be an identifier
+        :param criterion_or_node: The node to link may be an identifier
             or a callable extracting the node from the graph
-        @type criterion_or_node:
-            id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
-        @return: an asyncronous value representing whether the
+        :type criterion_or_node:
+            id | callable(Graph -> Node)
+        :return: an asynchronous value representing whether the
             connection succeeded or not.
         """
         if callable(criterion_or_node):
@@ -62,11 +62,10 @@ class Node(core.Agent):
         """
         Sends a 'drop_link' message to the specified node.
 
-        @param criterion_or_node: The node to link may be an identifier
+        :param criterion_or_node: The node to link may be an identifier
             or a callable extracting the node from the graph
-        @type criterion_or_node:
-            id | callable(L{graph<graph.Graph>}) -> L{Node<Node>}
-        @return: None
+        :type criterion_or_node:
+            id | callable(Graph -> Node)
         """
         if callable(criterion_or_node):
             target_node = criterion_or_node(self.graph.handle)
@@ -79,8 +78,8 @@ class Node(core.Agent):
         """
         Accepts an 'accept_link' message (modifying the network).
 
-        @param originating_node: the node that required the connection
-        @type originating_node: int
+        :param originating_node: the node that required the connection
+        :type originating_node: int
         """
         self.graph.add_edge(originating_node, self.id)
         return True
@@ -89,14 +88,24 @@ class Node(core.Agent):
         """
         Accepts a 'drop_link' message (modifying the network).
 
-        @param originating_node: the node that required the drop
-        @type originating_node: int
+        :param originating_node: the node that required the drop
+        :type originating_node: int
         """
         self.graph.remove_edge(originating_node, self.id)
         return True
 
     def neighbors(self):
+        """
+        Return an iterable with the neighbors.
+        """
         return self.graph.neighbors(self.id)
 
     def can_be_collected(self):
+        """
+        Return whether this agent can be collected.
+
+        .. warning::
+            Defaults to true, do not override unless you know what
+            you are doing.
+        """
         return True

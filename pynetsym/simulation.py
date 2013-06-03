@@ -34,6 +34,7 @@ __all__ = [
     'Clock'
 ]
 
+
 class Activator(core.Agent):
     """
     The Activator chooses what happens at each step of the simulation.
@@ -49,17 +50,30 @@ class Activator(core.Agent):
     activator_options = {'graph'}
 
     def activate_nodes(self):
+        """
+        At each step is called to send the `activate` message to
+        the nodes chosen by :func:`Activator.nodes_to_activate`.
+        """
         node_ids = self.nodes_to_activate()
         for node_id in node_ids:
             self.send(node_id, 'activate')
 
     def destroy_nodes(self):
+        """
+        At each step is called to send the `kill` message to
+        the nodes chosen by :func:`Activator.nodes_to_destroy`.
+        """
         self.dying_nodes = self.nodes_to_destroy()
         for node_id in self.dying_nodes:
             # notice: this is "beautifully" queued
             self.send(node_id, 'kill')
 
     def create_nodes(self):
+        """
+        At each step is called to require from the :class:`NodeManager`
+        the creation of the nodes returned by
+        :func:`Activator.nodes_to_activate`.
+        """
         to_create = self.nodes_to_create()
         node_ids = SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',
@@ -68,24 +82,48 @@ class Activator(core.Agent):
         self.fresh_nodes = node_ids.get()
 
     def simulation_ended(self):
+        """
+        Informs the :class:`NodeManager` that the simulation ended.
+        """
         return self.send(NodeManager.name, 'simulation_ended').get()
 
     def tick(self):
+        """
+        Processes the tick message from the clock.
+        """
         self.destroy_nodes()
         self.create_nodes()
         self.activate_nodes()
 
     def signal_termination(self, reason):
         self.send(TerminationChecker.name, 'require_termination',
-                reason=reason).get()
+                  reason=reason).get()
 
     def nodes_to_activate(self):
+        """
+        Override to determine which nodes need activation.
+
+        :return: a collection of the nodes to process.
+        :rtype: iterable
+        """
         return [self.graph.random_selector.random_node()]
 
     def nodes_to_destroy(self):
+        """
+        Override to determine which nodes need destruction.
+
+        :return: a collection of the nodes to process.
+        :rtype: iterable
+        """
         return {}
 
     def nodes_to_create(self):
+        """
+        Override to determine which nodes need creation.
+
+        :return: a collection of the nodes to process.
+        :rtype: iterable
+        """
         return {}
 
 
@@ -94,7 +132,6 @@ class SyncActivator(Activator):
     This Activator variant always waits for the nodes to acknowledge the
     activate message, thus making it essentially serial.
     """
-
     def activate_nodes(self):
         node_ids = self.nodes_to_activate()
         for node_id in node_ids:
@@ -103,6 +140,15 @@ class SyncActivator(Activator):
 
 
 class BaseClock(core.Agent):
+    """
+    Basic clock.
+
+    .. warning:
+        Use the provided SynchronousClock or AsynchronousClock.
+
+        This can also be sub-classed to provide different behavior.
+
+    """
     name = 'clock'
     activator_can_terminate = false()
     clock_loop_g = Instance(gevent.Greenlet)
@@ -149,7 +195,6 @@ class BaseClock(core.Agent):
         self.send_simulation_ended().get()
         self.send(Logger.name, 'stop_receiving')
 
-
     def ask_to_terminate(self):
         return self.send(
             termination.TerminationChecker.name, 'check',
@@ -157,6 +202,9 @@ class BaseClock(core.Agent):
 
 
 class AsyncClock(BaseClock):
+    """
+    Asynchronous Clock.
+    """
     remaining_ticks = Int
 
     def clock_loop(self):
@@ -168,6 +216,9 @@ class AsyncClock(BaseClock):
 
 
 class Clock(BaseClock):
+    """
+    Synchronous Clock.
+    """
     def clock_loop(self):
         while self.active:
             waiting = self.send_tick()
@@ -178,11 +229,15 @@ class Clock(BaseClock):
             self.simulation_end()
 
 
-
-
 class AdditionalAgentComponentBuilder(ComponentBuilder):
+    """
+    Utility class that the :class:`Simulation` uses to create
+    additional roles.
+
+    This is mostly uninteresting for users.
+    """
     def __init__(self, context, additional_agent_line):
-        (component_name, gfa, start_after_clock) =\
+        (component_name, gfa, start_after_clock) = \
             self.parse_additional_agent_line(additional_agent_line)
         self.start_after_clock = start_after_clock
         super(AdditionalAgentComponentBuilder, self).__init__(
@@ -207,8 +262,6 @@ class AdditionalAgentComponentBuilder(ComponentBuilder):
         return component_name, gfa, start_after_clock
 
 
-
-
 class Simulation(object):
     """
     A subclass of Simulation describes a specific kind of simulation.
@@ -216,22 +269,20 @@ class Simulation(object):
     Some parameters have to be overridden to customize behavior. Most of
     these parameters may be class parameters in the overridden class as well
     as instance variables. It is for example acceptable to define an
-    enclosed class `activator_type` that "satisfies" the need for an L{activator_type}
+    enclosed class `activator_type` that "satisfies" the need for an :func:`activator_type`
     attribute.
-        1. L{Simulation.activator_type}: the callable that creates the activator_type
-            for the simulation
-        2. L{Simulation.graph_type}: the callable that creates the graph
-            which holds the network.
-        3. L{Simulation.clock_type}: the callable that creates the clock_type in the
-            simulation
-        4. L{Simulation.command_line_options}
-        5. L{Simulation.configurator_type}
 
-    Of these, L{Simulation.activator_type}, L{Simulation.graph_type},
-    L{Simulation.command_line_options} and
-    L{Simulation.clock_type} have sensible default values (respectively,
-    L{generation.Activator}, L{backend.NXGraphWrapper},
-    a list of default options and L{generation.Clock}.
+        1. :func:`Simulation.activator_type`: the callable that creates the activator_type for the simulation
+        2. :func:`Simulation.graph_type`: the callable that creates the graph which holds the network.
+        3. :func:`Simulation.clock_type`: the callable that creates the clock_type in the simulation
+        4. :func:`Simulation.command_line_options`
+        5. :func:`Simulation.configurator_type`
+
+    Of these, :func:`Simulation.activator_type`, :func:`Simulation.graph_type`,
+    :func:`Simulation.command_line_options` and
+    :func:`Simulation.clock_type` have sensible default values (respectively,
+    :class:`Activator`, :class:`graph.`,
+    a list of default options and :class:`Clock`.
     The other arguments need to be supplied by the subclass.
 
     Notice that command_line_options are scanned along the inheritance
@@ -242,6 +293,7 @@ class Simulation(object):
     design.
 
     The preferred way to deal with these options is like::
+
         class SimulationSubclass(Simulation):
             class activator_type(Activator):
                 # ...
@@ -253,12 +305,12 @@ class Simulation(object):
 
             command_line_options = (
                 ('-b', '--bar', dict(default=..., type=...))
-    """
 
+    """
 
     command_line_options = (
         ("-s", "--steps", dict(default=100, type=int)),
-        )
+    )
     """
     Each option line is in the form:
         1. (short_option_name, long_option_name, parameters)
@@ -296,17 +348,15 @@ class Simulation(object):
         During the initialization step we create a new graph according to
         the property graph_type. Additional parameters can be passed to
         graph_type setting the attribute graph_options to a dictionary.
-        @return:
         """
         self.direct_setattr(
-                '_simulation_parameters',
-                {'graph': None})
+            '_simulation_parameters',
+            {'graph': None})
         self._set_parameters = False
         # do not register the node_add because that is done when
         # the id is extracted from id_manager
         self.callback = timing.TimeLogger(sys.stdout)
         self.address_book = None
-
 
     def add_parameter(self, key, value):
         self._simulation_parameters[key] = value
@@ -332,7 +382,7 @@ class Simulation(object):
                 self._simulation_parameters[name] = value
             else:
                 raise AttributeError(
-                        'Read only attribute %s.' % name)
+                    'Read only attribute %s.' % name)
         else:
             object.__setattr__(self, name, value)
 
@@ -357,16 +407,40 @@ class Simulation(object):
         return cli_args_dict
 
     def setup(self):
+        """
+        This is called before the simulation starts.
+
+        The Graph is instantiated here. Ensure to call the base
+        version if overridden.
+
+        The graph is created using the component system.
+        Use graph_type to customize the kind of graph backend.
+        Use graph_options to specify which arguments need to be passed.
+        """
         graph_builder = ComponentBuilder(self, 'graph')
         graph_builder.build(
             self._simulation_parameters,
             set_=True)
 
-    def create_node_db(self):
+    def create_agent_db(self):
+        """
+        Creates the AgentDB.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use agent_db_type to customize the kind.
+        Use agent_db_options to specify which arguments need to be passed.
+        """
         agent_db_builder = ComponentBuilder(self, 'agent_db')
         agent_db_builder.build(set_=True)
 
     def create_address_book(self):
+        """
+        Creates the AddressBook.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use address_book_type to customize the kind.
+        Use address_book_options to specify which arguments need to be passed.
+        """
         node_address_book = addressing.FlatAddressBook()
         main_address_book = addressing.FlatAddressBook()
         self.address_book = addressing.AutoResolvingAddressBook(
@@ -376,18 +450,38 @@ class Simulation(object):
                                        lambda o: isinstance(o, basestring))
 
     def create_logger(self):
+        """
+        Creates the Logger.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use logger_type to customize the kind.
+        Use logger_options to specify which arguments need to be passed.
+        """
         logger_builder = ComponentBuilder(self, 'logger')
-        logger_builder.build(stream=sys.stderr, set_=True)\
+        logger_builder.build(stream=sys.stderr, set_=True) \
             .start(self.address_book, self.agent_db)
 
-
     def create_termination_checker(self):
+        """
+        Creates the TerminationChecker.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use termination_checker_type to customize the kind.
+        Use termination_checker_options to specify which arguments need to be passed.
+        """
         termination_checker_builder = ComponentBuilder(
             self, 'termination_checker')
         termination_checker_builder.build(set_=True)
         self.termination_checker.start(self.address_book, self.agent_db)
 
     def create_configurator(self):
+        """
+        Creates the Configurator agent.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use configurator_type to customize the kind.
+        Use configurator_options to specify which arguments need to be passed.
+        """
         configurator_builder = ComponentBuilder(
             self, 'configurator', gather_from_ancestors=True)
         configurator_builder.build(
@@ -396,10 +490,24 @@ class Simulation(object):
             full_parameters=self._simulation_parameters)
 
     def create_node_manager(self):
+        """
+        Creates the NodeManager.
+
+        The graph must have been created before calling this.
+        """
         self.node_manager = NodeManager(self.graph)
 
     def create_service_agents(self):
-        self.create_node_db()
+        """
+        Access the component system to create:
+        1. agent db
+        2. address book
+        3. logger
+        4. termination checker
+        5. configurator
+        6. node manager (no component system)
+        """
+        self.create_agent_db()
         self.create_address_book()
         self.create_logger()
         self.create_termination_checker()
@@ -413,13 +521,23 @@ class Simulation(object):
         self.node_manager._greenlet.unlink(self.configurator._greeenlet)
 
     def pre_configure_network(self):
+        """
+        Starts the NodeManager and the Configurator so that the initial
+        setup can occur.
+        """
         self.node_manager.start(self.address_book, self.agent_db)
 
         self.configurator.start(self.address_book, self.agent_db)
         self.link_node_manager_with_configurator()
 
-
     def create_activator(self):
+        """
+        Creates the Activator.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use activator_type to customize the kind.
+        Use activator_options to specify which arguments need to be passed.
+        """
         activator_builder = ComponentBuilder(
             self, 'activator', gather_from_ancestors=True)
         activator_builder.build(self._simulation_parameters,
@@ -427,14 +545,27 @@ class Simulation(object):
         self.activator.start(self.address_book, self.agent_db)
 
     def create_clock(self):
+        """
+        Creates the Clock.
+
+        Since it uses the component system, it does not need to be overridden.
+        Use clock_type to customize the kind.
+        Use clock_options to specify which arguments need to be passed.
+        """
         clock_builder = ComponentBuilder(
             self, 'clock')
         clock_builder.build(set_=True)
         self.clock.start(self.address_book, self.agent_db)
 
     def create_additional_agents(self):
+        """
+        Creates all the additional agents.
+
+        To use this, provide <role>_type and <role>_options attributes and
+        the additional_agents attribute.
+        """
         additional_agents = gather_from_ancestors(
-                    self, 'additional_agents', acc_type=set)
+            self, 'additional_agents', acc_type=set)
         self.late_start = []
         for additional_agent_line in additional_agents:
             component_builder = AdditionalAgentComponentBuilder(
@@ -447,6 +578,9 @@ class Simulation(object):
                 component.start(self.address_book, self.agent_db)
 
     def create_simulation_agents(self):
+        """
+        Creates the Activator, the Clock and the additional agents.
+        """
         self.create_activator()
         self.create_clock()
         self.create_additional_agents()
@@ -459,20 +593,20 @@ class Simulation(object):
     def run(self, args=None, force_cli=False, **kwargs):
         """
         Runs the simulation.
-        @param args: a string of command line options parsed with
-            L{parse_arguments}. Default value=None. If it is None and no
-            options have been passed with kwargs, sys.argv[1:] is processed
-        @param kwargs: option relevant for the model can be passed as
-            keyword options and they override values in args.
-        @attention: output and format are presently not working and are
-            vestiges of an older version. However, we plan to add support
-            for "easy" saving of networks which may make use of them and
-            thus have not removed the options right now.
-        @return: The current simulation so that it is easier to create
-            one-liners
-        @rtype: Simulation
 
-        @warning: The idea here is either to call this method with all
+        Args:
+            args: a string of command line options parsed with
+                  :func:`parse_arguments`.
+            force_cli: forces the evaluation of the command
+                       line arguments even if args is not None
+            **kwargs: option relevant for the model can be passed
+                as keyword options and they override values in args.
+
+        Returns:
+            The current simulation so that it is easier to create one-liners
+
+        .. warning::
+            The idea here is either to call this method with all
             keyword arguments or with no arguments at all (in the case the
             program is run as a standalone script). However, it also makes
             sense to override (in the standalone script case) individual
@@ -506,8 +640,14 @@ class Simulation(object):
 
     @property
     def handle(self):
+        """
+        Return a handle to the graph.
+        """
         return self.graph.handle
 
     @property
     def motive(self):
+        """
+        Return the reason why the simulation stopped.
+        """
         return self.termination_checker.motive

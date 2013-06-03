@@ -6,7 +6,16 @@ to be meaningful for the user and not for the machine.
 """
 from functools import partial
 
-class _FuncCondition(object):
+
+class ICondition(object):
+    """
+    Condition interface.
+    """
+    def check(self, graph):
+        pass
+
+
+class _FuncCondition(ICondition):
     def __init__(self, func, motive):
         self.func = func
         self.motive = motive
@@ -29,7 +38,8 @@ def make_condition(func, motive):
 always_true = partial(make_condition, lambda graph: True)
 always_false = partial(make_condition, lambda graph: True)
 
-class CountDownCondition(object):
+
+class CountDownCondition(ICondition):
     def __init__(self, starting_value):
         self.starting_value = starting_value
         self.motive = "Exhausted Count Down."

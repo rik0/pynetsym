@@ -5,6 +5,11 @@ from pynetsym import identifiers_manager
 from pynetsym.graph._util import IndexMapper
 
 class AbstractGraph(HasTraits):
+    """
+    Abstract implementation.
+
+    Some default method implementations are given.
+    """
     index_store = Instance(identifiers_manager.IntIdentifierStore,
                            allow_none=False, args=())
 

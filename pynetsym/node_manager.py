@@ -5,22 +5,22 @@ from pynetsym import core
 
 from pynetsym.identifiers_manager import IntIdentifierStore
 
+
 class NodeManager(core.Agent):
     """
     The class responsible to create nodes.
-
     """
     name = 'manager'
     """
-    the registered name in the L{address book<AddressBook>}
+    the registered name in the :class:`addressing.AddressBook`
     """
 
     def __init__(self, graph):
         """
         Creates a new node_manager
 
-        @param graph: the graph to pass to the agents
-        @type graph: storage.GraphWrapper
+        :param graph: the graph to pass to the agents
+        :type graph: storage.GraphWrapper
         """
         self.graph = graph
         self.failures = []
@@ -43,14 +43,12 @@ class NodeManager(core.Agent):
         """
         Creates a new node.
 
-        @param cls: the factory creating the new node.
-            Usually the node class.
-        @type cls: callable
-        @param parameters: the parameters that are forwarded to the node for
-            creation
-        @type parameters: dict
-        @return: the actual identifier
-        @rtype: int | str
+        :param cls: the factory creating the new node.
+        :type cls: callable
+        :param parameters: the parameters that are forwarded to the node for creation
+        :type parameters: dict
+        :return: the actual identifier
+        :rtype: int | str
         """
         node = cls(**parameters)
         identifier = self.graph.add_node()

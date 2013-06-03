@@ -19,8 +19,9 @@ class IntIdentifierStore(object):
     def take(self):
         """
         Return the lowest available index and marks is as used.
-        @return: the lowest possible index
-        @rtype: int
+
+        :return: the lowest possible index
+        :rtype: int
         """
         if self._holes:
             return heappop(self._holes)
@@ -32,8 +33,9 @@ class IntIdentifierStore(object):
     def peek(self):
         """
         Return the lowest available index.
-        @return: the lowest possible index
-        @rtype: int
+
+        :return: the lowest possible index
+        :rtype: int
         """
         if self._holes:
             return self._holes[0]
@@ -53,7 +55,8 @@ class IntIdentifierStore(object):
     def free(self, identifier):
         """
         Frees the identifier.
-        @param identifier: marks the identifier as free
+
+        :param identifier: marks the identifier as free
         """
         if identifier < 0:
             raise ValueError(

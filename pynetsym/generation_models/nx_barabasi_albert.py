@@ -1,6 +1,9 @@
+"""
+Barabasi-Albert Model with NetworkX backend.
+"""
+
 from traits.trait_types import Int
 from pynetsym import Node, Activator, Simulation, BasicConfigurator
-
 
 
 class Node(Node):

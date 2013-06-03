@@ -3,13 +3,12 @@ from pynetsym import node_manager
 
 import h5py
 
-from pynetsym.util import extract_subdictionary, SequenceAsyncResult
+from pynetsym.util import extract_sub_dictionary, SequenceAsyncResult
 from .basic import AbstractConfigurator
 
 class BasicH5Configurator(AbstractConfigurator):
     """
-    BasicH5Configurator reads the starting network from
-     an HD5 file.
+    BasicH5Configurator reads the starting network from an HD5 file.
 
     It receives the path of the file from the simulation
     option 'h5_file', which has to be specified in the
@@ -30,7 +29,7 @@ class BasicH5Configurator(AbstractConfigurator):
         indptr = ifile['indptr']
         max_node = indptr.len() - 1
         
-        self.node_arguments = extract_subdictionary(
+        self.node_arguments = extract_sub_dictionary(
                 self.full_parameters, self.node_options)
         node_manager_id = node_manager.NodeManager.name
 

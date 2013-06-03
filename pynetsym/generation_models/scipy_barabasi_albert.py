@@ -1,3 +1,8 @@
+"""
+Barabasi-Albert Model with Scipy backend.
+"""
+
+
 from pynetsym.generation_models import nx_barabasi_albert as ba
 from pynetsym.graph import ScipyGraph
 

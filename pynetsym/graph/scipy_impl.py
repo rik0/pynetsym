@@ -45,6 +45,9 @@ class DirectedScipyRandomSelector(ScipyRandomSelector):
         self._initialized_preferential_attachment = True
 
 class ScipyGraph(AbstractGraph):
+    """
+    Default wrapper for a Scipy Sparse Matrix.
+    """
     implements(IGraph)
 
     matrix_factory = Callable(sparse.lil_matrix)
@@ -229,6 +232,9 @@ class ScipyGraph(AbstractGraph):
 
 
 class DirectedScipyGraph(ScipyGraph):
+    """
+    Default wrapper for a Scipy Sparse Matrix representing a directed graph.
+    """
     random_selector_factory = DirectedScipyRandomSelector
 
     def number_of_edges(self):

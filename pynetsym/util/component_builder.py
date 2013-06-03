@@ -2,7 +2,7 @@ import copy
 import inspect
 
 from pynetsym import error
-from .dictionary import extract_subdictionary
+from .dictionary import extract_sub_dictionary
 from pynetsym.util import gather_from_ancestors
 
 
@@ -10,6 +10,12 @@ class ComponentError(error.PyNetSymError):
     pass
 
 class ComponentBuilder(object):
+    """
+    Main interface for the component system.
+
+    Pynetsym users do not need to mess with this, hence
+    the under-documented feel...
+    """
     def __init__(self, context, component_name,
         gather_from_ancestors=False):
         self.context = context
@@ -73,7 +79,7 @@ class ComponentBuilder(object):
         if has_kw:
             reduced_parameters = overriding_parameters
         else:
-            reduced_parameters = extract_subdictionary(
+            reduced_parameters = extract_sub_dictionary(
                 overriding_parameters, options)
         return reduced_parameters
 

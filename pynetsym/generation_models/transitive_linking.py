@@ -1,3 +1,7 @@
+"""
+Transitive linking model.
+"""
+
 from traits.trait_types import Float, Trait
 
 import random

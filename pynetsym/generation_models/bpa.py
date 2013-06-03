@@ -1,3 +1,7 @@
+"""
+Biased preferential attachment.
+"""
+
 import fractions
 import random
 from traits.trait_types import Float, Tuple, Method
@@ -22,15 +26,14 @@ class Node(Node):
     If a strategy is specified, probability is ignored and strategy
     is simply selected.
 
-    @param identifier: the node id
-    @param identifier: int
-    @param address_book: the address book
-    @param graph: the graph
-    @type graph: backend.GraphWrapper
-    @param gamma: the bias to select linkers
-    @param probability: the probability distribution of the nodes
+    :param identifier: the node id
+    :param identifier: int
+    :param address_book: the address book
+    :param graph: the graph
+    :param gamma: the bias to select linkers
+    :param probability: the probability distribution of the nodes
         behavior
-    @param strategy: the "forced" starting strategy
+    :param strategy: the "forced" starting strategy
     """
 
     gamma = Float

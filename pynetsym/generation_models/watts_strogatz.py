@@ -1,3 +1,7 @@
+"""
+Watts-Strogatz Model.
+"""
+
 import random
 
 from traits.api import Range, Int
@@ -12,18 +16,18 @@ class Node(Node):
     def activate(self):
         for index in self.lattice_cw_neighbors():
             neighbors = self.graph.neighbors(self.id)
-            if (random.random() < self.rewiring_probability
-                    and index in neighbors):
+            if (random.random() < self.rewiring_probability and
+                    (index in neighbors)):
                 random_node = self.graph.random_selector.random_node()
                 while random_node in neighbors:
                     random_node = self.graph.random_selector.random_node()
                 self.graph.remove_edge(self.id, index)
                 self.graph.add_edge(self.id, random_node)
-            #self.cooperate()
+                #self.cooperate()
 
     def lattice_cw_neighbors(self):
         return range(self.id + 1,
-                self.id + self.lattice_connections + 1)
+                     self.id + self.lattice_connections + 1)
 
     def initialize(self):
         for index in self.lattice_cw_neighbors():
@@ -53,10 +57,11 @@ class WS(Simulation):
         initialize_nodes = BasicConfigurator.do_initialize
         node_type = Node
         node_options = {
-                "rewiring_probability",
-                "lattice_connections",
-                "starting_network_size"}
+            "rewiring_probability",
+            "lattice_connections",
+            "starting_network_size"}
         #options = {"lattice_connections"}
+
 
 if __name__ == '__main__':
     sim = WS()

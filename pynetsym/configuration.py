@@ -5,6 +5,9 @@ from pynetsym.error import PyNetSymError
 
 
 class ConfigurationError(PyNetSymError):
+    """
+    Exception for configuration errors.
+    """
     pass
 
 
@@ -28,6 +31,9 @@ class _DictTask(object):
 
 
 class ConfigurationManager(object):
+    """
+    This class provides functions to manage model parameters.
+    """
     def __init__(self, option_description):
         self.option_description = option_description
         self._check_duplicated_options(self.option_description)
@@ -36,9 +42,15 @@ class ConfigurationManager(object):
         self._consider_defaults()
 
     def consider_command_line(self):
+        """
+        This is called if we want to force the evaluation of command line arguments.
+        """
         self.tasks.append(_ListTask(self.parser, sys.argv[1:]))
 
     def consider(self, entity):
+        """
+        High level interface to provide options to be considered.
+        """
         if isinstance(entity, collections.Mapping):
             self._consider_dict(entity)
         elif isinstance(entity, basestring):
@@ -90,7 +102,7 @@ class ConfigurationManager(object):
             1. (short_option_name, long_option_name, parameters)
             2. (long_option_name, parameters)
 
-        @param options: sequence of options
+        :param options: sequence of options
         """
         for option_element in options:
             self._load_line(option_element)
@@ -107,6 +119,7 @@ class ConfigurationManager(object):
                 self.parser.add_argument(option_element[0])
 
     def process(self):
+        """Return the actual dictionary of parameters."""
         final_arguments = {}
         for task in self.tasks:
             arguments = task.process()
