@@ -5,15 +5,22 @@ __all__ = [
     "Agent",
     "AgentError",
     "MinimalAgentRuntime",
-    "get_logger",
     "Logger",
+    "get_logger",
     "MissingNode",
     "AgentDB",
+    "NodeManager",
+    "Node",
     'Simulation',
     'Activator',
     'AsyncClock',
     'Clock',
+    "IConfigurator",
+    "AbstractConfigurator",
+    "BasicConfigurator",
+    "Either",
     'PyNetSymError',
+
 ]
 __all__.extend(configurators.__all__)
 
@@ -26,4 +33,5 @@ from .simulation import Simulation
 from .simulation import Activator
 from .simulation import Clock, AsyncClock
 from .configurators import IConfigurator, AbstractConfigurator, BasicConfigurator, Either
+from .configurators import BasicH5Configurator, NXGraphConfigurator
 from .error import PyNetSymError

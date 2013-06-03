@@ -294,31 +294,26 @@ class IGraph(Interface):
         """
         Applies func to the underlying graph representation as first argument.
 
-        *args and **kwargs are passed as well.
-        :return the value of the function call.
+        `*args` and `**kwargs` are passed as well.
+
+        :return: the value of the function call.
         """
 
     @property
     def handle(self):
         """
-        Used to create a context:
-
-            ```
+        Used to create a context::
             with graph.handle as handle:
                 print clustering_coefficient(handle)
-            ```
         """
         return None
 
     @property
     def handle_copy(self):
         """
-        Used to create a context:
-
-            ```
+        Used to create a context::
             with graph.handle_copy as handle:
                 print clustering_coefficient(handle)
-            ```
         """
         return None
 
@@ -326,8 +321,5 @@ class IGraph(Interface):
     def random_selector(self):
         """
         Return a random selector.
-
-        :return: the random selector.
-        :rtype IRandomSelector
         """
         return None

@@ -11,6 +11,6 @@ from .predicates import Either
 from .interface import IConfigurator
 from .basic import AbstractConfigurator, BasicConfigurator
 from .h5_configurator import BasicH5Configurator
-from nx_configurator import NXGraphConfigurator
+from .nx_configurator import NXGraphConfigurator
 
 

@@ -272,9 +272,9 @@ class Simulation(object):
     enclosed class `activator_type` that "satisfies" the need for an :func:`activator_type`
     attribute.
 
-        1. :func:`Simulation.activator_type`: the callable that creates the activator_type for the simulation
-        2. :func:`Simulation.graph_type`: the callable that creates the graph which holds the network.
-        3. :func:`Simulation.clock_type`: the callable that creates the clock_type in the simulation
+        1. :func:`Simulation.activator_type` : the callable that creates the activator_type for the simulation
+        2. :func:`Simulation.graph_type` : the callable that creates the graph which holds the network.
+        3. :func:`Simulation.clock_type` : the callable that creates the clock_type in the simulation
         4. :func:`Simulation.command_line_options`
         5. :func:`Simulation.configurator_type`
 
@@ -599,7 +599,7 @@ class Simulation(object):
                   :func:`parse_arguments`.
             force_cli: forces the evaluation of the command
                        line arguments even if args is not None
-            **kwargs: option relevant for the model can be passed
+            `**kwargs`: option relevant for the model can be passed
                 as keyword options and they override values in args.
 
         Returns:

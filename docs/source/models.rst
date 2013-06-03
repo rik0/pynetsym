@@ -2,7 +2,7 @@
 Models
 ******
 
-:mod:`pynetsym.generation_models` -- Some models for synthetic social network generation are here
+:mod:`pynetsym.generation_models` -- Generative Models
 =================================================================================================
 .. automodule:: pynetsym.generation_models
     :members:
@@ -11,6 +11,8 @@ Biased Preferential Attachment Model
 ------------------------------------
 .. automodule:: pynetsym.generation_models.bpa
     :members:
+
+.. program-output:: python ../pynetsym/generation_models/bpa.py -h
 
 Barabasi-Albert Model
 ---------------------
