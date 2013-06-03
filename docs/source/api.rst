@@ -38,3 +38,9 @@ API Documentation
 
 .. automodule:: pynetsym.configurators
     :members:
+
+:mod:`pynetsym.error` -- Generic exceptions for the project
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: pynetsym.error
+    :members:
