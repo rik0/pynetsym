@@ -11,7 +11,7 @@ __all__ = [
     "PythonPickler",
     "JSONPickler",
     "IAgentStorage",
-    "NodeDB"
+    "AgentDB"
 ]
 
 class MissingNode(PyNetSymError):
