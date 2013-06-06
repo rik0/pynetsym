@@ -20,7 +20,3 @@ sim = simulation_factory()
 cProfile.run('sim.run(args=arguments)', out_name)
 # sim.run(args=arguments)
 
-
-with sim.graph.handle as graph:
-    print graph.number_of_nodes()
-    print graph.number_of_edges()

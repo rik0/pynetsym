@@ -50,13 +50,14 @@ class WS(Simulation):
     activator_type = Activator
 
     class configurator_type(BasicConfigurator):
-        initialize_nodes = BasicConfigurator.do_initialize
         node_type = Node
         node_options = {
                 "rewiring_probability",
                 "lattice_connections",
                 "starting_network_size"}
-        #options = {"lattice_connections"}
+
+        def initialize_nodes(self):
+            self.do_initialize()
 
 if __name__ == '__main__':
     sim = WS()
