@@ -22,6 +22,20 @@ from .import interface
 class NxGraph(AbstractGraph):
     """
     Default wrapper for an NetworkX Graph.
+
+    This class uses either a directed or undirected NetworkX Graph
+    as a backend. Its behavior depends on the undelying network
+    behavior.
+
+    NetworkX graphs provide:
+
+        1. maximum flexibility
+        2. easy access to loads of network theoretic functions
+            by means of the networkx library
+
+    However, they are rather memory hungry compared to other
+    representations. It is an excellent starting point for
+    relatively small simulations.
     """
 
     implements(interface.IGraph)

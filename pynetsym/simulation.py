@@ -39,12 +39,12 @@ class Activator(core.Agent):
     """
     The Activator chooses what happens at each step of the simulation.
 
-    The tick method is called at each simulation step. The default behavior
-    is to call choose_node to select a random node and send it an activate
-    message.
+    The tick method is called at each simulation step. The default
+    behavior is to call choose_node to select a random node and send it
+    an activate message.
 
-    tick, simulation_ended and choose_node are meant to be overrode by
-    implementations.
+    tick, simulation_ended and choose_node are meant to be overridden
+    by implementations.
     """
     name = 'activator'
     activator_options = {'graph'}
@@ -62,6 +62,9 @@ class Activator(core.Agent):
         """
         At each step is called to send the `kill` message to
         the nodes chosen by :func:`Activator.nodes_to_destroy`.
+
+        The collection of nodes to be destroyed is kept in an
+        attribute named `dying_nodes`
         """
         self.dying_nodes = self.nodes_to_destroy()
         for node_id in self.dying_nodes:
@@ -73,6 +76,9 @@ class Activator(core.Agent):
         At each step is called to require from the :class:`NodeManager`
         the creation of the nodes returned by
         :func:`Activator.nodes_to_activate`.
+
+        The collection of nodes just created is kept in an
+        attribute named `fresh_nodes`.
         """
         to_create = self.nodes_to_create()
         node_ids = SequenceAsyncResult(
@@ -90,6 +96,18 @@ class Activator(core.Agent):
     def tick(self):
         """
         Processes the tick message from the clock.
+
+        First, nodes are destroyed. Then new nodes are created.
+        Eventually, the nodes are activated.
+
+        Override this to change the order in which the operations
+        occur. The order was chosen because in this way the newly
+        created nodes can be activated immediately (otherwise,
+        if the activation step did not follow the creation step,
+        they would not be available).
+
+        Similartly, we do not want to spend time activating nodes
+        that are destroyed in this very step.
         """
         self.destroy_nodes()
         self.create_nodes()

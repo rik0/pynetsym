@@ -1,6 +1,4 @@
-from traits.api import Interface, Enum
-
-
+from traits.api import Interface
 import traits.has_traits
 traits.has_traits.CHECK_INTERFACES = 2
 
@@ -13,8 +11,8 @@ class IGraph(Interface):
         """
         Add a node to the graph.
 
-        :return The index of the newly created node.
-        :rtype int
+        :return: The index of the newly created node.
+        :rtype: int
         """
 
     def add_nodes(self, how_many):
@@ -217,14 +215,18 @@ class IGraph(Interface):
     @property
     def NTI(self):
         """
-        An indexable object converting from nodes to indexes. See node_to_index.
+        An indexable object converting from nodes to indexes.
+
+        See :func:`IGraph.node_to_index`.
         It also accepts some forms of advanced indexing.
         """
 
     @property
     def ITN(self):
         """
-        An indexable object converting from indexes to nodes. See index_to_node.
+        An indexable object converting from indexes to nodes.
+
+        See :func:`IGraph.index_to_node`.
         It also accepts some forms of advanced indexing.
         """
 
@@ -240,8 +242,8 @@ class IGraph(Interface):
         .. warning::
           depending from the actual kind of graph this may be a copy
           or the original one. Modifications to a graph that is not a copy
-          may lead to servere malfunctions, unless the simulation has already
-          stopped.
+          may lead to servere malfunctions, unless the simulation has
+          already stopped.
         """
 
     def to_scipy(self, sparse_type=None, minimize=False):
@@ -302,7 +304,15 @@ class IGraph(Interface):
     @property
     def handle(self):
         """
-        Used to create a context::
+        Used to create a context.
+
+        .. note::
+            The original backend is actually returned in whatever
+            format it naturally is. No copy is made, so that modifications
+            done on the handle are actually made to the environment.
+
+        ::
+
             with graph.handle as handle:
                 print clustering_coefficient(handle)
         """
@@ -311,7 +321,15 @@ class IGraph(Interface):
     @property
     def handle_copy(self):
         """
-        Used to create a context::
+        Used to create a context.
+
+        .. note::
+            The original backend is actually returned in whatever
+            format it naturally is. A copy is made, so that modifications
+            done on the handle are not made to the environment.
+
+        ::
+
             with graph.handle_copy as handle:
                 print clustering_coefficient(handle)
         """

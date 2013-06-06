@@ -1,5 +1,7 @@
 """
 Watts-Strogatz Model.
+
+Watts DJ, Strogatz S (1998) Collective dynamics of small-world networks. Nature 393(6684):440-442
 """
 
 import random

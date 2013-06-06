@@ -1,12 +1,16 @@
 """
 Biased preferential attachment.
+
+Kumar R, Novak J, Tomkins A (2010) Structure and evolution of online social networks. In: Yu PSS,
+Han J, Faloutsos C (eds) Link mining: models, algorithms, and applications. Springer, New York,
+pp 337-357
 """
 
 import fractions
 import random
 from traits.trait_types import Float, Tuple, Method
 
-from pynetsym import Node, Activator, Simulation, BasicConfigurator, NodeManager
+from pynetsym import Node, Simulation, BasicConfigurator, NodeManager
 
 
 def distribution(s):

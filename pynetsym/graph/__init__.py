@@ -5,7 +5,8 @@ __all__ = (
     'has',
     'NxGraph',
     'ScipyGraph',
-    'DirectedScipyGraph'
+    'DirectedScipyGraph',
+    'BasicH5Graph'
 )
 
 import warnings

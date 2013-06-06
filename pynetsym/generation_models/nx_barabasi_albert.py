@@ -1,5 +1,7 @@
 """
 Barabasi-Albert Model with NetworkX backend.
+
+Barabasi AL, Albert R (1999) Emergence of scaling in random networks. Science 286:509-51
 """
 
 from traits.trait_types import Int
@@ -25,9 +27,13 @@ class Activator(Activator):
     options = {'starting_edges'}
 
     def nodes_to_activate(self):
+        # fresh_nodes holds the collection of nodes
+        # that have just been created.
         return self.fresh_nodes
 
     def nodes_to_create(self):
+        # create just a node of type Node and passing it
+        # the attribute `starting_edge'
         return [(Node, dict(starting_edges=self.starting_edges))]
 
 

@@ -1,5 +1,8 @@
 """
 Transitive linking model.
+
+Davidsen J, Ebel H, Bornholdt S (2002) Emergence of a small world from local interactions: modeling
+acquaintance networks. Phys Rev Lett 88(12):1-4
 """
 
 from traits.trait_types import Float, Trait
@@ -71,12 +74,6 @@ class TL(Simulation):
         node_type = Node
         node_options = {"death_probability", "criterion"}
 
-#    class clock_type(Clock):
-#        DEBUG_SEND = True
-#
-#    class activator_type(Activator):
-#        DEBUG_SEND = True
-#        DEBUG_RECEIVE = True
 
 if __name__ == '__main__':
     sim = TL()
