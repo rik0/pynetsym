@@ -1,8 +1,16 @@
+"""
+Biased preferential attachment.
+
+Kumar R, Novak J, Tomkins A (2010) Structure and evolution of online social networks. In: Yu PSS,
+Han J, Faloutsos C (eds) Link mining: models, algorithms, and applications. Springer, New York,
+pp 337-357
+"""
+
 import fractions
 import random
 from traits.trait_types import Float, Tuple, Method
 
-from pynetsym import Node, Activator, Simulation, BasicConfigurator, NodeManager
+from pynetsym import Node, Simulation, BasicConfigurator, NodeManager
 
 
 def distribution(s):
@@ -22,15 +30,14 @@ class Node(Node):
     If a strategy is specified, probability is ignored and strategy
     is simply selected.
 
-    @param identifier: the node id
-    @param identifier: int
-    @param address_book: the address book
-    @param graph: the graph
-    @type graph: backend.GraphWrapper
-    @param gamma: the bias to select linkers
-    @param probability: the probability distribution of the nodes
+    :param identifier: the node id
+    :param identifier: int
+    :param address_book: the address book
+    :param graph: the graph
+    :param gamma: the bias to select linkers
+    :param probability: the probability distribution of the nodes
         behavior
-    @param strategy: the "forced" starting strategy
+    :param strategy: the "forced" starting strategy
     """
 
     gamma = Float

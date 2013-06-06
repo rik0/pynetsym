@@ -1,3 +1,9 @@
+"""
+Watts-Strogatz Model.
+
+Watts DJ, Strogatz S (1998) Collective dynamics of small-world networks. Nature 393(6684):440-442
+"""
+
 import random
 
 from traits.api import Range, Int
@@ -12,18 +18,17 @@ class Node(Node):
     def activate(self):
         for index in self.lattice_cw_neighbors():
             neighbors = self.graph.neighbors(self.id)
-            if (random.random() < self.rewiring_probability
-                    and index in neighbors):
+            if (random.random() < self.rewiring_probability and
+                    (index in neighbors)):
                 random_node = self.graph.random_selector.random_node()
                 while random_node in neighbors:
                     random_node = self.graph.random_selector.random_node()
                 self.graph.remove_edge(self.id, index)
                 self.graph.add_edge(self.id, random_node)
-            #self.cooperate()
 
     def lattice_cw_neighbors(self):
         return range(self.id + 1,
-                self.id + self.lattice_connections + 1)
+                     self.id + self.lattice_connections + 1)
 
     def initialize(self):
         for index in self.lattice_cw_neighbors():

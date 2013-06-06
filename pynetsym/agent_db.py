@@ -11,8 +11,9 @@ __all__ = [
     "PythonPickler",
     "JSONPickler",
     "IAgentStorage",
-    "NodeDB"
+    "AgentDB"
 ]
+
 
 class MissingNode(PyNetSymError):
     pass
@@ -142,10 +143,11 @@ class AgentDB(HasTraits):
         """
         Creates a new AgentDB.
 
-        @param pickling_module: something that is able to pickle Python
+        :param pickling_module: something that is able to pickle Python
             objects. Pickle interface expected (loads and dumps).
-        @param storage: object that can store pickled objects. Dictionary
-            __getitem__/__setitem__ interface expected.
+        :param storage: object that can store pickled objects.
+            Dictionary __getitem__/__setitem__ interface expected.
+        :type storage: :class:`collections.MutableMapping
         """
         self.storage = storage
         self.pickling_module = pickling_module
@@ -167,7 +169,17 @@ try:
 except ImportError:
     pass
 else:
-    def runmongo(dbfile, port=27017, host='localhost'):
+    def run_mongo(dbfile, port=27017, host='localhost'):
+        """
+        Convenience function to run a Mongo instance.
+
+        It assumes mongod is on the PATH.
+
+        :param dbfile: the db file to use
+        :param port: the port to use
+        :param host: the host to use
+        :return:
+        """
         import subprocess
         p = subprocess.Popen(['mongod',
             '--port', port,

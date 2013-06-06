@@ -1,7 +1,9 @@
 
 def inits(iterable):
     """
-    The inits function returns all initial segments of the argument, shortest first. For example,
+    The inits function returns all initial segments of the argument, shortest first.
+
+    For example,
 
     >>> list(inits(""))
     [[]]

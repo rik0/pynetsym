@@ -4,6 +4,7 @@ import operator
 from pynetsym.error import PyNetSymError
 from pynetsym.util import encapsulate_global
 
+
 class AddressingError(PyNetSymError):
     """
     Error signaling that something with the addressing of
@@ -14,8 +15,10 @@ class AddressingError(PyNetSymError):
     def __init__(self, *args, **kwargs):
         super(AddressingError, self).__init__(*args, **kwargs)
 
+
 get_root_address_book, \
 set_root_address_book = encapsulate_global('root', {})
+
 
 class AddressBook(object):
     """
@@ -28,12 +31,12 @@ class AddressBook(object):
         """
         Binds the identifier with the agent
 
-        @param identifier: the identifier to bind the agent to
-        @type identifier: hashable
-        @param agent: the agent to bind
-        @type agent: Agent
-        @raise AddressingError: if identifier is already bound
-        @raise TypeError: if the identifier has a type that is not recognized
+        :param identifier: the identifier to bind the agent to
+        :type identifier: hashable
+        :param agent: the agent to bind
+        :type agent: Agent
+        :raise AddressingError: if identifier is already bound
+        :raise TypeError: if the identifier has a type that is not recognized
             by the AddressBook
         """
         pass
@@ -42,17 +45,28 @@ class AddressBook(object):
         """
         Resolves :param: identifier to the actual agent.
 
-        @raise AddressingError: if the agent is not registered.
+        :raise AddressingError: if the agent is not registered.
         """
         pass
 
     def unregister(self, identifier):
+        """
+        Unregisters the identifier.
+
+        I.e., the agent with that identifier will no longer be addressable.
+        """
         raise NotImplementedError()
 
     def list(self):
+        """
+        Returns a list with all the available agents.
+        """
         return list(self.list_iter())
 
     def list_iter(self):
+        """
+        Returns an iterator with all the available agents.
+        """
         raise NotImplementedError()
 
 
@@ -70,11 +84,11 @@ class FlatAddressBook(AddressBook):
         self.name_registry = {}
 
     def register(self, agent, identifier):
-        if (identifier in self.name_registry
-                and self.name_registry[identifier] is not agent):
+        if (identifier in self.name_registry and
+                (self.name_registry[identifier] is not agent)):
             raise AddressingError(
-                    "Could not rebind agent %r to identifier %r." % (
-                        agent, identifier))
+                "Could not rebind agent %r to identifier %r." % (
+                    agent, identifier))
         else:
             self.name_registry[identifier] = agent
 
@@ -83,7 +97,7 @@ class FlatAddressBook(AddressBook):
             del self.name_registry[identifier]
         except KeyError:
             raise AddressingError(
-                    "Could not remove not registered identifier %r" % (
+                "Could not remove not registered identifier %r" % (
                     identifier))
 
     def resolve(self, identifier):
@@ -98,6 +112,7 @@ class FlatAddressBook(AddressBook):
 
     def list(self):
         return self.name_registry.viewkeys()
+
 
 class NamespacedAddressBook(AddressBook):
     def __init__(self, E={}, **F):
@@ -146,8 +161,11 @@ class NamespacedAddressBook(AddressBook):
                 yield namespace, identifier
 
 
+# noinspection PyMethodOverriding
 class AutoResolvingAddressBook(NamespacedAddressBook):
-    def __init__(self, E={}, **F):
+    def __init__(self, E=None, **F):
+        if not E:
+            E = {}
         super(AutoResolvingAddressBook, self).__init__(E, **F)
         self.resolvers = []
 
@@ -176,5 +194,5 @@ class AutoResolvingAddressBook(NamespacedAddressBook):
 
     def list_iter(self):
         return itertools.imap(operator.itemgetter(1),
-                       super(AutoResolvingAddressBook, self).list_iter())
+                              super(AutoResolvingAddressBook, self).list_iter())
 

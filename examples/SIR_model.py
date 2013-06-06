@@ -1,3 +1,31 @@
+"""
+SIR Model
+
+Pastor-Satorras R, Vespignani A (2001) Epidemic spreading in scale-free networks. Phys Rev Lett
+86:3200-3203
+
+To run this you need a MongoDB active!
+I usually just do::
+
+    $ mongod --dbpath=mdb&
+
+where mdb is the directory where mongo stuff is placed.
+I retrieve the data with the script "read_from_mongo.py" with
+the appropriate options.
+
+In order to create the HDF5 file that is the starting network,
+`make_er.py` can be used.
+
+For example::
+
+    python make_er.py -n 1000 -m 120 -o N1KM120.h5
+
+and then something on the lines of::
+
+    python SIR_model.py --h5-file N1KM120.h5 -p 1.0 -r 0.4 -f 0.01
+
+"""
+
 import math
 import random
 from traits.trait_types import Enum, Int, CInt, Float, Set
@@ -16,27 +44,44 @@ from pynetsym.agent_db import MongoAgentDB
 
 from pymongo import MongoClient
 
+
+
+
 class Recorder(Agent):
+    """
+    The Recorder Agent keeps track of the number of
+    susceptible, infected and recovered nodes at each step.
+    """
     name = 'recorder'
     current_time = Int(-1)
 
     options = {'steps', 'graph', }
 
     def setup(self):
+        """
+        Initialization of the agent.
+        """
         self.number_of_nodes = self.graph.number_of_nodes()
         self.susceptible = self.number_of_nodes
         self.infected = 0
         self.recovered = 0
 
+        # opens a connection to Mongo
         self.client = MongoClient()
+        # resets the stats of old simulations
         self.client.drop_database('stats')
         self.db = self.client.stats
         self.distributions = self.db.distributions
 
+        # tells the clock that it want to be notified when
+        # a new step begins
         self.send(BaseClock.name,
                   'register_observer', name=self.name)
 
     def ticked(self):
+        """
+        Receives this message from the Clock.
+        """
         self.distributions.insert({
             'current_time': self.current_time,
             'susceptible': self.susceptible,
@@ -45,15 +90,26 @@ class Recorder(Agent):
         self.current_time += 1
 
     def node_infected(self, node):
+        """
+        The Activator signals each node that is infected.
+        """
         self.susceptible -= 1
         self.infected += 1
 
     def node_recovered(self, node):
+        """
+        The Activator signals each node that recovers.
+        """
         self.infected -= 1
         self.recovered += 1
 
 
 class AdvancedRecorder(Recorder):
+    """
+    In addition to what the Record does, the AdvancedRecorder
+    also tracks when each individual node was infected and
+    when it did recover.
+    """
     def setup(self):
         super(AdvancedRecorder, self).setup()
         self.infections = self.db.infections
@@ -78,17 +134,30 @@ class Activator(pynetsym.Activator):
         if self.infected_nodes:
             super(Activator, self).tick()
         else:
+            # no more infected nodes, we can just quit!
             self.signal_termination('No more infected')
 
     def infected(self, node):
+        """
+        Whenever a node is infected, it notifies the Activator.
+
+        The activator keeps track of the infected nodes,
+        which are the only ones that receive an `activate` message.
+        """
         self.infected_nodes.add(node)
         self.send(Recorder.name, 'node_infected', node=node)
 
     def not_infected(self, node):
+        """
+        Whenever a node recovers, it notifies the Activator.
+        """
         self.infected_nodes.remove(node)
         self.send(Recorder.name, 'node_recovered', node=node)
 
     def nodes_to_activate(self):
+        """
+        Only the infected nodes are activated.
+        """
         return self.infected_nodes
 
 
@@ -118,11 +187,6 @@ class Node(pynetsym.Node):
             if random.random() < self.recovery_rate:
                 self.state = 'R'
                 self.send(Activator.name, 'not_infected', node=self.id)
-        elif self.state in ('R', 'S'):
-            pass
-        else:
-            self.send_log('I should not get here.')
-
 
 class Simulation(pynetsym.Simulation):
     default_infection_rate = 1.
@@ -132,8 +196,8 @@ class Simulation(pynetsym.Simulation):
     agent_db_type = MongoAgentDB
     agent_db_parameters = {}
 
-
-    recorder_type = AdvancedRecorder
+    recorder_type = Recorder
+    # recorder_type = AdvancedRecorder
 
     additional_agents = ('recorder', )
 
@@ -149,11 +213,12 @@ class Simulation(pynetsym.Simulation):
         ('-f', '--initial-infected-rate',
          dict(default=default_infected_rate, type=float)),
         ('--h5-file', dict(default='', type=str)),
-        )
+    )
 
     activator_type = Activator
     activator_options = {}
 
+    # reads the network from and HDF5 file
     graph_type = BasicH5Graph
     graph_options = {'h5_file', }
 
@@ -196,6 +261,3 @@ if __name__ == '__main__':
     sim.run(force_cli=True)
 
     print sim.motive
-
-    network_size = sim.graph.number_of_nodes()
-    # sim.recorder.save_statistic()

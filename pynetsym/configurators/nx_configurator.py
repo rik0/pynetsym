@@ -5,11 +5,20 @@ from pynetsym import node_manager
 import itertools
 import networkx as nx
 
-from pynetsym.util import extract_subdictionary, SequenceAsyncResult
+from pynetsym.util import extract_sub_dictionary, SequenceAsyncResult
 from .basic import AbstractConfigurator
 
+
 class NXGraphConfigurator(AbstractConfigurator):
+    """
+    Sets up a network reading the initial configuration from a graph
+    in a file supported by the NetworkX library.
+    """
+
     options = {'starting_graph'}
+    """
+    The NXGraphConfigurator agent reads the `starting_graph` property
+    """
 
     starting_graph = Instance(nx.Graph, allow_none=False)
 
@@ -17,6 +26,9 @@ class NXGraphConfigurator(AbstractConfigurator):
     node_options = Instance(set)
 
     def create_edges(self):
+        """
+        Creates the edges as specified in the network it read.
+        """
         graph = self.starting_graph
         for u, v in graph.edges_iter():
             u1 = self.node_map[u]
@@ -24,7 +36,10 @@ class NXGraphConfigurator(AbstractConfigurator):
             self.send(v1, 'accept_link', originating_node=u1)
 
     def create_nodes(self):
-        self.node_arguments = extract_subdictionary(
+        """
+        Requires the `NodeManager` to create the nodes as specified in the network it read.
+        """
+        self.node_arguments = extract_sub_dictionary(
                 self.full_parameters, self.node_options)
         node_manager_id = node_manager.NodeManager.name
         graph = self.starting_graph

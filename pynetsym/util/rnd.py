@@ -1,6 +1,10 @@
 import random
 
+
 def choice_from_iter(iterator, max_value):
+    """
+    Selects a random element from an iterator.
+    """
     if max_value <= 0:
         raise ValueError(
                 ("Max should be positive, got %s instead" % max_value))

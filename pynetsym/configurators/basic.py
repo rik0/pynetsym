@@ -2,7 +2,7 @@ from traits.has_traits import implements
 from traits.trait_types import Dict, Str, Int, Any, Type, Set, false
 
 from .. import core
-from ..util import extract_subdictionary, SequenceAsyncResult
+from ..util import extract_sub_dictionary, SequenceAsyncResult
 from ..node_manager import NodeManager
 from .interface import IConfigurator
 
@@ -61,7 +61,7 @@ class BasicConfigurator(AbstractConfigurator):
         pass
 
     def create_nodes(self):
-        self.node_arguments = extract_subdictionary(
+        self.node_arguments = extract_sub_dictionary(
                 self.full_parameters, self.node_options)
         node_ids = SequenceAsyncResult(
             [self.send(NodeManager.name, 'create_node',

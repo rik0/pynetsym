@@ -1,11 +1,22 @@
-import warnings
+__all__ = (
+    'IGraph',
+    'GraphError',
+    'can_test',
+    'has',
+    'NxGraph',
+    'ScipyGraph',
+    'DirectedScipyGraph',
+    'BasicH5Graph'
+)
 
-__all__ = ['IGraph', 'GraphError', 'can_test', 'has']
+import warnings
 
 from .interface import IGraph
 from .error import GraphError
 from ._plugin import has, can_test, register
 from .basic_io_impl import BasicH5Graph
+
+
 try:
     import networkx
     del networkx
@@ -13,7 +24,6 @@ except ImportError:
     warnings.warn("NetworkX not installed.")
 else:
     from nx_impl import NxGraph
-    __all__.append('NxGraph')
     register('networkx')
     default_graph = NxGraph
 
@@ -24,7 +34,6 @@ except ImportError:
     warnings.warn("Scipy not installed.")
 else:
     from scipy_impl import ScipyGraph, DirectedScipyGraph
-    __all__.extend(['ScipyGraph', 'DirectedScipyGraph'])
     register('scipy')
 
 try:

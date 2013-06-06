@@ -45,6 +45,21 @@ class DirectedScipyRandomSelector(ScipyRandomSelector):
         self._initialized_preferential_attachment = True
 
 class ScipyGraph(AbstractGraph):
+    """
+    Default wrapper for a Scipy Sparse Matrix.
+
+    Using a Scipy sparse matrix as a backend, this
+    implementation combines very good memory efficient
+    and programming convenience.
+
+    In order to make graph and network theoretic operations,
+    it is relatively easy to obtain the network as a scipy
+    sparse matrix in the right format for the efficient
+    computation by means of the to_scipy method.
+
+    Implementing algorithms as matrix computations is relatively
+    straightforward.
+    """
     implements(IGraph)
 
     matrix_factory = Callable(sparse.lil_matrix)
@@ -63,9 +78,11 @@ class ScipyGraph(AbstractGraph):
     def parameters(self):
         return {}
 
-    def __init__(self, max_nodes=None, matrix=None, nodes=None, random_selector=None):
-        self.random_selector = (self.random_selector_factory(graph_container=self)
-                                if random_selector is None else random_selector)
+    def __init__(self, max_nodes=None, matrix=None,
+            nodes=None, random_selector=None):
+        self.random_selector = (
+                self.random_selector_factory(graph_container=self)
+                    if random_selector is None else random_selector)
         if matrix is not None:
             self.matrix = matrix
             self.matrix_factory = type(matrix)
@@ -117,7 +134,9 @@ class ScipyGraph(AbstractGraph):
             self.matrix[target, source] = False
             self.random_selector.remove_edge(source, target)
         else:
-            raise GraphError('Edge %d-%d not present in graph' % (source, target))
+            raise GraphError(
+                    'Edge %d-%d not present in graph' % (
+                        source, target))
 
     def has_edge(self, source, target):
         self._valid_nodes(source, target)
@@ -148,7 +167,8 @@ class ScipyGraph(AbstractGraph):
 
     def to_numpy(self, minimize=False):
         if minimize:
-            matrix, node_to_index, index_to_node = self.to_scipy(minimize=minimize)
+            matrix, node_to_index, index_to_node = self.to_scipy(
+                    minimize=minimize)
             return matrix.todense(), node_to_index, index_to_node
         else:
             return self.to_scipy(minimize=minimize).todense()
@@ -229,6 +249,9 @@ class ScipyGraph(AbstractGraph):
 
 
 class DirectedScipyGraph(ScipyGraph):
+    """
+    Default wrapper for a Scipy Sparse Matrix representing a directed graph.
+    """
     random_selector_factory = DirectedScipyRandomSelector
 
     def number_of_edges(self):
@@ -245,7 +268,9 @@ class DirectedScipyGraph(ScipyGraph):
             self.matrix[source, target] = False
             self.random_selector.remove_edge(source, target)
         else:
-            raise GraphError('Edge %d-%d not present in graph' % (source, target))
+            raise GraphError(
+                    'Edge %d-%d not present in graph' % (
+                        source, target))
 
     def is_directed(self):
         return True

@@ -27,6 +27,7 @@ __all__ = [
     'Logger'
 ]
 
+
 class NoMessage(queue.Empty, PyNetSymError):
     pass
 
@@ -34,7 +35,9 @@ class NoMessage(queue.Empty, PyNetSymError):
 class AgentError(PyNetSymError):
     pass
 
+
 _M = collections.namedtuple('Message', 'sender payload parameters')
+
 
 class Message(_M):
     """
@@ -47,12 +50,11 @@ class Message(_M):
     __str__ = __repr__
 
 
-
-
 class Agent(t.HasTraits):
     """
-    An Agent is the basic class of the simulation. Agents communicate
-    asynchronously with themselves.
+    An Agent is the basic class of the simulation.
+
+    Agents communicate asynchronously.
     """
 
     #DEBUG_RECEIVE = True
@@ -71,22 +73,6 @@ class Agent(t.HasTraits):
 
     __ = t.PythonValue(transient=True)
 
-    def deliver(self, message, result):
-        """
-        Delivers message to this agent.
-        @param message: the message
-        @type message: Message
-        @param result: dataflow-like object we use to feed-back answers
-        @type result: event.AsyncResult
-        """
-        self._default_queue.put((message, result))
-
-    def cooperate(self):
-        """
-        Release control
-        """
-        gevent.sleep()
-
     def join(self):
         try:
             return self._greenlet.join()
@@ -101,6 +87,8 @@ class Agent(t.HasTraits):
     def setup(self):
         """
         Additional initialization before the run loop goes here.
+
+        The default implementation is empty.
         """
 
     def _compute_identifier(self, identifier):
@@ -113,6 +101,19 @@ class Agent(t.HasTraits):
             self.id = identifier
 
     def start(self, address_book, agent_db, identifier=None):
+        """
+        Start executing the agent.
+
+        :param address_book: the address book where the other agents references can be found.
+        :type address_book: :class:`addressing.AddressBook`
+        :param agent_db: the agent database that is used if this agent needs to be serialized
+        :type agent_db: :class:`agent_db.IAgentStorage`
+        :param identifier: this agent identifier. It is also added to the address book.
+        :type identifier: str | int
+
+        :return: the agent itself
+        :rtype: :class:`Agent`
+        """
         self._compute_identifier(identifier)
         self._address_book = address_book
         self._address_book.register(self, self.id)
@@ -128,11 +129,14 @@ class Agent(t.HasTraits):
 
     @property
     def started(self):
+        """
+        True if the agent has been started.
+        """
         return ((self.id is not None) and
                 (self._address_book is not None) and
                 (self._greenlet is not None))
 
-    def _unstart(self, source):
+    def _revert_start(self, _source):
         self._address_book.unregister(self.id)
         del self._address_book
         del self._default_queue
@@ -157,22 +161,33 @@ class Agent(t.HasTraits):
         return ss.getvalue()
 
     def on_error(self, source):
+        """
+        This handler is called when an error arises in the greenlet executing the agent.
+
+        The default implementation logs the error. Other implementations may
+        take different actions.
+
+        :param source: the greenlet where the error originated.
+        :type source: gevent.Greenlet
+        """
         text = self._create_error_text(source)
         self._get_logger().put_error(self, text)
 
     def kill(self):
         return self._greenlet.kill()
 
-
     def read(self, timeout=None):
         """
         Reads the next message that was sent to this agent.
 
-        @param timeout: can specify a timeout
-        @attention: It is not really meant to be called directly unless you are building a runloop.
+        :param timeout: can specify a timeout
+
+        :return: (Message, event.AsyncResult)
+        :raise: NoMessage if no message arrives after timeout
+
+        .. warning::
+            It is not really meant to be called directly unless you are building a runloop.
             Strictly speaking it is not non public, though.
-        @return: (Message, event.AsyncResult)
-        @raise: NoMessage if no message arrives after timeout
         """
         try:
             entry = self._default_queue.get(timeout=timeout)
@@ -186,10 +201,20 @@ class Agent(t.HasTraits):
         return get_logger(self._address_book, self._node_db, stream)
 
     def send_log(self, message, stream=sys.stdout):
+        """
+        Logs the message to the specified stream.
+        :param message: the message to be logged
+        :type message: :class:`Message`
+        :param stream: the stream where the message will be printed
+        """
         logger = self._get_logger(stream)
         logger.put_log(self.id, message)
 
     def log_sent(self, payload, receiver):
+        """
+        Mainly a debug hook that is called every time a messgage is sent,
+        if the attribute DEBUG_SEND is True.
+        """
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
             message = "{%s} SEND %s to %s" % (
@@ -200,6 +225,10 @@ class Agent(t.HasTraits):
         self.send_log(message)
 
     def log_received(self, msg):
+        """
+        Mainly a debug hook that is called every time a message is received,
+        if the attribute DEBUG_RECEIVE is True.
+        """
         gl = gevent.getcurrent()
         if gl is not self._greenlet:
             message = "RECV {%s} %s" % (gl, msg)
@@ -214,7 +243,7 @@ class Agent(t.HasTraits):
 
     def _store_agent(self):
         self._node_db.store(self)
-        self._unstart(self._greenlet)
+        self._revert_start(self._greenlet)
 
     def _resolve(self, identifier):
         try:
@@ -225,7 +254,6 @@ class Agent(t.HasTraits):
             except agent_db.MissingNode:
                 raise e
         return receiver
-
 
     def _handle_message(self, message, receiver):
         if getattr(self, 'DEBUG_SEND', False):
@@ -245,11 +273,11 @@ class Agent(t.HasTraits):
         """
         Send a message to the specified agent.
 
-        @param receiver_id: the id of the receiving agent
-        @param message_name: the name of the receiving agent method or
-            a function taking the agent as its first argument (unbound
-            methods are just perfect).
-        @param additional_parameters: additional parameters to be passed
+        :param receiver_id: the id of the receiving agent
+        :type receiver_id: int|str
+        :param message_name: the name of the receiving agent method
+        :type message_name: str
+        :param `**additional_parameters`: additional parameters to be passed
             to the function
         """
         try:
@@ -263,8 +291,14 @@ class Agent(t.HasTraits):
             result = self._handle_message(message, receiver)
             return result
 
-    def sync_send(self, receiver_id, message_name, timeout=None, **additional_parameters):
-        return self.send(receiver_id, message_name, **additional_parameters).get(timeout=timeout)
+    def sync_send(self, receiver_id, message_name, timeout=None,
+                  **additional_parameters):
+        """
+        Like :func:`Agent.send`, but explicitly blocks until the message
+            is processed by the receiver.
+        """
+        return self.send(receiver_id, message_name,
+                         **additional_parameters).get(timeout=timeout)
 
     def _send_all_fixed_params(self, additional_parameters, message_name, receivers):
         message = Message(self.id, message_name, additional_parameters)
@@ -294,8 +328,20 @@ class Agent(t.HasTraits):
         return SequenceAsyncResult(result_sequence)
 
     def send_all(self, receivers, message_name, **additional_parameters):
+        """
+        Like :func:`Agent.send`, but sends the messages to every agent in receivers.
+
+        If some parameter in additional_parameters is a callable, it is called
+        for each agent in receivers with the agent id as a parameter and
+        the return value is sent instead of the callable.
+
+        This is used for customizing the message sent to each agent.
+
+        :param receivers: A collection of receivers
+        :type receivers: iterable
+        """
         if any(callable(param)
-            for param in additional_parameters.values()):
+               for param in additional_parameters.values()):
             return self._send_all_multi_params(
                 additional_parameters, message_name, receivers)
         else:
@@ -303,13 +349,22 @@ class Agent(t.HasTraits):
                 additional_parameters, message_name, receivers)
 
     def sync_send_all(self, receivers, message_name, **additional_parameters):
-        return self.send_all(receivers, message_name, **additional_parameters).get()
-
+        """
+        Like :func:`Agent.send_all`, but explicitly blocks until the message
+            is processed by the receiver.
+        """
+        return self.send_all(receivers, message_name,
+                             **additional_parameters).get()
 
     def process(self, message, result):
         """
-        Processes the message. This means calling the message payload with
-        self as argument.
+        Processes the message.
+
+        This means calling the message payload with self as argument.
+
+        .. warning::
+            This is not meant to be used direclty, unless you are writing
+            a runloop.
 
         """
         action_name = message.payload
@@ -323,13 +378,12 @@ class Agent(t.HasTraits):
             del bound_method
         result.set(value)
 
-
     def can_be_collected(self):
         """
-        Override this if the Agent should not be collected
+        Override this if the Agent should not be collected (i.e., serialized
+            and put to sleep in the agent_db)
         """
         return False
-
 
     def _start(self):
         """
@@ -346,16 +400,6 @@ class Agent(t.HasTraits):
             2. process the message and elaborate the answer
             3. if the answer is not None, send it to the original message
             4. release control
-
-        The format of answer shall be either:
-            1. a string indicating the message name to be send
-            2. a tuple where the first element is the name of the
-                message to be sent and the second element is a
-                dictionary of additional parameters that will be
-                passed along.
-
-        @attention: checks regarding message_processor and similar
-            are not made
         """
         while 1:
             try:
@@ -372,12 +416,36 @@ class Agent(t.HasTraits):
     def unsupported_message(self, name, **additional_parameters):
         """
         Prints out something if we received a message we could not process.
+
+        This is meant to be overridden, if a different behavior is desired.
         """
         print (
             ('%s received "%s" message with parameters %s: '
              'could not process.') %
             (self, name, additional_parameters))
 
+    def deliver(self, message, result):
+        """
+        Delivers message to this agent.
+
+        Typically this is not called directly by other agents.
+        Use the source agent send message, instead.
+
+        :param message: the message
+        :type message: Message
+        :param result: dataflow-like object we use to feed-back answers
+        :type result: event.AsyncResult
+        """
+        self._default_queue.put((message, result))
+
+    def cooperate(self):
+        """
+        Release control.
+
+        Usually this is not explicitly needed.
+        If in doubt, do not use it.
+        """
+        gevent.sleep()
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__, self.id)
@@ -386,6 +454,13 @@ class Agent(t.HasTraits):
 
 
 class Logger(Agent, t.SingletonHasTraits):
+    """
+    A system agents that is used to log stuff.
+
+    The agents expect at least one logger to be running.
+    Prebuilt agent environments (such as the :class:`simulation.Simulation`)
+    create a Logger.
+    """
     DEBUG_RECEIVE = False
     DEBUG_SEND = False
 
@@ -397,6 +472,9 @@ class Logger(Agent, t.SingletonHasTraits):
         self.error_stream = error_stream
 
     def log_entry(self, sender, message, when=None):
+        """
+        Creates an entry in the log.
+        """
         if when is None:
             full_line = '[%s: r%.3f] %s\n' % (sender, time.clock(), message)
         else:
@@ -404,6 +482,10 @@ class Logger(Agent, t.SingletonHasTraits):
         self.stream.write(full_line)
 
     def put_log(self, sender, message):
+        """
+        The other agent can send a "put_log" message to the logger to
+        print a message on the default stream.
+        """
         result = event.AsyncResult()
         message = Message(sender,
                           'log_entry',
@@ -412,12 +494,19 @@ class Logger(Agent, t.SingletonHasTraits):
         self.deliver(message, result)
 
     def put_error(self, sender, text):
+        """
+        The other agent can send a "put_log" message to the logger to
+        print an error on the default stream.
+        """
         result = event.AsyncResult()
         message = Message(sender, 'error_message',
                           dict(sender=sender, text=text))
         self.deliver(message, result)
 
     def stop_receiving(self):
+        """
+        Send this message for killing the logger.
+        """
         while 1:
             try:
                 message, result = self.read(timeout=0.01)
@@ -428,6 +517,9 @@ class Logger(Agent, t.SingletonHasTraits):
         self.kill()
 
     def error_message(self, sender, text):
+        """
+        This method actually writes on the stream.
+        """
         ss = StringIO()
         ss.write('=' * 10)
         ss.write(str(sender))
@@ -440,10 +532,20 @@ class Logger(Agent, t.SingletonHasTraits):
 
 
 def get_logger(address_book, node_db, stream=sys.stderr):
+    """
+    Gets the default logger.
+
+    Factory function.
+    """
     logger = Logger(stream)
     if not logger.started:
         logger.start(address_book, node_db)
     return logger
+
+
+def _default_agent_db_factory():
+    return agent_db.AgentDB(
+        agent_db.PythonPickler(), dict())
 
 
 class MinimalAgentRuntime(object):
@@ -451,13 +553,14 @@ class MinimalAgentRuntime(object):
     Use this to establish a minimal agent runtime.
 
     If a more elaborate runtime is being used, this is not needed.
+    Not necessary for Simulations: the Simulation class is just a more
+    elaborate runtime.
     """
 
     def __init__(self, address_book_factory=addressing.FlatAddressBook,
-            node_db_factory=lambda: agent_db.AgentDB(
-                agent_db.PythonPickler(), dict())):
+            agent_db_factory=_default_agent_db_factory):
         self.address_book = address_book_factory()
-        self.node_db = node_db_factory()
+        self.node_db = agent_db_factory()
         self.logger = self.create_agent(Logger, stream=sys.stdout)
 
     def create_agent(self, cls, **more_stuff):
@@ -470,5 +573,6 @@ class MinimalAgentRuntime(object):
 
     def start_agent(self, agent, identifier=None):
         agent.start(self.address_book, self.node_db, identifier)
+
 
 GreenletExit = gevent.GreenletExit

@@ -1,4 +1,7 @@
 def encapsulate_global(key, encapsulated_globals={}):
+    """
+    A utility function to better encapsulate global state.
+    """
     def get_encapsulated_global():
         try:
             return encapsulated_globals[key]
