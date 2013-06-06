@@ -1,0 +1,131 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">configurators</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&quot;Agent&quot;</span><span class="p">,</span>
+    <span class="s">&quot;AgentError&quot;</span><span class="p">,</span>
+    <span class="s">&quot;MinimalAgentRuntime&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Logger&quot;</span><span class="p">,</span>
+    <span class="s">&quot;get_logger&quot;</span><span class="p">,</span>
+    <span class="s">&quot;MissingNode&quot;</span><span class="p">,</span>
+    <span class="s">&quot;AgentDB&quot;</span><span class="p">,</span>
+    <span class="s">&quot;NodeManager&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Node&quot;</span><span class="p">,</span>
+    <span class="s">&#39;Simulation&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Activator&#39;</span><span class="p">,</span>
+    <span class="s">&#39;AsyncClock&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Clock&#39;</span><span class="p">,</span>
+    <span class="s">&quot;IConfigurator&quot;</span><span class="p">,</span>
+    <span class="s">&quot;AbstractConfigurator&quot;</span><span class="p">,</span>
+    <span class="s">&quot;BasicConfigurator&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Either&quot;</span><span class="p">,</span>
+    <span class="s">&#39;PyNetSymError&#39;</span><span class="p">,</span>
+
+<span class="p">]</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">configurators</span><span class="o">.</span><span class="n">__all__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">AgentError</span><span class="p">,</span> <span class="n">MinimalAgentRuntime</span><span class="p">,</span> <span class="n">Logger</span><span class="p">,</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">.addressing</span> <span class="kn">import</span> <span class="n">AddressingError</span>
+<span class="kn">from</span> <span class="nn">.agent_db</span> <span class="kn">import</span> <span class="n">MissingNode</span><span class="p">,</span> <span class="n">AgentDB</span>
+<span class="kn">from</span> <span class="nn">.node_manager</span> <span class="kn">import</span> <span class="n">NodeManager</span>
+<span class="kn">from</span> <span class="nn">.nodes</span> <span class="kn">import</span> <span class="n">Node</span>
+<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">Activator</span>
+<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">Clock</span><span class="p">,</span> <span class="n">AsyncClock</span>
+<span class="kn">from</span> <span class="nn">.configurators</span> <span class="kn">import</span> <span class="n">IConfigurator</span><span class="p">,</span> <span class="n">AbstractConfigurator</span><span class="p">,</span> <span class="n">BasicConfigurator</span><span class="p">,</span> <span class="n">Either</span>
+<span class="kn">from</span> <span class="nn">.configurators</span> <span class="kn">import</span> <span class="n">BasicH5Configurator</span><span class="p">,</span> <span class="n">NXGraphConfigurator</span>
+<span class="kn">from</span> <span class="nn">.error</span> <span class="kn">import</span> <span class="n">PyNetSymError</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

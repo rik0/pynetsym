@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Support Modules &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="index.html" />
+    <link rel="next" title="Models" href="models.html" />
+    <link rel="prev" title="API Documentation" href="api.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyNetSym 0.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="support-modules">
+<h1>Support Modules<a class="headerlink" href="#support-modules" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="agent-addressing">
+<h2>Agent Addressing<a class="headerlink" href="#agent-addressing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pynetsym.addressing">
+<span id="pynetsym-addressing-main-classes-dealing-with-addressing"></span><h3><a class="reference internal" href="#module-pynetsym.addressing" title="pynetsym.addressing"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.addressing</span></tt></a> &#8211; Main classes dealing with addressing<a class="headerlink" href="#module-pynetsym.addressing" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pynetsym.addressing.AddressBook">
+<em class="property">class </em><tt class="descclassname">pynetsym.addressing.</tt><tt class="descname">AddressBook</tt><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressBook"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressBook" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Address book holds information on every agent in the system.</p>
+<p>An agent that is not in the AddressBook is virtually unreachable.</p>
+<dl class="method">
+<dt id="pynetsym.addressing.AddressBook.list">
+<tt class="descname">list</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressBook.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressBook.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with all the available agents.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.addressing.AddressBook.list_iter">
+<tt class="descname">list_iter</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressBook.list_iter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressBook.list_iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterator with all the available agents.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.addressing.AddressBook.register">
+<tt class="descname">register</tt><big>(</big><em>agent</em>, <em>identifier</em><big>)</big><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressBook.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressBook.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binds the identifier with the agent</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>identifier</strong> (<em>hashable</em>) &#8211; the identifier to bind the agent to</li>
+<li><strong>agent</strong> (<em>Agent</em>) &#8211; the agent to bind</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AddressingError</strong> &#8211; if identifier is already bound</li>
+<li><strong>TypeError</strong> &#8211; if the identifier has a type that is not recognized
+by the AddressBook</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.addressing.AddressBook.resolve">
+<tt class="descname">resolve</tt><big>(</big><em>identifier</em><big>)</big><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressBook.resolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressBook.resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves :param: identifier to the actual agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises AddressingError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if the agent is not registered.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.addressing.AddressBook.unregister">
+<tt class="descname">unregister</tt><big>(</big><em>identifier</em><big>)</big><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressBook.unregister"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressBook.unregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregisters the identifier.</p>
+<p>I.e., the agent with that identifier will no longer be addressable.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pynetsym.addressing.AddressingError">
+<em class="property">exception </em><tt class="descclassname">pynetsym.addressing.</tt><tt class="descname">AddressingError</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pynetsym/addressing.html#AddressingError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.AddressingError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Error signaling that something with the addressing of
+a message went wrong.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.addressing.FlatAddressBook">
+<em class="property">class </em><tt class="descclassname">pynetsym.addressing.</tt><tt class="descname">FlatAddressBook</tt><a class="reference internal" href="_modules/pynetsym/addressing.html#FlatAddressBook"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.addressing.FlatAddressBook" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Address book holds information on agents.</p>
+<p>This AddressBook uses a flat namespace.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="agent-serialization">
+<h2>Agent Serialization<a class="headerlink" href="#agent-serialization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pynetsym.agent_db">
+<span id="pynetsym-agent-db-support-for-serializing-the-agents-is-here"></span><h3><a class="reference internal" href="#module-pynetsym.agent_db" title="pynetsym.agent_db"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.agent_db</span></tt></a> &#8211; Support for serializing the agents is here<a class="headerlink" href="#module-pynetsym.agent_db" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="node-management">
+<h2>Node Management<a class="headerlink" href="#node-management" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pynetsym.node_manager">
+<span id="pynetsym-node-manager-platform-support-for-agent-creation"></span><h3><a class="reference internal" href="#module-pynetsym.node_manager" title="pynetsym.node_manager"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.node_manager</span></tt></a> &#8211; Platform support for agent creation<a class="headerlink" href="#module-pynetsym.node_manager" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pynetsym.node_manager.NodeManager">
+<em class="property">class </em><tt class="descclassname">pynetsym.node_manager.</tt><tt class="descname">NodeManager</tt><big>(</big><em>graph</em><big>)</big><a class="reference internal" href="_modules/pynetsym/node_manager.html#NodeManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.node_manager.NodeManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class responsible to create nodes.</p>
+<dl class="method">
+<dt id="pynetsym.node_manager.NodeManager.create_node">
+<tt class="descname">create_node</tt><big>(</big><em>cls</em>, <em>parameters</em><big>)</big><a class="reference internal" href="_modules/pynetsym/node_manager.html#NodeManager.create_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.node_manager.NodeManager.create_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cls</strong> (<em>callable</em>) &#8211; the factory creating the new node.</li>
+<li><strong>parameters</strong> (<em>dict</em>) &#8211; the parameters that are forwarded to the node for creation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the actual identifier</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int | str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.node_manager.NodeManager.name">
+<tt class="descname">name</tt><em class="property"> = 'manager'</em><a class="headerlink" href="#pynetsym.node_manager.NodeManager.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the registered name in the <tt class="xref py py-class docutils literal"><span class="pre">addressing.AddressBook</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pynetsym.util">
+<span id="pynetsym-util-miscellaneous-utilities"></span><h3><a class="reference internal" href="#module-pynetsym.util" title="pynetsym.util"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.util</span></tt></a> &#8211; Miscellaneous utilities<a class="headerlink" href="#module-pynetsym.util" title="Permalink to this headline">¶</a></h3>
+<p>Generic utility functions are defined here.</p>
+<p>For example functions to manipulate primitive data types and such.</p>
+<dl class="function">
+<dt id="pynetsym.util.extract_sub_dictionary">
+<tt class="descclassname">pynetsym.util.</tt><tt class="descname">extract_sub_dictionary</tt><big>(</big><em>dct</em>, <em>keys</em><big>)</big><a class="headerlink" href="#pynetsym.util.extract_sub_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts a sub-dictionary of dct with the keys specified in keys.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.util.choice_from_iter">
+<tt class="descclassname">pynetsym.util.</tt><tt class="descname">choice_from_iter</tt><big>(</big><em>iterator</em>, <em>max_value</em><big>)</big><a class="headerlink" href="#pynetsym.util.choice_from_iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects a random element from an iterator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.util.encapsulate_global">
+<tt class="descclassname">pynetsym.util.</tt><tt class="descname">encapsulate_global</tt><big>(</big><em>key</em>, <em>encapsulated_globals={}</em><big>)</big><a class="headerlink" href="#pynetsym.util.encapsulate_global" title="Permalink to this definition">¶</a></dt>
+<dd><p>A utility function to better encapsulate global state.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.util.gather_from_ancestors">
+<tt class="descclassname">pynetsym.util.</tt><tt class="descname">gather_from_ancestors</tt><big>(</big><em>child_obj</em>, <em>attr_name</em>, <em>acc_type=&lt;type 'set'&gt;</em><big>)</big><a class="headerlink" href="#pynetsym.util.gather_from_ancestors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accumulate all the options sets defined over the class hierarchy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>child_obj</strong> &#8211; an object instance or a class from which to start gathering. If is an instance, its type is obtained.</li>
+<li><strong>attr_name</strong> (<em>str</em>) &#8211; the name of the attribute to accumulate.</li>
+<li><strong>acc_type</strong> &#8211; a factory of the type of objects were to accumulate stuff. Examples are sets or lists (depending on the intended semantics).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.util.classproperty">
+<tt class="descclassname">pynetsym.util.</tt><tt class="descname">classproperty</tt><a class="headerlink" href="#pynetsym.util.classproperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduces a class property. Works like property, but on the class.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The setter and deleter do not work as expected.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.util.approximate_cpl">
+<tt class="descclassname">pynetsym.util.</tt><tt class="descname">approximate_cpl</tt><big>(</big><em>graph</em>, <em>q=0.5</em>, <em>delta=0.15</em>, <em>eps=0.05</em><big>)</big><a class="headerlink" href="#pynetsym.util.approximate_cpl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the approximate CPL for the specified graph
+:param graph: the graph
+:param q: the q-median to use (default 1/2-median, i.e., median)
+:param delta: used to compute the size of the sample
+:param eps: used to compute the size of the sample
+:return: the median
+:rtype: float</p>
+</dd></dl>
+
+<span class="target" id="module-pynetsym.util.sna"></span><dl class="function">
+<dt id="pynetsym.util.sna.approximate_cpl">
+<tt class="descclassname">pynetsym.util.sna.</tt><tt class="descname">approximate_cpl</tt><big>(</big><em>graph</em>, <em>q=0.5</em>, <em>delta=0.15</em>, <em>eps=0.05</em><big>)</big><a class="reference internal" href="_modules/pynetsym/util/sna.html#approximate_cpl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.util.sna.approximate_cpl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the approximate CPL for the specified graph
+:param graph: the graph
+:param q: the q-median to use (default 1/2-median, i.e., median)
+:param delta: used to compute the size of the sample
+:param eps: used to compute the size of the sample
+:return: the median
+:rtype: float</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="miscellanea">
+<h2>Miscellanea<a class="headerlink" href="#miscellanea" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pynetsym.identifiers_manager">
+<span id="pynetsym-identifiers-manager-support-for-unique-identifiers"></span><h3><a class="reference internal" href="#module-pynetsym.identifiers_manager" title="pynetsym.identifiers_manager"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.identifiers_manager</span></tt></a> &#8211; Support for unique identifiers<a class="headerlink" href="#module-pynetsym.identifiers_manager" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pynetsym.identifiers_manager.IntIdentifierStore">
+<em class="property">class </em><tt class="descclassname">pynetsym.identifiers_manager.</tt><tt class="descname">IntIdentifierStore</tt><a class="reference internal" href="_modules/pynetsym/identifiers_manager.html#IntIdentifierStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.identifiers_manager.IntIdentifierStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>An free identifier store can be queried for the smallest free identifier.</p>
+<dl class="method">
+<dt id="pynetsym.identifiers_manager.IntIdentifierStore.free">
+<tt class="descname">free</tt><big>(</big><em>identifier</em><big>)</big><a class="reference internal" href="_modules/pynetsym/identifiers_manager.html#IntIdentifierStore.free"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.identifiers_manager.IntIdentifierStore.free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frees the identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> &#8211; marks the identifier as free</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.identifiers_manager.IntIdentifierStore.peek">
+<tt class="descname">peek</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/identifiers_manager.html#IntIdentifierStore.peek"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.identifiers_manager.IntIdentifierStore.peek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the lowest available index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the lowest possible index</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.identifiers_manager.IntIdentifierStore.take">
+<tt class="descname">take</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/identifiers_manager.html#IntIdentifierStore.take"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.identifiers_manager.IntIdentifierStore.take" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the lowest available index and marks is as used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the lowest possible index</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.termination">
+<span id="pynetsym-termination-package-with-the-definition-of-termination-conditions"></span><h3><a class="reference internal" href="#module-pynetsym.termination" title="pynetsym.termination"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.termination</span></tt></a> &#8211; Package with the definition of termination conditions<a class="headerlink" href="#module-pynetsym.termination" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pynetsym.termination.TerminationChecker">
+<em class="property">class </em><tt class="descclassname">pynetsym.termination.</tt><tt class="descname">TerminationChecker</tt><big>(</big><em>graph</em>, <em>conditions</em><big>)</big><a class="headerlink" href="#pynetsym.termination.TerminationChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Agent that monitors the termination of the simulation.</p>
+<dl class="method">
+<dt id="pynetsym.termination.TerminationChecker.add_condition">
+<tt class="descname">add_condition</tt><big>(</big><em>condition</em><big>)</big><a class="headerlink" href="#pynetsym.termination.TerminationChecker.add_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a condition to monitor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> (<tt class="xref py py-class docutils literal"><span class="pre">pynetsym.termination.conditions.ICondition</span></tt>) &#8211; the condition to monitor.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.termination.TerminationChecker.check">
+<tt class="descname">check</tt><big>(</big><em>requester</em><big>)</big><a class="headerlink" href="#pynetsym.termination.TerminationChecker.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>An agent can send a message to require that the conditions for
+termination are met.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.termination.make_condition">
+<tt class="descclassname">pynetsym.termination.</tt><tt class="descname">make_condition</tt><big>(</big><em>func</em>, <em>motive</em><big>)</big><a class="headerlink" href="#pynetsym.termination.make_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a condition that is true when func evaluates to true.
+Motive is the motive that will be set when this condition evaluates
+to true.</p>
+<p>func is a function taking a graph wrapper and returning a boolean.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.termination.count_down">
+<tt class="descclassname">pynetsym.termination.</tt><tt class="descname">count_down</tt><big>(</big><em>m</em><big>)</big><a class="headerlink" href="#pynetsym.termination.count_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a condition that becomes true after being checked m times.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.termination.ICondition">
+<em class="property">class </em><tt class="descclassname">pynetsym.termination.</tt><tt class="descname">ICondition</tt><a class="headerlink" href="#pynetsym.termination.ICondition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Condition interface.</p>
+</dd></dl>
+
+<span class="target" id="module-pynetsym.termination.conditions"></span><p>Conditions are object that provide a check method that receives a graph
+and answers whether the simulation has to stop. After the condition evaluated
+to True a motive attribute indicates the termination reason. It is intended
+to be meaningful for the user and not for the machine.</p>
+</div>
+<div class="section" id="module-pynetsym.configuration">
+<span id="pynetsym-configuration-code-that-deals-with-supporting-model-parameters"></span><h3><a class="reference internal" href="#module-pynetsym.configuration" title="pynetsym.configuration"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.configuration</span></tt></a> &#8211; Code that deals with supporting model parameters<a class="headerlink" href="#module-pynetsym.configuration" title="Permalink to this headline">¶</a></h3>
+<dl class="exception">
+<dt id="pynetsym.configuration.ConfigurationError">
+<em class="property">exception </em><tt class="descclassname">pynetsym.configuration.</tt><tt class="descname">ConfigurationError</tt><a class="reference internal" href="_modules/pynetsym/configuration.html#ConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.configuration.ConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception for configuration errors.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.configuration.ConfigurationManager">
+<em class="property">class </em><tt class="descclassname">pynetsym.configuration.</tt><tt class="descname">ConfigurationManager</tt><big>(</big><em>option_description</em><big>)</big><a class="reference internal" href="_modules/pynetsym/configuration.html#ConfigurationManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.configuration.ConfigurationManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class provides functions to manage model parameters.</p>
+<dl class="method">
+<dt id="pynetsym.configuration.ConfigurationManager.consider">
+<tt class="descname">consider</tt><big>(</big><em>entity</em><big>)</big><a class="reference internal" href="_modules/pynetsym/configuration.html#ConfigurationManager.consider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.configuration.ConfigurationManager.consider" title="Permalink to this definition">¶</a></dt>
+<dd><p>High level interface to provide options to be considered.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.configuration.ConfigurationManager.consider_command_line">
+<tt class="descname">consider_command_line</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/configuration.html#ConfigurationManager.consider_command_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.configuration.ConfigurationManager.consider_command_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is called if we want to force the evaluation of command line arguments.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.configuration.ConfigurationManager.process">
+<tt class="descname">process</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/configuration.html#ConfigurationManager.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.configuration.ConfigurationManager.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the actual dictionary of parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Support Modules</a><ul>
+<li><a class="reference internal" href="#agent-addressing">Agent Addressing</a><ul>
+<li><a class="reference internal" href="#module-pynetsym.addressing"><tt class="docutils literal"><span class="pre">pynetsym.addressing</span></tt> &#8211; Main classes dealing with addressing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#agent-serialization">Agent Serialization</a><ul>
+<li><a class="reference internal" href="#module-pynetsym.agent_db"><tt class="docutils literal"><span class="pre">pynetsym.agent_db</span></tt> &#8211; Support for serializing the agents is here</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#node-management">Node Management</a><ul>
+<li><a class="reference internal" href="#module-pynetsym.node_manager"><tt class="docutils literal"><span class="pre">pynetsym.node_manager</span></tt> &#8211; Platform support for agent creation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#utilities">Utilities</a><ul>
+<li><a class="reference internal" href="#module-pynetsym.util"><tt class="docutils literal"><span class="pre">pynetsym.util</span></tt> &#8211; Miscellaneous utilities</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#miscellanea">Miscellanea</a><ul>
+<li><a class="reference internal" href="#module-pynetsym.identifiers_manager"><tt class="docutils literal"><span class="pre">pynetsym.identifiers_manager</span></tt> &#8211; Support for unique identifiers</a></li>
+<li><a class="reference internal" href="#module-pynetsym.termination"><tt class="docutils literal"><span class="pre">pynetsym.termination</span></tt> &#8211; Package with the definition of termination conditions</a></li>
+<li><a class="reference internal" href="#module-pynetsym.configuration"><tt class="docutils literal"><span class="pre">pynetsym.configuration</span></tt> &#8211; Code that deals with supporting model parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">API Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">Models</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/additional_api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Models"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">PyNetSym 0.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

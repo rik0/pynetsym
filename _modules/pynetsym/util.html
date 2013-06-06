@@ -1,0 +1,133 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym.util &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="pynetsym" href="../pynetsym.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" accesskey="U">pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym.util</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generic utility functions are defined here.</span>
+
+<span class="sd">For example functions to manipulate primitive data types and such.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;extract_sub_dictionary&#39;</span><span class="p">,</span>
+    <span class="s">&#39;choice_from_iter&#39;</span><span class="p">,</span>
+    <span class="s">&#39;SequenceAsyncResult&#39;</span><span class="p">,</span>
+    <span class="s">&#39;encapsulate_global&#39;</span><span class="p">,</span>
+    <span class="s">&#39;gather_from_ancestors&#39;</span><span class="p">,</span>
+    <span class="s">&#39;classproperty&#39;</span>
+<span class="p">]</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span>
+
+    <span class="k">del</span> <span class="n">numpy</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">sna</span> <span class="kn">import</span> <span class="n">ccdf</span><span class="p">,</span> <span class="n">approximate_cpl</span><span class="p">,</span> <span class="n">trivial_power_law_estimator</span><span class="p">,</span> <span class="n">make_hist</span><span class="p">,</span> <span class="n">degrees_to_hist</span>
+
+    <span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="s">&quot;ccdf&quot;</span><span class="p">,</span>
+        <span class="s">&quot;approximate_cpl&quot;</span><span class="p">,</span>
+        <span class="s">&quot;trivial_power_law_estimator&quot;</span><span class="p">,</span>
+        <span class="s">&quot;make_hist&quot;</span><span class="p">,</span>
+        <span class="s">&quot;degrees_to_hist&quot;</span><span class="p">])</span>
+
+<span class="kn">from</span> <span class="nn">dictionary</span> <span class="kn">import</span> <span class="n">extract_sub_dictionary</span>
+<span class="kn">from</span> <span class="nn">rnd</span> <span class="kn">import</span> <span class="n">choice_from_iter</span>
+<span class="kn">from</span> <span class="nn">concurrency</span> <span class="kn">import</span> <span class="n">SequenceAsyncResult</span>
+<span class="kn">from</span> <span class="nn">global_state</span> <span class="kn">import</span> <span class="n">encapsulate_global</span>
+<span class="kn">from</span> <span class="nn">meta</span> <span class="kn">import</span> <span class="n">gather_from_ancestors</span><span class="p">,</span> <span class="n">classproperty</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" >pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,2803 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API Documentation &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="index.html" />
+    <link rel="next" title="Support Modules" href="additional_api.html" />
+    <link rel="prev" title="Welcome to PyNetSym’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="additional_api.html" title="Support Modules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to PyNetSym’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyNetSym 0.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-pynetsym">
+<span id="pynetsym-main-package"></span><h2><a class="reference internal" href="#module-pynetsym" title="pynetsym"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym</span></tt></a> &#8211; Main package<a class="headerlink" href="#module-pynetsym" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pynetsym.Agent">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">Agent</tt><a class="headerlink" href="#pynetsym.Agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>An Agent is the basic class of the simulation.</p>
+<p>Agents communicate asynchronously.</p>
+<dl class="method">
+<dt id="pynetsym.Agent.can_be_collected">
+<tt class="descname">can_be_collected</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Agent.can_be_collected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this if the Agent should not be collected (i.e., serialized
+and put to sleep in the agent_db)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.cooperate">
+<tt class="descname">cooperate</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Agent.cooperate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release control.</p>
+<p>Usually this is not explicitly needed.
+If in doubt, do not use it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.deliver">
+<tt class="descname">deliver</tt><big>(</big><em>message</em>, <em>result</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.deliver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delivers message to this agent.</p>
+<p>Typically this is not called directly by other agents.
+Use the source agent send message, instead.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>message</strong> (<em>Message</em>) &#8211; the message</li>
+<li><strong>result</strong> (<em>event.AsyncResult</em>) &#8211; dataflow-like object we use to feed-back answers</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.log_received">
+<tt class="descname">log_received</tt><big>(</big><em>msg</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.log_received" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mainly a debug hook that is called every time a message is received,
+if the attribute DEBUG_RECEIVE is True.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.log_sent">
+<tt class="descname">log_sent</tt><big>(</big><em>payload</em>, <em>receiver</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.log_sent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mainly a debug hook that is called every time a messgage is sent,
+if the attribute DEBUG_SEND is True.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.on_error">
+<tt class="descname">on_error</tt><big>(</big><em>source</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.on_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>This handler is called when an error arises in the greenlet executing the agent.</p>
+<p>The default implementation logs the error. Other implementations may
+take different actions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source</strong> (<em>gevent.Greenlet</em>) &#8211; the greenlet where the error originated.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.process">
+<tt class="descname">process</tt><big>(</big><em>message</em>, <em>result</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the message.</p>
+<p>This means calling the message payload with self as argument.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is not meant to be used direclty, unless you are writing
+a runloop.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.read">
+<tt class="descname">read</tt><big>(</big><em>timeout=None</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the next message that was sent to this agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> &#8211; can specify a timeout</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Message, event.AsyncResult)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raise :</th><td class="field-body">NoMessage if no message arrives after timeout</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">It is not really meant to be called directly unless you are building a runloop.
+Strictly speaking it is not non public, though.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.run_loop">
+<tt class="descname">run_loop</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Agent.run_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Agent main run loop.</p>
+<ol class="arabic simple">
+<li>read a message from the queue</li>
+<li>process the message and elaborate the answer</li>
+<li>if the answer is not None, send it to the original message</li>
+<li>release control</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.send">
+<tt class="descname">send</tt><big>(</big><em>receiver_id</em>, <em>message_name</em>, <em>**additional_parameters</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a message to the specified agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>receiver_id</strong> (<em>int|str</em>) &#8211; the id of the receiving agent</li>
+<li><strong>message_name</strong> (<em>str</em>) &#8211; the name of the receiving agent method</li>
+<li><strong>**additional_parameters</strong> &#8211; additional parameters to be passed
+to the function</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.send_all">
+<tt class="descname">send_all</tt><big>(</big><em>receivers</em>, <em>message_name</em>, <em>**additional_parameters</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.send_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pynetsym.Agent.send" title="pynetsym.Agent.send"><tt class="xref py py-func docutils literal"><span class="pre">Agent.send()</span></tt></a>, but sends the messages to every agent in receivers.</p>
+<p>If some parameter in additional_parameters is a callable, it is called
+for each agent in receivers with the agent id as a parameter and
+the return value is sent instead of the callable.</p>
+<p>This is used for customizing the message sent to each agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>receivers</strong> (<em>iterable</em>) &#8211; A collection of receivers</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.send_log">
+<tt class="descname">send_log</tt><big>(</big><em>message</em>, <em>stream=&lt;open file '&lt;stdout&gt;'</em>, <em>mode 'w' at 0x1002891e0&gt;</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.send_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs the message to the specified stream.
+:param message: the message to be logged
+:type message: <tt class="xref py py-class docutils literal"><span class="pre">Message</span></tt>
+:param stream: the stream where the message will be printed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.setup">
+<tt class="descname">setup</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Agent.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional initialization before the run loop goes here.</p>
+<p>The default implementation is empty.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.start">
+<tt class="descname">start</tt><big>(</big><em>address_book</em>, <em>agent_db</em>, <em>identifier=None</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start executing the agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address_book</strong> (<a class="reference internal" href="additional_api.html#pynetsym.addressing.AddressBook" title="pynetsym.addressing.AddressBook"><tt class="xref py py-class docutils literal"><span class="pre">addressing.AddressBook</span></tt></a>) &#8211; the address book where the other agents references can be found.</li>
+<li><strong>agent_db</strong> (<tt class="xref py py-class docutils literal"><span class="pre">agent_db.IAgentStorage</span></tt>) &#8211; the agent database that is used if this agent needs to be serialized</li>
+<li><strong>identifier</strong> (<em>str | int</em>) &#8211; this agent identifier. It is also added to the address book.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the agent itself</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pynetsym.Agent" title="pynetsym.Agent"><tt class="xref py py-class docutils literal"><span class="pre">Agent</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Agent.started">
+<tt class="descname">started</tt><a class="headerlink" href="#pynetsym.Agent.started" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the agent has been started.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.sync_send">
+<tt class="descname">sync_send</tt><big>(</big><em>receiver_id</em>, <em>message_name</em>, <em>timeout=None</em>, <em>**additional_parameters</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.sync_send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pynetsym.Agent.send" title="pynetsym.Agent.send"><tt class="xref py py-func docutils literal"><span class="pre">Agent.send()</span></tt></a>, but explicitly blocks until the message
+is processed by the receiver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.sync_send_all">
+<tt class="descname">sync_send_all</tt><big>(</big><em>receivers</em>, <em>message_name</em>, <em>**additional_parameters</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.sync_send_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pynetsym.Agent.send_all" title="pynetsym.Agent.send_all"><tt class="xref py py-func docutils literal"><span class="pre">Agent.send_all()</span></tt></a>, but explicitly blocks until the message
+is processed by the receiver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Agent.unsupported_message">
+<tt class="descname">unsupported_message</tt><big>(</big><em>name</em>, <em>**additional_parameters</em><big>)</big><a class="headerlink" href="#pynetsym.Agent.unsupported_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out something if we received a message we could not process.</p>
+<p>This is meant to be overridden, if a different behavior is desired.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.MinimalAgentRuntime">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">MinimalAgentRuntime</tt><big>(</big><em>address_book_factory=&lt;class 'pynetsym.addressing.FlatAddressBook'&gt;</em>, <em>agent_db_factory=&lt;function _default_agent_db_factory at 0x108b0d140&gt;</em><big>)</big><a class="headerlink" href="#pynetsym.MinimalAgentRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this to establish a minimal agent runtime.</p>
+<p>If a more elaborate runtime is being used, this is not needed.
+Not necessary for Simulations: the Simulation class is just a more
+elaborate runtime.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.Logger">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">Logger</tt><big>(</big><em>stream</em>, <em>error_stream=&lt;open file '&lt;stderr&gt;'</em>, <em>mode 'w' at 0x100289270&gt;</em><big>)</big><a class="headerlink" href="#pynetsym.Logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>A system agents that is used to log stuff.</p>
+<p>The agents expect at least one logger to be running.
+Prebuilt agent environments (such as the <a class="reference internal" href="#pynetsym.simulation.Simulation" title="pynetsym.simulation.Simulation"><tt class="xref py py-class docutils literal"><span class="pre">simulation.Simulation</span></tt></a>)
+create a Logger.</p>
+<dl class="method">
+<dt id="pynetsym.Logger.error_message">
+<tt class="descname">error_message</tt><big>(</big><em>sender</em>, <em>text</em><big>)</big><a class="headerlink" href="#pynetsym.Logger.error_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method actually writes on the stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Logger.log_entry">
+<tt class="descname">log_entry</tt><big>(</big><em>sender</em>, <em>message</em>, <em>when=None</em><big>)</big><a class="headerlink" href="#pynetsym.Logger.log_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an entry in the log.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Logger.put_error">
+<tt class="descname">put_error</tt><big>(</big><em>sender</em>, <em>text</em><big>)</big><a class="headerlink" href="#pynetsym.Logger.put_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>The other agent can send a &#8220;put_log&#8221; message to the logger to
+print an error on the default stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Logger.put_log">
+<tt class="descname">put_log</tt><big>(</big><em>sender</em>, <em>message</em><big>)</big><a class="headerlink" href="#pynetsym.Logger.put_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>The other agent can send a &#8220;put_log&#8221; message to the logger to
+print a message on the default stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Logger.stop_receiving">
+<tt class="descname">stop_receiving</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Logger.stop_receiving" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send this message for killing the logger.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.get_logger">
+<tt class="descclassname">pynetsym.</tt><tt class="descname">get_logger</tt><big>(</big><em>address_book</em>, <em>node_db</em>, <em>stream=&lt;open file '&lt;stderr&gt;'</em>, <em>mode 'w' at 0x100289270&gt;</em><big>)</big><a class="headerlink" href="#pynetsym.get_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the default logger.</p>
+<p>Factory function.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.NodeManager">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">NodeManager</tt><big>(</big><em>graph</em><big>)</big><a class="headerlink" href="#pynetsym.NodeManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class responsible to create nodes.</p>
+<dl class="method">
+<dt id="pynetsym.NodeManager.create_node">
+<tt class="descname">create_node</tt><big>(</big><em>cls</em>, <em>parameters</em><big>)</big><a class="headerlink" href="#pynetsym.NodeManager.create_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cls</strong> (<em>callable</em>) &#8211; the factory creating the new node.</li>
+<li><strong>parameters</strong> (<em>dict</em>) &#8211; the parameters that are forwarded to the node for creation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the actual identifier</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int | str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.Node">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">Node</tt><big>(</big><em>**attributes</em><big>)</big><a class="headerlink" href="#pynetsym.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node in the social network.</p>
+<dl class="method">
+<dt id="pynetsym.Node.accept_link">
+<tt class="descname">accept_link</tt><big>(</big><em>originating_node</em><big>)</big><a class="headerlink" href="#pynetsym.Node.accept_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts an &#8216;accept_link&#8217; message (modifying the network).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>originating_node</strong> (<em>int</em>) &#8211; the node that required the connection</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Node.can_be_collected">
+<tt class="descname">can_be_collected</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Node.can_be_collected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether this agent can be collected.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Defaults to true, do not override unless you know what
+you are doing.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Node.drop_link">
+<tt class="descname">drop_link</tt><big>(</big><em>originating_node</em><big>)</big><a class="headerlink" href="#pynetsym.Node.drop_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts a &#8216;drop_link&#8217; message (modifying the network).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>originating_node</strong> (<em>int</em>) &#8211; the node that required the drop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Node.link_to">
+<tt class="descname">link_to</tt><big>(</big><em>criterion_or_node</em><big>)</big><a class="headerlink" href="#pynetsym.Node.link_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends an &#8216;accept_link&#8217; message to the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>criterion_or_node</strong> (<em>id | callable(Graph -&gt; Node)</em>) &#8211; The node to link may be an identifier
+or a callable extracting the node from the graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">an asynchronous value representing whether the
+connection succeeded or not.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Node.neighbors">
+<tt class="descname">neighbors</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Node.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an iterable with the neighbors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Node.unlink_from">
+<tt class="descname">unlink_from</tt><big>(</big><em>criterion_or_node</em><big>)</big><a class="headerlink" href="#pynetsym.Node.unlink_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a &#8216;drop_link&#8217; message to the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>criterion_or_node</strong> (<em>id | callable(Graph -&gt; Node)</em>) &#8211; The node to link may be an identifier
+or a callable extracting the node from the graph</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.Simulation">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">Simulation</tt><a class="headerlink" href="#pynetsym.Simulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A subclass of Simulation describes a specific kind of simulation.</p>
+<p>Some parameters have to be overridden to customize behavior. Most of
+these parameters may be class parameters in the overridden class as well
+as instance variables. It is for example acceptable to define an
+enclosed class <cite>activator_type</cite> that &#8220;satisfies&#8221; the need for an <a class="reference internal" href="#pynetsym.Simulation.activator_type" title="pynetsym.Simulation.activator_type"><tt class="xref py py-func docutils literal"><span class="pre">activator_type()</span></tt></a>
+attribute.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><a class="reference internal" href="#pynetsym.Simulation.activator_type" title="pynetsym.Simulation.activator_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.activator_type()</span></tt></a> : the callable that creates the activator_type for the simulation</li>
+<li><a class="reference internal" href="#pynetsym.Simulation.graph_type" title="pynetsym.Simulation.graph_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.graph_type()</span></tt></a> : the callable that creates the graph which holds the network.</li>
+<li><a class="reference internal" href="#pynetsym.Simulation.clock_type" title="pynetsym.Simulation.clock_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.clock_type()</span></tt></a> : the callable that creates the clock_type in the simulation</li>
+<li><tt class="xref py py-func docutils literal"><span class="pre">Simulation.command_line_options()</span></tt></li>
+<li><tt class="xref py py-func docutils literal"><span class="pre">Simulation.configurator_type()</span></tt></li>
+</ol>
+</div></blockquote>
+<p>Of these, <a class="reference internal" href="#pynetsym.Simulation.activator_type" title="pynetsym.Simulation.activator_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.activator_type()</span></tt></a>, <a class="reference internal" href="#pynetsym.Simulation.graph_type" title="pynetsym.Simulation.graph_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.graph_type()</span></tt></a>,
+<tt class="xref py py-func docutils literal"><span class="pre">Simulation.command_line_options()</span></tt> and
+<a class="reference internal" href="#pynetsym.Simulation.clock_type" title="pynetsym.Simulation.clock_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.clock_type()</span></tt></a> have sensible default values (respectively,
+<a class="reference internal" href="#pynetsym.Activator" title="pynetsym.Activator"><tt class="xref py py-class docutils literal"><span class="pre">Activator</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">graph.</span></tt>,
+a list of default options and <a class="reference internal" href="#pynetsym.Clock" title="pynetsym.Clock"><tt class="xref py py-class docutils literal"><span class="pre">Clock</span></tt></a>.
+The other arguments need to be supplied by the subclass.</p>
+<p>Notice that command_line_options are scanned along the inheritance
+tree and put all together in a single list before being processed.
+As a consequence it is an error to choose options with names already
+used in superclasses. As the Simulation class hierarchies are meant
+to be small, this should not be a problem and greatly simplify the
+design.</p>
+<p>The preferred way to deal with these options is like:</p>
+<div class="highlight-python"><pre>class SimulationSubclass(Simulation):
+    class activator_type(Activator):
+        # ...
+
+    class configurator_type(generation.BasicConfigurator):
+        node_type = Node
+        node_options = {...}
+        options = {...}
+
+    command_line_options = (
+        ('-b', '--bar', dict(default=..., type=...))</pre>
+</div>
+<dl class="attribute">
+<dt id="pynetsym.Simulation.activator_type">
+<tt class="descname">activator_type</tt><a class="headerlink" href="#pynetsym.Simulation.activator_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#pynetsym.Activator" title="pynetsym.Activator"><tt class="xref py py-class docutils literal"><span class="pre">Activator</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Simulation.clock_type">
+<tt class="descname">clock_type</tt><a class="headerlink" href="#pynetsym.Simulation.clock_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#pynetsym.Clock" title="pynetsym.Clock"><tt class="xref py py-class docutils literal"><span class="pre">Clock</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_activator">
+<tt class="descname">create_activator</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_activator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Activator.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use activator_type to customize the kind.
+Use activator_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_additional_agents">
+<tt class="descname">create_additional_agents</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_additional_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates all the additional agents.</p>
+<p>To use this, provide &lt;role&gt;_type and &lt;role&gt;_options attributes and
+the additional_agents attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_address_book">
+<tt class="descname">create_address_book</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_address_book" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the AddressBook.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use address_book_type to customize the kind.
+Use address_book_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_agent_db">
+<tt class="descname">create_agent_db</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_agent_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the AgentDB.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use agent_db_type to customize the kind.
+Use agent_db_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_clock">
+<tt class="descname">create_clock</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Clock.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use clock_type to customize the kind.
+Use clock_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_configurator">
+<tt class="descname">create_configurator</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_configurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Configurator agent.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use configurator_type to customize the kind.
+Use configurator_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_logger">
+<tt class="descname">create_logger</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Logger.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use logger_type to customize the kind.
+Use logger_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_node_manager">
+<tt class="descname">create_node_manager</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_node_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the NodeManager.</p>
+<p>The graph must have been created before calling this.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_service_agents">
+<tt class="descname">create_service_agents</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_service_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access the component system to create:
+1. agent db
+2. address book
+3. logger
+4. termination checker
+5. configurator
+6. node manager (no component system)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_simulation_agents">
+<tt class="descname">create_simulation_agents</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_simulation_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Activator, the Clock and the additional agents.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.create_termination_checker">
+<tt class="descname">create_termination_checker</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.create_termination_checker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the TerminationChecker.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use termination_checker_type to customize the kind.
+Use termination_checker_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Simulation.graph_type">
+<tt class="descname">graph_type</tt><a class="headerlink" href="#pynetsym.Simulation.graph_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">NxGraph</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Simulation.handle">
+<tt class="descname">handle</tt><a class="headerlink" href="#pynetsym.Simulation.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a handle to the graph.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Simulation.logger_type">
+<tt class="descname">logger_type</tt><a class="headerlink" href="#pynetsym.Simulation.logger_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#pynetsym.Logger" title="pynetsym.Logger"><tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Simulation.motive">
+<tt class="descname">motive</tt><a class="headerlink" href="#pynetsym.Simulation.motive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the reason why the simulation stopped.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.pre_configure_network">
+<tt class="descname">pre_configure_network</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.pre_configure_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the NodeManager and the Configurator so that the initial
+setup can occur.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.run">
+<tt class="descname">run</tt><big>(</big><em>args=None</em>, <em>force_cli=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pynetsym.Simulation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the simulation.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>args: a string of command line options parsed with</dt>
+<dd><tt class="xref py py-func docutils literal"><span class="pre">parse_arguments()</span></tt>.</dd>
+<dt>force_cli: forces the evaluation of the command</dt>
+<dd>line arguments even if args is not None</dd>
+<dt><cite>**kwargs</cite>: option relevant for the model can be passed</dt>
+<dd>as keyword options and they override values in args.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>The current simulation so that it is easier to create one-liners</dd>
+</dl>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The idea here is either to call this method with all
+keyword arguments or with no arguments at all (in the case the
+program is run as a standalone script). However, it also makes
+sense to override (in the standalone script case) individual
+options.  Deliberately mixing arguments passed with an array in
+args and keywords arguments (although working) is strongly
+discouraged.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Simulation.setup">
+<tt class="descname">setup</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Simulation.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is called before the simulation starts.</p>
+<p>The Graph is instantiated here. Ensure to call the base
+version if overridden.</p>
+<p>The graph is created using the component system.
+Use graph_type to customize the kind of graph backend.
+Use graph_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.Simulation.termination_checker_type">
+<tt class="descname">termination_checker_type</tt><a class="headerlink" href="#pynetsym.Simulation.termination_checker_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">TerminationChecker</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.Activator">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">Activator</tt><a class="headerlink" href="#pynetsym.Activator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Activator chooses what happens at each step of the simulation.</p>
+<p>The tick method is called at each simulation step. The default
+behavior is to call choose_node to select a random node and send it
+an activate message.</p>
+<p>tick, simulation_ended and choose_node are meant to be overridden
+by implementations.</p>
+<dl class="method">
+<dt id="pynetsym.Activator.activate_nodes">
+<tt class="descname">activate_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.activate_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each step is called to send the <cite>activate</cite> message to
+the nodes chosen by <a class="reference internal" href="#pynetsym.Activator.nodes_to_activate" title="pynetsym.Activator.nodes_to_activate"><tt class="xref py py-func docutils literal"><span class="pre">Activator.nodes_to_activate()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.create_nodes">
+<tt class="descname">create_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.create_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each step is called to require from the <a class="reference internal" href="#pynetsym.NodeManager" title="pynetsym.NodeManager"><tt class="xref py py-class docutils literal"><span class="pre">NodeManager</span></tt></a>
+the creation of the nodes returned by
+<a class="reference internal" href="#pynetsym.Activator.nodes_to_activate" title="pynetsym.Activator.nodes_to_activate"><tt class="xref py py-func docutils literal"><span class="pre">Activator.nodes_to_activate()</span></tt></a>.</p>
+<p>The collection of nodes just created is kept in an
+attribute named <cite>fresh_nodes</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.destroy_nodes">
+<tt class="descname">destroy_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.destroy_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each step is called to send the <cite>kill</cite> message to
+the nodes chosen by <a class="reference internal" href="#pynetsym.Activator.nodes_to_destroy" title="pynetsym.Activator.nodes_to_destroy"><tt class="xref py py-func docutils literal"><span class="pre">Activator.nodes_to_destroy()</span></tt></a>.</p>
+<p>The collection of nodes to be destroyed is kept in an
+attribute named <cite>dying_nodes</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.nodes_to_activate">
+<tt class="descname">nodes_to_activate</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.nodes_to_activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to determine which nodes need activation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a collection of the nodes to process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iterable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.nodes_to_create">
+<tt class="descname">nodes_to_create</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.nodes_to_create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to determine which nodes need creation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a collection of the nodes to process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iterable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.nodes_to_destroy">
+<tt class="descname">nodes_to_destroy</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.nodes_to_destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to determine which nodes need destruction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a collection of the nodes to process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iterable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.simulation_ended">
+<tt class="descname">simulation_ended</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.simulation_ended" title="Permalink to this definition">¶</a></dt>
+<dd><p>Informs the <a class="reference internal" href="#pynetsym.NodeManager" title="pynetsym.NodeManager"><tt class="xref py py-class docutils literal"><span class="pre">NodeManager</span></tt></a> that the simulation ended.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.Activator.tick">
+<tt class="descname">tick</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.Activator.tick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the tick message from the clock.</p>
+<p>First, nodes are destroyed. Then new nodes are created.
+Eventually, the nodes are activated.</p>
+<p>Override this to change the order in which the operations
+occur. The order was chosen because in this way the newly
+created nodes can be activated immediately (otherwise,
+if the activation step did not follow the creation step,
+they would not be available).</p>
+<p>Similartly, we do not want to spend time activating nodes
+that are destroyed in this very step.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.AsyncClock">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">AsyncClock</tt><a class="headerlink" href="#pynetsym.AsyncClock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asynchronous Clock.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.Clock">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">Clock</tt><a class="headerlink" href="#pynetsym.Clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synchronous Clock.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.BasicConfigurator">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">BasicConfigurator</tt><a class="headerlink" href="#pynetsym.BasicConfigurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A BasicConfigurator needs a network_size parameter
+that specifies the size of the initial network.</p>
+<p>network_size nodes of type node_type (specified in the body
+of the configurator) are created and are passed the arguments
+from additional_arguments specified in node_options.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pynetsym.PyNetSymError">
+<em class="property">exception </em><tt class="descclassname">pynetsym.</tt><tt class="descname">PyNetSymError</tt><a class="headerlink" href="#pynetsym.PyNetSymError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base exception for PyNetSym.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">BasicConfigurator</tt></dt>
+<dd><p>A BasicConfigurator needs a network_size parameter
+that specifies the size of the initial network.</p>
+<p>network_size nodes of type node_type (specified in the body
+of the configurator) are created and are passed the arguments
+from additional_arguments specified in node_options.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.BasicH5Configurator">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">BasicH5Configurator</tt><a class="headerlink" href="#pynetsym.BasicH5Configurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>BasicH5Configurator reads the starting network from an HD5 file.</p>
+<p>It receives the path of the file from the simulation
+option &#8216;h5_file&#8217;, which has to be specified in the
+command line option description.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.NXGraphConfigurator">
+<em class="property">class </em><tt class="descclassname">pynetsym.</tt><tt class="descname">NXGraphConfigurator</tt><a class="headerlink" href="#pynetsym.NXGraphConfigurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up a network reading the initial configuration from a graph
+in a file supported by the NetworkX library.</p>
+<dl class="method">
+<dt id="pynetsym.NXGraphConfigurator.create_edges">
+<tt class="descname">create_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.NXGraphConfigurator.create_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the edges as specified in the network it read.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.NXGraphConfigurator.create_nodes">
+<tt class="descname">create_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.NXGraphConfigurator.create_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requires the <cite>NodeManager</cite> to create the nodes as specified in the network it read.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.core">
+<span id="pynetsym-core-main-classes-supporting-the-actor-semantics"></span><h2><a class="reference internal" href="#module-pynetsym.core" title="pynetsym.core"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.core</span></tt></a> &#8211; Main classes supporting the actor semantics<a class="headerlink" href="#module-pynetsym.core" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pynetsym.core.Agent">
+<em class="property">class </em><tt class="descclassname">pynetsym.core.</tt><tt class="descname">Agent</tt><a class="reference internal" href="_modules/pynetsym/core.html#Agent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>An Agent is the basic class of the simulation.</p>
+<p>Agents communicate asynchronously.</p>
+<dl class="method">
+<dt id="pynetsym.core.Agent.can_be_collected">
+<tt class="descname">can_be_collected</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.can_be_collected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.can_be_collected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this if the Agent should not be collected (i.e., serialized
+and put to sleep in the agent_db)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.cooperate">
+<tt class="descname">cooperate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.cooperate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.cooperate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release control.</p>
+<p>Usually this is not explicitly needed.
+If in doubt, do not use it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.deliver">
+<tt class="descname">deliver</tt><big>(</big><em>message</em>, <em>result</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.deliver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.deliver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delivers message to this agent.</p>
+<p>Typically this is not called directly by other agents.
+Use the source agent send message, instead.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>message</strong> (<em>Message</em>) &#8211; the message</li>
+<li><strong>result</strong> (<em>event.AsyncResult</em>) &#8211; dataflow-like object we use to feed-back answers</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.log_received">
+<tt class="descname">log_received</tt><big>(</big><em>msg</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.log_received"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.log_received" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mainly a debug hook that is called every time a message is received,
+if the attribute DEBUG_RECEIVE is True.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.log_sent">
+<tt class="descname">log_sent</tt><big>(</big><em>payload</em>, <em>receiver</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.log_sent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.log_sent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mainly a debug hook that is called every time a messgage is sent,
+if the attribute DEBUG_SEND is True.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.on_error">
+<tt class="descname">on_error</tt><big>(</big><em>source</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.on_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.on_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>This handler is called when an error arises in the greenlet executing the agent.</p>
+<p>The default implementation logs the error. Other implementations may
+take different actions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source</strong> (<em>gevent.Greenlet</em>) &#8211; the greenlet where the error originated.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.process">
+<tt class="descname">process</tt><big>(</big><em>message</em>, <em>result</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the message.</p>
+<p>This means calling the message payload with self as argument.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is not meant to be used direclty, unless you are writing
+a runloop.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.read">
+<tt class="descname">read</tt><big>(</big><em>timeout=None</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the next message that was sent to this agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> &#8211; can specify a timeout</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Message, event.AsyncResult)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raise :</th><td class="field-body">NoMessage if no message arrives after timeout</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">It is not really meant to be called directly unless you are building a runloop.
+Strictly speaking it is not non public, though.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.run_loop">
+<tt class="descname">run_loop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.run_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.run_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Agent main run loop.</p>
+<ol class="arabic simple">
+<li>read a message from the queue</li>
+<li>process the message and elaborate the answer</li>
+<li>if the answer is not None, send it to the original message</li>
+<li>release control</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.send">
+<tt class="descname">send</tt><big>(</big><em>receiver_id</em>, <em>message_name</em>, <em>**additional_parameters</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a message to the specified agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>receiver_id</strong> (<em>int|str</em>) &#8211; the id of the receiving agent</li>
+<li><strong>message_name</strong> (<em>str</em>) &#8211; the name of the receiving agent method</li>
+<li><strong>**additional_parameters</strong> &#8211; additional parameters to be passed
+to the function</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.send_all">
+<tt class="descname">send_all</tt><big>(</big><em>receivers</em>, <em>message_name</em>, <em>**additional_parameters</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.send_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.send_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pynetsym.core.Agent.send" title="pynetsym.core.Agent.send"><tt class="xref py py-func docutils literal"><span class="pre">Agent.send()</span></tt></a>, but sends the messages to every agent in receivers.</p>
+<p>If some parameter in additional_parameters is a callable, it is called
+for each agent in receivers with the agent id as a parameter and
+the return value is sent instead of the callable.</p>
+<p>This is used for customizing the message sent to each agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>receivers</strong> (<em>iterable</em>) &#8211; A collection of receivers</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.send_log">
+<tt class="descname">send_log</tt><big>(</big><em>message</em>, <em>stream=&lt;open file '&lt;stdout&gt;'</em>, <em>mode 'w' at 0x1002891e0&gt;</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.send_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.send_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs the message to the specified stream.
+:param message: the message to be logged
+:type message: <tt class="xref py py-class docutils literal"><span class="pre">Message</span></tt>
+:param stream: the stream where the message will be printed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.setup">
+<tt class="descname">setup</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional initialization before the run loop goes here.</p>
+<p>The default implementation is empty.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.start">
+<tt class="descname">start</tt><big>(</big><em>address_book</em>, <em>agent_db</em>, <em>identifier=None</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start executing the agent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address_book</strong> (<tt class="xref py py-class docutils literal"><span class="pre">addressing.AddressBook</span></tt>) &#8211; the address book where the other agents references can be found.</li>
+<li><strong>agent_db</strong> (<tt class="xref py py-class docutils literal"><span class="pre">agent_db.IAgentStorage</span></tt>) &#8211; the agent database that is used if this agent needs to be serialized</li>
+<li><strong>identifier</strong> (<em>str | int</em>) &#8211; this agent identifier. It is also added to the address book.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the agent itself</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pynetsym.core.Agent" title="pynetsym.core.Agent"><tt class="xref py py-class docutils literal"><span class="pre">Agent</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.core.Agent.started">
+<tt class="descname">started</tt><a class="reference internal" href="_modules/pynetsym/core.html#Agent.started"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.started" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the agent has been started.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.sync_send">
+<tt class="descname">sync_send</tt><big>(</big><em>receiver_id</em>, <em>message_name</em>, <em>timeout=None</em>, <em>**additional_parameters</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.sync_send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.sync_send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pynetsym.core.Agent.send" title="pynetsym.core.Agent.send"><tt class="xref py py-func docutils literal"><span class="pre">Agent.send()</span></tt></a>, but explicitly blocks until the message
+is processed by the receiver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.sync_send_all">
+<tt class="descname">sync_send_all</tt><big>(</big><em>receivers</em>, <em>message_name</em>, <em>**additional_parameters</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.sync_send_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.sync_send_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#pynetsym.core.Agent.send_all" title="pynetsym.core.Agent.send_all"><tt class="xref py py-func docutils literal"><span class="pre">Agent.send_all()</span></tt></a>, but explicitly blocks until the message
+is processed by the receiver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Agent.unsupported_message">
+<tt class="descname">unsupported_message</tt><big>(</big><em>name</em>, <em>**additional_parameters</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Agent.unsupported_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Agent.unsupported_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out something if we received a message we could not process.</p>
+<p>This is meant to be overridden, if a different behavior is desired.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.core.Logger">
+<em class="property">class </em><tt class="descclassname">pynetsym.core.</tt><tt class="descname">Logger</tt><big>(</big><em>stream</em>, <em>error_stream=&lt;open file '&lt;stderr&gt;'</em>, <em>mode 'w' at 0x100289270&gt;</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>A system agents that is used to log stuff.</p>
+<p>The agents expect at least one logger to be running.
+Prebuilt agent environments (such as the <tt class="xref py py-class docutils literal"><span class="pre">simulation.Simulation</span></tt>)
+create a Logger.</p>
+<dl class="method">
+<dt id="pynetsym.core.Logger.error_message">
+<tt class="descname">error_message</tt><big>(</big><em>sender</em>, <em>text</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.error_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Logger.error_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method actually writes on the stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Logger.log_entry">
+<tt class="descname">log_entry</tt><big>(</big><em>sender</em>, <em>message</em>, <em>when=None</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.log_entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Logger.log_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an entry in the log.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Logger.put_error">
+<tt class="descname">put_error</tt><big>(</big><em>sender</em>, <em>text</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.put_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Logger.put_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>The other agent can send a &#8220;put_log&#8221; message to the logger to
+print an error on the default stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Logger.put_log">
+<tt class="descname">put_log</tt><big>(</big><em>sender</em>, <em>message</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.put_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Logger.put_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>The other agent can send a &#8220;put_log&#8221; message to the logger to
+print a message on the default stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.core.Logger.stop_receiving">
+<tt class="descname">stop_receiving</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.stop_receiving"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.Logger.stop_receiving" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send this message for killing the logger.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.core.MinimalAgentRuntime">
+<em class="property">class </em><tt class="descclassname">pynetsym.core.</tt><tt class="descname">MinimalAgentRuntime</tt><big>(</big><em>address_book_factory=&lt;class 'pynetsym.addressing.FlatAddressBook'&gt;</em>, <em>agent_db_factory=&lt;function _default_agent_db_factory at 0x108b0d140&gt;</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#MinimalAgentRuntime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.MinimalAgentRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this to establish a minimal agent runtime.</p>
+<p>If a more elaborate runtime is being used, this is not needed.
+Not necessary for Simulations: the Simulation class is just a more
+elaborate runtime.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pynetsym.core.get_logger">
+<tt class="descclassname">pynetsym.core.</tt><tt class="descname">get_logger</tt><big>(</big><em>address_book</em>, <em>node_db</em>, <em>stream=&lt;open file '&lt;stderr&gt;'</em>, <em>mode 'w' at 0x100289270&gt;</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#get_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.core.get_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the default logger.</p>
+<p>Factory function.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">pynetsym.core.</tt><tt class="descname">Logger</tt><big>(</big><em>stream</em>, <em>error_stream=&lt;open file '&lt;stderr&gt;'</em>, <em>mode 'w' at 0x100289270&gt;</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A system agents that is used to log stuff.</p>
+<p>The agents expect at least one logger to be running.
+Prebuilt agent environments (such as the <tt class="xref py py-class docutils literal"><span class="pre">simulation.Simulation</span></tt>)
+create a Logger.</p>
+<dl class="method">
+<dt>
+<tt class="descname">error_message</tt><big>(</big><em>sender</em>, <em>text</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.error_message"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>This method actually writes on the stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">log_entry</tt><big>(</big><em>sender</em>, <em>message</em>, <em>when=None</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.log_entry"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Creates an entry in the log.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">put_error</tt><big>(</big><em>sender</em>, <em>text</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.put_error"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The other agent can send a &#8220;put_log&#8221; message to the logger to
+print an error on the default stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">put_log</tt><big>(</big><em>sender</em>, <em>message</em><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.put_log"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The other agent can send a &#8220;put_log&#8221; message to the logger to
+print a message on the default stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">stop_receiving</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/core.html#Logger.stop_receiving"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Send this message for killing the logger.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.nodes">
+<span id="pynetsym-nodes-main-classes-supporting-the-actor-nodes-semantics"></span><h2><a class="reference internal" href="#module-pynetsym.nodes" title="pynetsym.nodes"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.nodes</span></tt></a> &#8211; Main classes supporting the actor/nodes semantics<a class="headerlink" href="#module-pynetsym.nodes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pynetsym.nodes.Node">
+<em class="property">class </em><tt class="descclassname">pynetsym.nodes.</tt><tt class="descname">Node</tt><big>(</big><em>**attributes</em><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Node in the social network.</p>
+<dl class="method">
+<dt id="pynetsym.nodes.Node.accept_link">
+<tt class="descname">accept_link</tt><big>(</big><em>originating_node</em><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node.accept_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node.accept_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts an &#8216;accept_link&#8217; message (modifying the network).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>originating_node</strong> (<em>int</em>) &#8211; the node that required the connection</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.nodes.Node.can_be_collected">
+<tt class="descname">can_be_collected</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node.can_be_collected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node.can_be_collected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether this agent can be collected.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Defaults to true, do not override unless you know what
+you are doing.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.nodes.Node.drop_link">
+<tt class="descname">drop_link</tt><big>(</big><em>originating_node</em><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node.drop_link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node.drop_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts a &#8216;drop_link&#8217; message (modifying the network).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>originating_node</strong> (<em>int</em>) &#8211; the node that required the drop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.nodes.Node.link_to">
+<tt class="descname">link_to</tt><big>(</big><em>criterion_or_node</em><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node.link_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node.link_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends an &#8216;accept_link&#8217; message to the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>criterion_or_node</strong> (<em>id | callable(Graph -&gt; Node)</em>) &#8211; The node to link may be an identifier
+or a callable extracting the node from the graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">an asynchronous value representing whether the
+connection succeeded or not.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.nodes.Node.neighbors">
+<tt class="descname">neighbors</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node.neighbors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an iterable with the neighbors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.nodes.Node.unlink_from">
+<tt class="descname">unlink_from</tt><big>(</big><em>criterion_or_node</em><big>)</big><a class="reference internal" href="_modules/pynetsym/nodes.html#Node.unlink_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.nodes.Node.unlink_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a &#8216;drop_link&#8217; message to the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>criterion_or_node</strong> (<em>id | callable(Graph -&gt; Node)</em>) &#8211; The node to link may be an identifier
+or a callable extracting the node from the graph</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.simulation">
+<span id="pynetsym-simulation-main-classes-supporting-the-simulation-definition"></span><h2><a class="reference internal" href="#module-pynetsym.simulation" title="pynetsym.simulation"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.simulation</span></tt></a> &#8211; Main classes supporting the simulation definition<a class="headerlink" href="#module-pynetsym.simulation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pynetsym.simulation.Simulation">
+<em class="property">class </em><tt class="descclassname">pynetsym.simulation.</tt><tt class="descname">Simulation</tt><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A subclass of Simulation describes a specific kind of simulation.</p>
+<p>Some parameters have to be overridden to customize behavior. Most of
+these parameters may be class parameters in the overridden class as well
+as instance variables. It is for example acceptable to define an
+enclosed class <cite>activator_type</cite> that &#8220;satisfies&#8221; the need for an <a class="reference internal" href="#pynetsym.simulation.Simulation.activator_type" title="pynetsym.simulation.Simulation.activator_type"><tt class="xref py py-func docutils literal"><span class="pre">activator_type()</span></tt></a>
+attribute.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><a class="reference internal" href="#pynetsym.simulation.Simulation.activator_type" title="pynetsym.simulation.Simulation.activator_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.activator_type()</span></tt></a> : the callable that creates the activator_type for the simulation</li>
+<li><a class="reference internal" href="#pynetsym.simulation.Simulation.graph_type" title="pynetsym.simulation.Simulation.graph_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.graph_type()</span></tt></a> : the callable that creates the graph which holds the network.</li>
+<li><a class="reference internal" href="#pynetsym.simulation.Simulation.clock_type" title="pynetsym.simulation.Simulation.clock_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.clock_type()</span></tt></a> : the callable that creates the clock_type in the simulation</li>
+<li><a class="reference internal" href="#pynetsym.simulation.Simulation.command_line_options" title="pynetsym.simulation.Simulation.command_line_options"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.command_line_options()</span></tt></a></li>
+<li><tt class="xref py py-func docutils literal"><span class="pre">Simulation.configurator_type()</span></tt></li>
+</ol>
+</div></blockquote>
+<p>Of these, <a class="reference internal" href="#pynetsym.simulation.Simulation.activator_type" title="pynetsym.simulation.Simulation.activator_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.activator_type()</span></tt></a>, <a class="reference internal" href="#pynetsym.simulation.Simulation.graph_type" title="pynetsym.simulation.Simulation.graph_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.graph_type()</span></tt></a>,
+<a class="reference internal" href="#pynetsym.simulation.Simulation.command_line_options" title="pynetsym.simulation.Simulation.command_line_options"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.command_line_options()</span></tt></a> and
+<a class="reference internal" href="#pynetsym.simulation.Simulation.clock_type" title="pynetsym.simulation.Simulation.clock_type"><tt class="xref py py-func docutils literal"><span class="pre">Simulation.clock_type()</span></tt></a> have sensible default values (respectively,
+<a class="reference internal" href="#pynetsym.simulation.Activator" title="pynetsym.simulation.Activator"><tt class="xref py py-class docutils literal"><span class="pre">Activator</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">graph.</span></tt>,
+a list of default options and <a class="reference internal" href="#pynetsym.simulation.Clock" title="pynetsym.simulation.Clock"><tt class="xref py py-class docutils literal"><span class="pre">Clock</span></tt></a>.
+The other arguments need to be supplied by the subclass.</p>
+<p>Notice that command_line_options are scanned along the inheritance
+tree and put all together in a single list before being processed.
+As a consequence it is an error to choose options with names already
+used in superclasses. As the Simulation class hierarchies are meant
+to be small, this should not be a problem and greatly simplify the
+design.</p>
+<p>The preferred way to deal with these options is like:</p>
+<div class="highlight-python"><pre>class SimulationSubclass(Simulation):
+    class activator_type(Activator):
+        # ...
+
+    class configurator_type(generation.BasicConfigurator):
+        node_type = Node
+        node_options = {...}
+        options = {...}
+
+    command_line_options = (
+        ('-b', '--bar', dict(default=..., type=...))</pre>
+</div>
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.activator_type">
+<tt class="descname">activator_type</tt><a class="headerlink" href="#pynetsym.simulation.Simulation.activator_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#pynetsym.simulation.Activator" title="pynetsym.simulation.Activator"><tt class="xref py py-class docutils literal"><span class="pre">Activator</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.clock_type">
+<tt class="descname">clock_type</tt><a class="headerlink" href="#pynetsym.simulation.Simulation.clock_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#pynetsym.simulation.Clock" title="pynetsym.simulation.Clock"><tt class="xref py py-class docutils literal"><span class="pre">Clock</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.command_line_options">
+<tt class="descname">command_line_options</tt><em class="property"> = (('-s', '--steps', {'default': 100, 'type': &lt;type 'int'&gt;}),)</em><a class="headerlink" href="#pynetsym.simulation.Simulation.command_line_options" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Each option line is in the form:</dt>
+<dd><ol class="first last arabic simple">
+<li>(short_option_name, long_option_name, parameters)</li>
+<li>(long_option_name, parameters)</li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_activator">
+<tt class="descname">create_activator</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_activator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_activator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Activator.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use activator_type to customize the kind.
+Use activator_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_additional_agents">
+<tt class="descname">create_additional_agents</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_additional_agents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_additional_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates all the additional agents.</p>
+<p>To use this, provide &lt;role&gt;_type and &lt;role&gt;_options attributes and
+the additional_agents attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_address_book">
+<tt class="descname">create_address_book</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_address_book"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_address_book" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the AddressBook.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use address_book_type to customize the kind.
+Use address_book_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_agent_db">
+<tt class="descname">create_agent_db</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_agent_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_agent_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the AgentDB.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use agent_db_type to customize the kind.
+Use agent_db_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_clock">
+<tt class="descname">create_clock</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_clock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Clock.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use clock_type to customize the kind.
+Use clock_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_configurator">
+<tt class="descname">create_configurator</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_configurator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_configurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Configurator agent.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use configurator_type to customize the kind.
+Use configurator_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_logger">
+<tt class="descname">create_logger</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Logger.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use logger_type to customize the kind.
+Use logger_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_node_manager">
+<tt class="descname">create_node_manager</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_node_manager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_node_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the NodeManager.</p>
+<p>The graph must have been created before calling this.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_service_agents">
+<tt class="descname">create_service_agents</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_service_agents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_service_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access the component system to create:
+1. agent db
+2. address book
+3. logger
+4. termination checker
+5. configurator
+6. node manager (no component system)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_simulation_agents">
+<tt class="descname">create_simulation_agents</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_simulation_agents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_simulation_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Activator, the Clock and the additional agents.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.create_termination_checker">
+<tt class="descname">create_termination_checker</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.create_termination_checker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.create_termination_checker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the TerminationChecker.</p>
+<p>Since it uses the component system, it does not need to be overridden.
+Use termination_checker_type to customize the kind.
+Use termination_checker_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.graph_type">
+<tt class="descname">graph_type</tt><a class="headerlink" href="#pynetsym.simulation.Simulation.graph_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">NxGraph</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.handle">
+<tt class="descname">handle</tt><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a handle to the graph.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.logger_type">
+<tt class="descname">logger_type</tt><a class="headerlink" href="#pynetsym.simulation.Simulation.logger_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.motive">
+<tt class="descname">motive</tt><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.motive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.motive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the reason why the simulation stopped.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.pre_configure_network">
+<tt class="descname">pre_configure_network</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.pre_configure_network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.pre_configure_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the NodeManager and the Configurator so that the initial
+setup can occur.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.run">
+<tt class="descname">run</tt><big>(</big><em>args=None</em>, <em>force_cli=False</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the simulation.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt>args: a string of command line options parsed with</dt>
+<dd><tt class="xref py py-func docutils literal"><span class="pre">parse_arguments()</span></tt>.</dd>
+<dt>force_cli: forces the evaluation of the command</dt>
+<dd>line arguments even if args is not None</dd>
+<dt><cite>**kwargs</cite>: option relevant for the model can be passed</dt>
+<dd>as keyword options and they override values in args.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>The current simulation so that it is easier to create one-liners</dd>
+</dl>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The idea here is either to call this method with all
+keyword arguments or with no arguments at all (in the case the
+program is run as a standalone script). However, it also makes
+sense to override (in the standalone script case) individual
+options.  Deliberately mixing arguments passed with an array in
+args and keywords arguments (although working) is strongly
+discouraged.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Simulation.setup">
+<tt class="descname">setup</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Simulation.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Simulation.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is called before the simulation starts.</p>
+<p>The Graph is instantiated here. Ensure to call the base
+version if overridden.</p>
+<p>The graph is created using the component system.
+Use graph_type to customize the kind of graph backend.
+Use graph_options to specify which arguments need to be passed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.simulation.Simulation.termination_checker_type">
+<tt class="descname">termination_checker_type</tt><a class="headerlink" href="#pynetsym.simulation.Simulation.termination_checker_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">TerminationChecker</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.simulation.Activator">
+<em class="property">class </em><tt class="descclassname">pynetsym.simulation.</tt><tt class="descname">Activator</tt><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Activator chooses what happens at each step of the simulation.</p>
+<p>The tick method is called at each simulation step. The default
+behavior is to call choose_node to select a random node and send it
+an activate message.</p>
+<p>tick, simulation_ended and choose_node are meant to be overridden
+by implementations.</p>
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.activate_nodes">
+<tt class="descname">activate_nodes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.activate_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.activate_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each step is called to send the <cite>activate</cite> message to
+the nodes chosen by <a class="reference internal" href="#pynetsym.simulation.Activator.nodes_to_activate" title="pynetsym.simulation.Activator.nodes_to_activate"><tt class="xref py py-func docutils literal"><span class="pre">Activator.nodes_to_activate()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.create_nodes">
+<tt class="descname">create_nodes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.create_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.create_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each step is called to require from the <tt class="xref py py-class docutils literal"><span class="pre">NodeManager</span></tt>
+the creation of the nodes returned by
+<a class="reference internal" href="#pynetsym.simulation.Activator.nodes_to_activate" title="pynetsym.simulation.Activator.nodes_to_activate"><tt class="xref py py-func docutils literal"><span class="pre">Activator.nodes_to_activate()</span></tt></a>.</p>
+<p>The collection of nodes just created is kept in an
+attribute named <cite>fresh_nodes</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.destroy_nodes">
+<tt class="descname">destroy_nodes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.destroy_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.destroy_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each step is called to send the <cite>kill</cite> message to
+the nodes chosen by <a class="reference internal" href="#pynetsym.simulation.Activator.nodes_to_destroy" title="pynetsym.simulation.Activator.nodes_to_destroy"><tt class="xref py py-func docutils literal"><span class="pre">Activator.nodes_to_destroy()</span></tt></a>.</p>
+<p>The collection of nodes to be destroyed is kept in an
+attribute named <cite>dying_nodes</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.nodes_to_activate">
+<tt class="descname">nodes_to_activate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.nodes_to_activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.nodes_to_activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to determine which nodes need activation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a collection of the nodes to process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iterable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.nodes_to_create">
+<tt class="descname">nodes_to_create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.nodes_to_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.nodes_to_create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to determine which nodes need creation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a collection of the nodes to process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iterable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.nodes_to_destroy">
+<tt class="descname">nodes_to_destroy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.nodes_to_destroy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.nodes_to_destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to determine which nodes need destruction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a collection of the nodes to process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iterable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.simulation_ended">
+<tt class="descname">simulation_ended</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.simulation_ended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.simulation_ended" title="Permalink to this definition">¶</a></dt>
+<dd><p>Informs the <tt class="xref py py-class docutils literal"><span class="pre">NodeManager</span></tt> that the simulation ended.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.simulation.Activator.tick">
+<tt class="descname">tick</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pynetsym/simulation.html#Activator.tick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Activator.tick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the tick message from the clock.</p>
+<p>First, nodes are destroyed. Then new nodes are created.
+Eventually, the nodes are activated.</p>
+<p>Override this to change the order in which the operations
+occur. The order was chosen because in this way the newly
+created nodes can be activated immediately (otherwise,
+if the activation step did not follow the creation step,
+they would not be available).</p>
+<p>Similartly, we do not want to spend time activating nodes
+that are destroyed in this very step.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.simulation.AsyncClock">
+<em class="property">class </em><tt class="descclassname">pynetsym.simulation.</tt><tt class="descname">AsyncClock</tt><a class="reference internal" href="_modules/pynetsym/simulation.html#AsyncClock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.AsyncClock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asynchronous Clock.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.simulation.Clock">
+<em class="property">class </em><tt class="descclassname">pynetsym.simulation.</tt><tt class="descname">Clock</tt><a class="reference internal" href="_modules/pynetsym/simulation.html#Clock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.simulation.Clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synchronous Clock.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.configurators">
+<span id="pynetsym-configurators-package-for-the-configurator-agents"></span><h2><a class="reference internal" href="#module-pynetsym.configurators" title="pynetsym.configurators"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.configurators</span></tt></a> &#8211; Package for the configurator agents<a class="headerlink" href="#module-pynetsym.configurators" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pynetsym.configurators.BasicConfigurator">
+<em class="property">class </em><tt class="descclassname">pynetsym.configurators.</tt><tt class="descname">BasicConfigurator</tt><a class="headerlink" href="#pynetsym.configurators.BasicConfigurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A BasicConfigurator needs a network_size parameter
+that specifies the size of the initial network.</p>
+<p>network_size nodes of type node_type (specified in the body
+of the configurator) are created and are passed the arguments
+from additional_arguments specified in node_options.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.configurators.BasicH5Configurator">
+<em class="property">class </em><tt class="descclassname">pynetsym.configurators.</tt><tt class="descname">BasicH5Configurator</tt><a class="headerlink" href="#pynetsym.configurators.BasicH5Configurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>BasicH5Configurator reads the starting network from an HD5 file.</p>
+<p>It receives the path of the file from the simulation
+option &#8216;h5_file&#8217;, which has to be specified in the
+command line option description.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.configurators.NXGraphConfigurator">
+<em class="property">class </em><tt class="descclassname">pynetsym.configurators.</tt><tt class="descname">NXGraphConfigurator</tt><a class="headerlink" href="#pynetsym.configurators.NXGraphConfigurator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up a network reading the initial configuration from a graph
+in a file supported by the NetworkX library.</p>
+<dl class="method">
+<dt id="pynetsym.configurators.NXGraphConfigurator.create_edges">
+<tt class="descname">create_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.configurators.NXGraphConfigurator.create_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the edges as specified in the network it read.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.configurators.NXGraphConfigurator.create_nodes">
+<tt class="descname">create_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.configurators.NXGraphConfigurator.create_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requires the <cite>NodeManager</cite> to create the nodes as specified in the network it read.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.graph">
+<span id="pynetsym-graph-package-for-the-network-database-implementations"></span><h2><a class="reference internal" href="#module-pynetsym.graph" title="pynetsym.graph"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.graph</span></tt></a> &#8211; Package for the network database implementations<a class="headerlink" href="#module-pynetsym.graph" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pynetsym.graph.IGraph">
+<em class="property">class </em><tt class="descclassname">pynetsym.graph.</tt><tt class="descname">IGraph</tt><a class="headerlink" href="#pynetsym.graph.IGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Graph Interface.</p>
+<dl class="attribute">
+<dt id="pynetsym.graph.IGraph.ITN">
+<tt class="descname">ITN</tt><a class="headerlink" href="#pynetsym.graph.IGraph.ITN" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexable object converting from indexes to nodes.</p>
+<p>See <a class="reference internal" href="#pynetsym.graph.IGraph.index_to_node" title="pynetsym.graph.IGraph.index_to_node"><tt class="xref py py-func docutils literal"><span class="pre">IGraph.index_to_node()</span></tt></a>.
+It also accepts some forms of advanced indexing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.graph.IGraph.NTI">
+<tt class="descname">NTI</tt><a class="headerlink" href="#pynetsym.graph.IGraph.NTI" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexable object converting from nodes to indexes.</p>
+<p>See <a class="reference internal" href="#pynetsym.graph.IGraph.node_to_index" title="pynetsym.graph.IGraph.node_to_index"><tt class="xref py py-func docutils literal"><span class="pre">IGraph.node_to_index()</span></tt></a>.
+It also accepts some forms of advanced indexing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.add_edge">
+<tt class="descname">add_edge</tt><big>(</big><em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add edge to the graph</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> (<em>int</em>) &#8211; the node from where the edge starts</li>
+<li><strong>target</strong> (<em>int</em>) &#8211; the node to which the edge arrives</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">the actual behavior depends on the implementation being
+directed or undirected</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.add_node">
+<tt class="descname">add_node</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a node to the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The index of the newly created node.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.add_nodes">
+<tt class="descname">add_nodes</tt><big>(</big><em>how_many</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.add_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds how_many nodes to the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>how_many</strong> &#8211; The number of nodes to create</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the sequence of indexes of the created nodes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.apply">
+<tt class="descname">apply</tt><big>(</big><em>func</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies func to the underlying graph representation as first argument.</p>
+<p><cite>*args</cite> and <cite>**kwargs</cite> are passed as well.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the value of the function call.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.degree">
+<tt class="descname">degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the degree of the specified node</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; a node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the degree</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.graph.IGraph.handle">
+<tt class="descname">handle</tt><a class="headerlink" href="#pynetsym.graph.IGraph.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to create a context.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The original backend is actually returned in whatever
+format it naturally is. No copy is made, so that modifications
+done on the handle are actually made to the environment.</p>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">handle</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+    <span class="k">print</span> <span class="n">clustering_coefficient</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.graph.IGraph.handle_copy">
+<tt class="descname">handle_copy</tt><a class="headerlink" href="#pynetsym.graph.IGraph.handle_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to create a context.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The original backend is actually returned in whatever
+format it naturally is. A copy is made, so that modifications
+done on the handle are not made to the environment.</p>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">handle_copy</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+    <span class="k">print</span> <span class="n">clustering_coefficient</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.has_edge">
+<tt class="descname">has_edge</tt><big>(</big><em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.has_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the graph contains the specified identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> (<em>int</em>) &#8211; the node from where the edge starts</li>
+<li><strong>target</strong> (<em>int</em>) &#8211; the node to which the edge arrives</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if edge is in graph</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">bool</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if identifier is not convertible to a non negative integer.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.has_node">
+<tt class="descname">has_node</tt><big>(</big><em>node_index</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.has_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the graph contains the specified identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<em>int</em>) &#8211; the identifier to seek</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if identifier is in graph</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if identifier is not convertible to a non negative integer.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.in_degree">
+<tt class="descname">in_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.in_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the in-degree of the specified node
+:param node: a node
+:return: the degree
+:rtype: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.index_to_node">
+<tt class="descname">index_to_node</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.index_to_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the nth node as specified by index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> (<em>int</em>) &#8211; the index</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the node</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">if the graph changed since when the index was created,
+the method is not an inverse for node_to_index anymore and
+creates wrong results.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.is_directed">
+<tt class="descname">is_directed</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.is_directed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if the graph is directed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the graph is directed, False otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.make_NTI">
+<tt class="descname">make_NTI</tt><big>(</big><em>ITN=None</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.make_NTI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an NTI instance from an ITN instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.neighbors">
+<tt class="descname">neighbors</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the neighbors of the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the neighbors</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.node_to_index">
+<tt class="descname">node_to_index</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.node_to_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the progressive index of the node as if nodes where ordered.
+&#8220;Missing&#8221; values are skipped.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<em>int</em>) &#8211; the node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the index</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises IndexError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if the required node is not in the matrix.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.number_of_edges">
+<tt class="descname">number_of_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.number_of_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of edges in the network.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The number of edges in the network.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.number_of_nodes">
+<tt class="descname">number_of_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of nodes in the network.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The number of edges in the network</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">the default implementation is not efficient, as it calls self.nodes()</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.out_degree">
+<tt class="descname">out_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.out_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the out-degree of the specified node</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; a node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the degree</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.predecessors">
+<tt class="descname">predecessors</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.predecessors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nodes that have an outgoing edge to node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the neighbors</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.graph.IGraph.random_selector">
+<tt class="descname">random_selector</tt><a class="headerlink" href="#pynetsym.graph.IGraph.random_selector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random selector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.remove_edge">
+<tt class="descname">remove_edge</tt><big>(</big><em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.remove_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes edge from the graph</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> (<em>int</em>) &#8211; the node from where the edge starts</li>
+<li><strong>target</strong> (<em>int</em>) &#8211; the node to which the edge arrives</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">the actual behavior depends on the implementation being
+directed or undirected</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.remove_node">
+<tt class="descname">remove_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.remove_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the node &#8220;node&#8221; from the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; the node to remove</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if the node is not in the graph.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.successors">
+<tt class="descname">successors</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.successors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nodes that have an incoming edge from node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the neighbors</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.to_numpy">
+<tt class="descname">to_numpy</tt><big>(</big><em>minimize=False</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corresponding NetworkX graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>minimize</strong> &#8211; determines if the returned matrix is as small
+as possible considering the nodes.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A numpy dense matrix.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray | (scipy.sparse.spmatrix, numpy.ndarray, numpy.ndarray)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">depending from the actual kind of graph this may be a copy
+or the original one. Modifications to a graph that is not a copy
+may lead to severe malfunctions, unless the simulation has already
+stopped.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.to_nx">
+<tt class="descname">to_nx</tt><big>(</big><em>copy=False</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.to_nx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corresponding NetworkX graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>copy</strong> (<em>bool</em>) &#8211; whether the graph should be copied.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A networkx graph.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">networkx.Graph</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">depending from the actual kind of graph this may be a copy
+or the original one. Modifications to a graph that is not a copy
+may lead to servere malfunctions, unless the simulation has
+already stopped.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.IGraph.to_scipy">
+<tt class="descname">to_scipy</tt><big>(</big><em>sparse_type=None</em>, <em>minimize=False</em><big>)</big><a class="headerlink" href="#pynetsym.graph.IGraph.to_scipy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corresponding NetworkX graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>copy</strong> &#8211; whether the graph should be copied.</li>
+<li><strong>sparse_type</strong> &#8211; the kind of sparse matrix that is returned</li>
+<li><strong>minimize</strong> &#8211; whether we want the returned sparse matrix to be
+reshaped so that it contains only the minimum possible number
+of nodes. If False, the matrix can contain &#8220;empty&#8221; nodes before the
+maximum, however, no &#8220;empty&#8221; nodes remain after the last real node.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A scipy sparse matrix or, if minimize is requested, a tuple
+(matrix, node_to_index, index_to_node) where matrix is the
+sparse matrix with cols and rows corresponding to &#8220;nodes&#8221; not
+present in the network removed, node_to_index maps the node
+name to the corresponding matrix index and index_to_node makes
+the opposite.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">scipy.sparse.spmatrix | (scipy.sparse.spmatrix, collections.Mapping, collections.Mapping)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">depending from the actual kind of graph this may be a copy
+or the original one. Modifications to a graph that is not a copy
+may lead to severe malfunctions, unless the simulation has already
+stopped.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In general, if the type of sparse matrix requested is different from
+the underlying representation or if a minimization is requested, a copy
+is made.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.graph.NxGraph">
+<em class="property">class </em><tt class="descclassname">pynetsym.graph.</tt><tt class="descname">NxGraph</tt><big>(</big><em>graph</em>, <em>random_selector=None</em><big>)</big><a class="headerlink" href="#pynetsym.graph.NxGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default wrapper for an NetworkX Graph.</p>
+<p>This class uses either a directed or undirected NetworkX Graph
+as a backend. Its behavior depends on the undelying network
+behavior.</p>
+<p>NetworkX graphs provide:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">maximum flexibility</p>
+</li>
+<li><dl class="first docutils">
+<dt>easy access to loads of network theoretic functions</dt>
+<dd><p class="first last">by means of the networkx library</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
+<p>However, they are rather memory hungry compared to other
+representations. It is an excellent starting point for
+relatively small simulations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.graph.ScipyGraph">
+<em class="property">class </em><tt class="descclassname">pynetsym.graph.</tt><tt class="descname">ScipyGraph</tt><big>(</big><em>max_nodes=None</em>, <em>matrix=None</em>, <em>nodes=None</em>, <em>random_selector=None</em><big>)</big><a class="headerlink" href="#pynetsym.graph.ScipyGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default wrapper for a Scipy Sparse Matrix.</p>
+<p>Using a Scipy sparse matrix as a backend, this
+implementation combines very good memory efficient
+and programming convenience.</p>
+<p>In order to make graph and network theoretic operations,
+it is relatively easy to obtain the network as a scipy
+sparse matrix in the right format for the efficient
+computation by means of the to_scipy method.</p>
+<p>Implementing algorithms as matrix computations is relatively
+straightforward.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.graph.DirectedScipyGraph">
+<em class="property">class </em><tt class="descclassname">pynetsym.graph.</tt><tt class="descname">DirectedScipyGraph</tt><big>(</big><em>max_nodes=None</em>, <em>matrix=None</em>, <em>nodes=None</em>, <em>random_selector=None</em><big>)</big><a class="headerlink" href="#pynetsym.graph.DirectedScipyGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default wrapper for a Scipy Sparse Matrix representing a directed graph.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pynetsym.graph.BasicH5Graph">
+<em class="property">class </em><tt class="descclassname">pynetsym.graph.</tt><tt class="descname">BasicH5Graph</tt><big>(</big><em>h5_file</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>This implementation used an HDF5 file as backend.</p>
+<p>This is a decent choice for medium/high-medium size simulations
+that do not modify the network structure.</p>
+<p>The implementation uses a compressed sparse matrix format
+that is not efficient for this kind of operations, that
+have consequently been disabled. A subclass could provide
+such operations, if it is really required.</p>
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.add_edge">
+<tt class="descname">add_edge</tt><big>(</big><em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add edge to the graph</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> (<em>int</em>) &#8211; the node from where the edge starts</li>
+<li><strong>target</strong> (<em>int</em>) &#8211; the node to which the edge arrives</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">the actual behavior depends on the implementation being
+directed or undirected</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.add_node">
+<tt class="descname">add_node</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a node to the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The index of the newly created node.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.add_nodes">
+<tt class="descname">add_nodes</tt><big>(</big><em>how_many</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.add_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds how_many nodes to the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>how_many</strong> &#8211; The number of nodes to create</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the sequence of indexes of the created nodes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.apply">
+<tt class="descname">apply</tt><big>(</big><em>func</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies func to the underlying graph representation as
+first argument.</p>
+<p><cite>*args</cite> and <cite>**kwargs</cite> are passed as well.
+:return: the value of the function call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.degree">
+<tt class="descname">degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the degree of the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; a node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the degree</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.has_edge">
+<tt class="descname">has_edge</tt><big>(</big><em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.has_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the graph contains the specified identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>source</strong> (<em>int</em>) &#8211; the node from where the edge starts</li>
+<li><strong>target</strong> (<em>int</em>) &#8211; the node to which the edge arrives</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if edge is in graph</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">bool</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if identifier is not convertible to a non negative integer.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.has_node">
+<tt class="descname">has_node</tt><big>(</big><em>node_index</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.has_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the graph contains the specified identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> (<em>int</em>) &#8211; the identifier to seek</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if identifier is in graph</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if identifier is not convertible
+to a non negative integer.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.in_degree">
+<tt class="descname">in_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.in_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the in-degree of the specified node</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; a node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the degree</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.index_to_node">
+<tt class="descname">index_to_node</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.index_to_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the nth node as specified by index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> (<em>int</em>) &#8211; the index</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the node</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">if the graph changed since when the index was created,
+the method is not an inverse for node_to_index anymore and
+creates wrong results.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.is_directed">
+<tt class="descname">is_directed</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.is_directed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if the graph is directed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the graph is directed, False otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.make_NTI">
+<tt class="descname">make_NTI</tt><big>(</big><em>ITN=None</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.make_NTI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an NTI instance from an ITN instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.neighbors">
+<tt class="descname">neighbors</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the neighbors of the specified node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the neighbors</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.node_to_index">
+<tt class="descname">node_to_index</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.node_to_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the progressive index of the node as if nodes where ordered.
+&#8220;Missing&#8221; values are skipped.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<em>int</em>) &#8211; the node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the index</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises IndexError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if the required node is not in the matrix.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.number_of_edges">
+<tt class="descname">number_of_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.number_of_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of edges in the network.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The number of edges in the network.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.number_of_nodes">
+<tt class="descname">number_of_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of nodes in the network.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The number of edges in the network</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">the default implementation is not efficient,
+as it calls self.nodes()</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.out_degree">
+<tt class="descname">out_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.out_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the out-degree of the specified node</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; a node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the degree</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.predecessors">
+<tt class="descname">predecessors</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.predecessors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nodes that have an outgoing edge to node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the neighbors</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pynetsym.graph.BasicH5Graph.random_selector">
+<tt class="descname">random_selector</tt><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.random_selector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random selector.</p>
+<p>:return:: the random selector.
+:rtype: IRandomSelector</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.remove_edge">
+<tt class="descname">remove_edge</tt><big>(</big><em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.remove_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes edge from the graph</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> (<em>int</em>) &#8211; the node from where the edge starts</li>
+<li><strong>target</strong> (<em>int</em>) &#8211; the node to which the edge arrives</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">the actual behavior depends on the implementation
+being directed or undirected</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.remove_node">
+<tt class="descname">remove_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.remove_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the node &#8220;node&#8221; from the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> &#8211; the node to remove</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if the node is not in the graph.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.successors">
+<tt class="descname">successors</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.successors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nodes that have an incoming edge from node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the neighbors</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.to_numpy">
+<tt class="descname">to_numpy</tt><big>(</big><em>minimize=False</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corresponding NetworkX graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>minimize</strong> &#8211; determines if the returned matrix is
+as small as possible considering the nodes.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A numpy dense matrix.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray |
+(scipy.sparse.spmatrix, numpy.ndarray, numpy.ndarray)</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>..warning::</dt>
+<dd>depending from the actual kind of graph this may be a copy
+or the original one. Modifications to a graph that is not a
+copy may lead to severe malfunctions, unless the simulation
+has already stopped.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.to_nx">
+<tt class="descname">to_nx</tt><big>(</big><em>copy=False</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.to_nx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corresponding NetworkX graph.
+:param copy: whether the graph should be copied.
+:type copy: bool
+:return: A networkx graph.
+:rtype: networkx.Graph</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">depending from the actual kind of graph this may be a
+copy or the original one. Modifications to a graph that
+is not a copy may lead to servere malfunctions, unless
+the simulation has already stopped.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pynetsym.graph.BasicH5Graph.to_scipy">
+<tt class="descname">to_scipy</tt><big>(</big><em>sparse_type=None</em>, <em>minimize=False</em><big>)</big><a class="headerlink" href="#pynetsym.graph.BasicH5Graph.to_scipy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corresponding NetworkX graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>copy</strong> &#8211; whether the graph should be copied.</li>
+<li><strong>sparse_type</strong> &#8211; the kind of sparse matrix that is returned</li>
+<li><strong>minimize</strong> &#8211; whether we want the returned sparse matrix to
+be reshaped so that it contains only the minimum possible
+number of nodes. If False, the matrix can contain &#8220;empty&#8221;
+nodes before the maximum, however, no &#8220;empty&#8221; nodes remain
+after the last real node.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A scipy sparse matrix or, if minimize is requested,
+a tuple (matrix, node_to_index, index_to_node) where matrix
+is the sparse matrix with cols and rows corresponding to
+&#8220;nodes&#8221; not present in the network removed, node_to_index
+maps the node name to the corresponding matrix index and
+index_to_node makes the opposite.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">scipy.sparse.spmatrix
+| (scipy.sparse.spmatrix, collections.Mapping,
+collections.Mapping)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">depending from the actual kind of graph this may be a
+copy or the original one. Modifications to a graph that
+is not a copy may lead to severe malfunctions, unless
+the simulation has already stopped.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In general, if the type of sparse matrix requested is
+different from the underlying representation or if a
+minimization is requested, a copy is made.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pynetsym.error">
+<span id="pynetsym-error-generic-exceptions-for-the-project"></span><h2><a class="reference internal" href="#module-pynetsym.error" title="pynetsym.error"><tt class="xref py py-mod docutils literal"><span class="pre">pynetsym.error</span></tt></a> &#8211; Generic exceptions for the project<a class="headerlink" href="#module-pynetsym.error" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="pynetsym.error.PyNetSymError">
+<em class="property">exception </em><tt class="descclassname">pynetsym.error.</tt><tt class="descname">PyNetSymError</tt><a class="reference internal" href="_modules/pynetsym/error.html#PyNetSymError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pynetsym.error.PyNetSymError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base exception for PyNetSym.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">API Documentation</a><ul>
+<li><a class="reference internal" href="#module-pynetsym"><tt class="docutils literal"><span class="pre">pynetsym</span></tt> &#8211; Main package</a></li>
+<li><a class="reference internal" href="#module-pynetsym.core"><tt class="docutils literal"><span class="pre">pynetsym.core</span></tt> &#8211; Main classes supporting the actor semantics</a></li>
+<li><a class="reference internal" href="#module-pynetsym.nodes"><tt class="docutils literal"><span class="pre">pynetsym.nodes</span></tt> &#8211; Main classes supporting the actor/nodes semantics</a></li>
+<li><a class="reference internal" href="#module-pynetsym.simulation"><tt class="docutils literal"><span class="pre">pynetsym.simulation</span></tt> &#8211; Main classes supporting the simulation definition</a></li>
+<li><a class="reference internal" href="#module-pynetsym.configurators"><tt class="docutils literal"><span class="pre">pynetsym.configurators</span></tt> &#8211; Package for the configurator agents</a></li>
+<li><a class="reference internal" href="#module-pynetsym.graph"><tt class="docutils literal"><span class="pre">pynetsym.graph</span></tt> &#8211; Package for the network database implementations</a></li>
+<li><a class="reference internal" href="#module-pynetsym.error"><tt class="docutils literal"><span class="pre">pynetsym.error</span></tt> &#8211; Generic exceptions for the project</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to PyNetSym&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="additional_api.html"
+                        title="next chapter">Support Modules</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="additional_api.html" title="Support Modules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to PyNetSym’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">PyNetSym 0.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,156 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym.node_manager &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="pynetsym" href="../pynetsym.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" accesskey="U">pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym.node_manager</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">gevent.pool</span> <span class="kn">import</span> <span class="n">Group</span>
+<span class="kn">from</span> <span class="nn">traits.trait_types</span> <span class="kn">import</span>   <span class="n">Instance</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">core</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym.identifiers_manager</span> <span class="kn">import</span> <span class="n">IntIdentifierStore</span>
+
+
+<div class="viewcode-block" id="NodeManager"><a class="viewcode-back" href="../../additional_api.html#pynetsym.node_manager.NodeManager">[docs]</a><span class="k">class</span> <span class="nc">NodeManager</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">Agent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The class responsible to create nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;manager&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    the registered name in the :class:`addressing.AddressBook`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new node_manager</span>
+
+<span class="sd">        :param graph: the graph to pass to the agents</span>
+<span class="sd">        :type graph: storage.GraphWrapper</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">Group</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setup_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">greenlet</span><span class="p">):</span>
+        <span class="n">greenlet</span><span class="o">.</span><span class="n">link_value</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">deactivate_node</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">greenlet</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">unset_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">greenlet</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">node</span><span class="o">.</span><span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">greenlet</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">greenlet</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">core</span><span class="o">.</span><span class="n">GreenletExit</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&#39;Removing&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+
+<div class="viewcode-block" id="NodeManager.create_node"><a class="viewcode-back" href="../../additional_api.html#pynetsym.node_manager.NodeManager.create_node">[docs]</a>    <span class="k">def</span> <span class="nf">create_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new node.</span>
+
+<span class="sd">        :param cls: the factory creating the new node.</span>
+<span class="sd">        :type cls: callable</span>
+<span class="sd">        :param parameters: the parameters that are forwarded to the node for creation</span>
+<span class="sd">        :type parameters: dict</span>
+<span class="sd">        :return: the actual identifier</span>
+<span class="sd">        :rtype: int | str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">()</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">identifier</span>
+</div>
+    <span class="k">def</span> <span class="nf">simulation_ended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" >pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

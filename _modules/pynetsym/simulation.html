@@ -1,0 +1,768 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym.simulation &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="pynetsym" href="../pynetsym.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" accesskey="U">pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym.simulation</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+
+<span class="kn">import</span> <span class="nn">gevent</span>
+<span class="kn">from</span> <span class="nn">gevent.greenlet</span> <span class="kn">import</span> <span class="n">LinkedCompleted</span>
+
+<span class="kn">from</span> <span class="nn">traits.api</span> <span class="kn">import</span> <span class="n">Int</span>
+<span class="kn">from</span> <span class="nn">traits.api</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">traits.api</span> <span class="kn">import</span> <span class="n">true</span>
+<span class="kn">from</span> <span class="nn">traits.api</span> <span class="kn">import</span> <span class="n">false</span>
+<span class="kn">from</span> <span class="nn">traits.api</span> <span class="kn">import</span> <span class="n">Instance</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">addressing</span><span class="p">,</span> <span class="n">Logger</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">graph</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">agent_db</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">configuration</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">termination</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">timing</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym.util</span> <span class="kn">import</span> <span class="n">SequenceAsyncResult</span>
+<span class="kn">from</span> <span class="nn">pynetsym.util</span> <span class="kn">import</span> <span class="n">gather_from_ancestors</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym.agent_db</span> <span class="kn">import</span> <span class="n">JSONPickler</span>
+<span class="kn">from</span> <span class="nn">pynetsym.node_manager</span> <span class="kn">import</span> <span class="n">NodeManager</span>
+<span class="kn">from</span> <span class="nn">pynetsym.termination</span> <span class="kn">import</span> <span class="n">TerminationChecker</span>
+<span class="kn">from</span> <span class="nn">pynetsym.util.component_builder</span> <span class="kn">import</span> <span class="n">ComponentBuilder</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;Simulation&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Activator&#39;</span><span class="p">,</span>
+    <span class="s">&#39;AsyncClock&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Clock&#39;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="Activator"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator">[docs]</a><span class="k">class</span> <span class="nc">Activator</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">Agent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Activator chooses what happens at each step of the simulation.</span>
+
+<span class="sd">    The tick method is called at each simulation step. The default</span>
+<span class="sd">    behavior is to call choose_node to select a random node and send it</span>
+<span class="sd">    an activate message.</span>
+
+<span class="sd">    tick, simulation_ended and choose_node are meant to be overridden</span>
+<span class="sd">    by implementations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;activator&#39;</span>
+    <span class="n">activator_options</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;graph&#39;</span><span class="p">}</span>
+
+<div class="viewcode-block" id="Activator.activate_nodes"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.activate_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">activate_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        At each step is called to send the `activate` message to</span>
+<span class="sd">        the nodes chosen by :func:`Activator.nodes_to_activate`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_to_activate</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="s">&#39;activate&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Activator.destroy_nodes"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.destroy_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">destroy_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        At each step is called to send the `kill` message to</span>
+<span class="sd">        the nodes chosen by :func:`Activator.nodes_to_destroy`.</span>
+
+<span class="sd">        The collection of nodes to be destroyed is kept in an</span>
+<span class="sd">        attribute named `dying_nodes`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dying_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_to_destroy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dying_nodes</span><span class="p">:</span>
+            <span class="c"># notice: this is &quot;beautifully&quot; queued</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="s">&#39;kill&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Activator.create_nodes"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.create_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">create_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        At each step is called to require from the :class:`NodeManager`</span>
+<span class="sd">        the creation of the nodes returned by</span>
+<span class="sd">        :func:`Activator.nodes_to_activate`.</span>
+
+<span class="sd">        The collection of nodes just created is kept in an</span>
+<span class="sd">        attribute named `fresh_nodes`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">to_create</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_to_create</span><span class="p">()</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="n">SequenceAsyncResult</span><span class="p">(</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">NodeManager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;create_node&#39;</span><span class="p">,</span>
+                       <span class="n">cls</span><span class="o">=</span><span class="n">node_class</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">node_parameters</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">node_class</span><span class="p">,</span> <span class="n">node_parameters</span> <span class="ow">in</span> <span class="n">to_create</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fresh_nodes</span> <span class="o">=</span> <span class="n">node_ids</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Activator.simulation_ended"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.simulation_ended">[docs]</a>    <span class="k">def</span> <span class="nf">simulation_ended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Informs the :class:`NodeManager` that the simulation ended.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">NodeManager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;simulation_ended&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Activator.tick"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.tick">[docs]</a>    <span class="k">def</span> <span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes the tick message from the clock.</span>
+
+<span class="sd">        First, nodes are destroyed. Then new nodes are created.</span>
+<span class="sd">        Eventually, the nodes are activated.</span>
+
+<span class="sd">        Override this to change the order in which the operations</span>
+<span class="sd">        occur. The order was chosen because in this way the newly</span>
+<span class="sd">        created nodes can be activated immediately (otherwise,</span>
+<span class="sd">        if the activation step did not follow the creation step,</span>
+<span class="sd">        they would not be available).</span>
+
+<span class="sd">        Similartly, we do not want to spend time activating nodes</span>
+<span class="sd">        that are destroyed in this very step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">destroy_nodes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_nodes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate_nodes</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">signal_termination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">TerminationChecker</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;require_termination&#39;</span><span class="p">,</span>
+                  <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Activator.nodes_to_activate"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.nodes_to_activate">[docs]</a>    <span class="k">def</span> <span class="nf">nodes_to_activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override to determine which nodes need activation.</span>
+
+<span class="sd">        :return: a collection of the nodes to process.</span>
+<span class="sd">        :rtype: iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">random_selector</span><span class="o">.</span><span class="n">random_node</span><span class="p">()]</span>
+</div>
+<div class="viewcode-block" id="Activator.nodes_to_destroy"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.nodes_to_destroy">[docs]</a>    <span class="k">def</span> <span class="nf">nodes_to_destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override to determine which nodes need destruction.</span>
+
+<span class="sd">        :return: a collection of the nodes to process.</span>
+<span class="sd">        :rtype: iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span>
+</div>
+<div class="viewcode-block" id="Activator.nodes_to_create"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Activator.nodes_to_create">[docs]</a>    <span class="k">def</span> <span class="nf">nodes_to_create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override to determine which nodes need creation.</span>
+
+<span class="sd">        :return: a collection of the nodes to process.</span>
+<span class="sd">        :rtype: iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">SyncActivator</span><span class="p">(</span><span class="n">Activator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This Activator variant always waits for the nodes to acknowledge the</span>
+<span class="sd">    activate message, thus making it essentially serial.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">activate_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_to_activate</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">:</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="s">&#39;activate&#39;</span><span class="p">)</span>
+            <span class="n">done</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">BaseClock</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">Agent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Basic clock.</span>
+
+<span class="sd">    .. warning:</span>
+<span class="sd">        Use the provided SynchronousClock or AsynchronousClock.</span>
+
+<span class="sd">        This can also be sub-classed to provide different behavior.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;clock&#39;</span>
+    <span class="n">activator_can_terminate</span> <span class="o">=</span> <span class="n">false</span><span class="p">()</span>
+    <span class="n">clock_loop_g</span> <span class="o">=</span> <span class="n">Instance</span><span class="p">(</span><span class="n">gevent</span><span class="o">.</span><span class="n">Greenlet</span><span class="p">)</span>
+
+    <span class="n">active</span> <span class="o">=</span> <span class="n">true</span><span class="p">(</span><span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">observers</span> <span class="o">=</span> <span class="n">List</span>
+
+    <span class="k">def</span> <span class="nf">register_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">unregister_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">BaseClock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">LinkedCompleted</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">start_clock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Here the clock actually starts ticking.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clock_loop_g</span> <span class="o">=</span> <span class="n">gevent</span><span class="o">.</span><span class="n">spawn_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clock_loop</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">positive_termination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">originator</span><span class="p">,</span> <span class="n">motive</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">originator</span> <span class="o">==</span> <span class="n">TerminationChecker</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clock_loop_g</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">clock_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">send_tick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="s">&#39;ticked&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Activator</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;tick&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">send_simulation_ended</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Activator</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;simulation_ended&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">simulation_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_simulation_ended</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Logger</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;stop_receiving&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">ask_to_terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+            <span class="n">termination</span><span class="o">.</span><span class="n">TerminationChecker</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;check&#39;</span><span class="p">,</span>
+            <span class="n">requester</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AsyncClock"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.AsyncClock">[docs]</a><span class="k">class</span> <span class="nc">AsyncClock</span><span class="p">(</span><span class="n">BaseClock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Asynchronous Clock.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">remaining_ticks</span> <span class="o">=</span> <span class="n">Int</span>
+
+    <span class="k">def</span> <span class="nf">clock_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_ticks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_tick</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remaining_ticks</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulation_end</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="Clock"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Clock">[docs]</a><span class="k">class</span> <span class="nc">Clock</span><span class="p">(</span><span class="n">BaseClock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Synchronous Clock.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">clock_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+            <span class="n">waiting</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_tick</span><span class="p">()</span>
+            <span class="n">waiting</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="n">should_terminate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask_to_terminate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">should_terminate</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulation_end</span><span class="p">()</span>
+
+</div>
+<span class="k">class</span> <span class="nc">AdditionalAgentComponentBuilder</span><span class="p">(</span><span class="n">ComponentBuilder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility class that the :class:`Simulation` uses to create</span>
+<span class="sd">    additional roles.</span>
+
+<span class="sd">    This is mostly uninteresting for users.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">additional_agent_line</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">component_name</span><span class="p">,</span> <span class="n">gfa</span><span class="p">,</span> <span class="n">start_after_clock</span><span class="p">)</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_additional_agent_line</span><span class="p">(</span><span class="n">additional_agent_line</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_after_clock</span> <span class="o">=</span> <span class="n">start_after_clock</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AdditionalAgentComponentBuilder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+            <span class="n">context</span><span class="p">,</span> <span class="n">component_name</span><span class="p">,</span> <span class="n">gfa</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse_additional_agent_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_agent_line</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">component_name</span><span class="p">,</span> <span class="n">gfa</span><span class="p">,</span>
+             <span class="n">start_after_clock</span><span class="p">)</span> <span class="o">=</span> <span class="n">additional_agent_line</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">component_name</span> <span class="o">=</span> <span class="n">additional_agent_line</span>
+            <span class="n">start_after_clock</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">gfa</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">additional_agent_line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">component_name</span><span class="p">,</span> <span class="n">gfa</span><span class="p">)</span> <span class="o">=</span> <span class="n">additional_agent_line</span>
+                <span class="n">start_after_clock</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">component_name</span> <span class="o">=</span> <span class="n">additional_agent_line</span>
+                <span class="n">start_after_clock</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">gfa</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">component_name</span><span class="p">,</span> <span class="n">gfa</span><span class="p">,</span> <span class="n">start_after_clock</span>
+
+
+<div class="viewcode-block" id="Simulation"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation">[docs]</a><span class="k">class</span> <span class="nc">Simulation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A subclass of Simulation describes a specific kind of simulation.</span>
+
+<span class="sd">    Some parameters have to be overridden to customize behavior. Most of</span>
+<span class="sd">    these parameters may be class parameters in the overridden class as well</span>
+<span class="sd">    as instance variables. It is for example acceptable to define an</span>
+<span class="sd">    enclosed class `activator_type` that &quot;satisfies&quot; the need for an :func:`activator_type`</span>
+<span class="sd">    attribute.</span>
+
+<span class="sd">        1. :func:`Simulation.activator_type` : the callable that creates the activator_type for the simulation</span>
+<span class="sd">        2. :func:`Simulation.graph_type` : the callable that creates the graph which holds the network.</span>
+<span class="sd">        3. :func:`Simulation.clock_type` : the callable that creates the clock_type in the simulation</span>
+<span class="sd">        4. :func:`Simulation.command_line_options`</span>
+<span class="sd">        5. :func:`Simulation.configurator_type`</span>
+
+<span class="sd">    Of these, :func:`Simulation.activator_type`, :func:`Simulation.graph_type`,</span>
+<span class="sd">    :func:`Simulation.command_line_options` and</span>
+<span class="sd">    :func:`Simulation.clock_type` have sensible default values (respectively,</span>
+<span class="sd">    :class:`Activator`, :class:`graph.`,</span>
+<span class="sd">    a list of default options and :class:`Clock`.</span>
+<span class="sd">    The other arguments need to be supplied by the subclass.</span>
+
+<span class="sd">    Notice that command_line_options are scanned along the inheritance</span>
+<span class="sd">    tree and put all together in a single list before being processed.</span>
+<span class="sd">    As a consequence it is an error to choose options with names already</span>
+<span class="sd">    used in superclasses. As the Simulation class hierarchies are meant</span>
+<span class="sd">    to be small, this should not be a problem and greatly simplify the</span>
+<span class="sd">    design.</span>
+
+<span class="sd">    The preferred way to deal with these options is like::</span>
+
+<span class="sd">        class SimulationSubclass(Simulation):</span>
+<span class="sd">            class activator_type(Activator):</span>
+<span class="sd">                # ...</span>
+
+<span class="sd">            class configurator_type(generation.BasicConfigurator):</span>
+<span class="sd">                node_type = Node</span>
+<span class="sd">                node_options = {...}</span>
+<span class="sd">                options = {...}</span>
+
+<span class="sd">            command_line_options = (</span>
+<span class="sd">                (&#39;-b&#39;, &#39;--bar&#39;, dict(default=..., type=...))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">command_line_options</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&quot;-s&quot;</span><span class="p">,</span> <span class="s">&quot;--steps&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Each option line is in the form:</span>
+<span class="sd">        1. (short_option_name, long_option_name, parameters)</span>
+<span class="sd">        2. (long_option_name, parameters)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">additional_agents</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="n">activator_type</span> <span class="o">=</span> <span class="n">Activator</span>
+    <span class="n">graph_type</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">default_graph</span>
+    <span class="n">clock_type</span> <span class="o">=</span> <span class="n">Clock</span>
+    <span class="n">logger_type</span> <span class="o">=</span> <span class="n">Logger</span>
+    <span class="n">termination_checker_type</span> <span class="o">=</span> <span class="n">TerminationChecker</span>
+    <span class="n">configurator_type</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">agent_db_type</span> <span class="o">=</span> <span class="n">agent_db</span><span class="o">.</span><span class="n">AgentDB</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">agent_db_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">pickling_module</span><span class="o">=</span><span class="n">JSONPickler</span><span class="p">(),</span>
+            <span class="n">storage</span><span class="o">=</span><span class="nb">dict</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">termination_checker_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">termination</span><span class="o">.</span><span class="n">count_down</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">termination_checker_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span>
+            <span class="n">conditions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">termination_checker_conditions</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        During the initialization step we create a new graph according to</span>
+<span class="sd">        the property graph_type. Additional parameters can be passed to</span>
+<span class="sd">        graph_type setting the attribute graph_options to a dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direct_setattr</span><span class="p">(</span>
+            <span class="s">&#39;_simulation_parameters&#39;</span><span class="p">,</span>
+            <span class="p">{</span><span class="s">&#39;graph&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_parameters</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c"># do not register the node_add because that is done when</span>
+        <span class="c"># the id is extracted from id_manager</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">timing</span><span class="o">.</span><span class="n">TimeLogger</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_book</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">remove_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cli_args_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cli_args_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">direct_setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                    <span class="s">&#39;Read only attribute </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setup_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">force_cli</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">cli_args_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_parameters</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">force_cli</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_parameters</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="n">cli_args_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build_parameters</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">force_cli</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">gather_from_ancestors</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="s">&#39;command_line_options&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="n">configuration_manager</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">ConfigurationManager</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">args</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force_cli</span><span class="p">:</span>
+            <span class="n">configuration_manager</span><span class="o">.</span><span class="n">consider_command_line</span><span class="p">()</span>
+        <span class="n">configuration_manager</span><span class="o">.</span><span class="n">consider</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">configuration_manager</span><span class="o">.</span><span class="n">consider</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">cli_args_dict</span> <span class="o">=</span> <span class="n">configuration_manager</span><span class="o">.</span><span class="n">process</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cli_args_dict</span>
+
+<div class="viewcode-block" id="Simulation.setup"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is called before the simulation starts.</span>
+
+<span class="sd">        The Graph is instantiated here. Ensure to call the base</span>
+<span class="sd">        version if overridden.</span>
+
+<span class="sd">        The graph is created using the component system.</span>
+<span class="sd">        Use graph_type to customize the kind of graph backend.</span>
+<span class="sd">        Use graph_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">graph_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;graph&#39;</span><span class="p">)</span>
+        <span class="n">graph_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">,</span>
+            <span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_agent_db"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_agent_db">[docs]</a>    <span class="k">def</span> <span class="nf">create_agent_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the AgentDB.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use agent_db_type to customize the kind.</span>
+<span class="sd">        Use agent_db_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">agent_db_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;agent_db&#39;</span><span class="p">)</span>
+        <span class="n">agent_db_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_address_book"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_address_book">[docs]</a>    <span class="k">def</span> <span class="nf">create_address_book</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the AddressBook.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use address_book_type to customize the kind.</span>
+<span class="sd">        Use address_book_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_address_book</span> <span class="o">=</span> <span class="n">addressing</span><span class="o">.</span><span class="n">FlatAddressBook</span><span class="p">()</span>
+        <span class="n">main_address_book</span> <span class="o">=</span> <span class="n">addressing</span><span class="o">.</span><span class="n">FlatAddressBook</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_book</span> <span class="o">=</span> <span class="n">addressing</span><span class="o">.</span><span class="n">AutoResolvingAddressBook</span><span class="p">(</span>
+            <span class="n">main</span><span class="o">=</span><span class="n">main_address_book</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node_address_book</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="o">.</span><span class="n">add_resolver</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">isNumberType</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="o">.</span><span class="n">add_resolver</span><span class="p">(</span><span class="s">&#39;main&#39;</span><span class="p">,</span>
+                                       <span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_logger"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_logger">[docs]</a>    <span class="k">def</span> <span class="nf">create_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Logger.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use logger_type to customize the kind.</span>
+<span class="sd">        Use logger_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;logger&#39;</span><span class="p">)</span>
+        <span class="n">logger_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_termination_checker"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_termination_checker">[docs]</a>    <span class="k">def</span> <span class="nf">create_termination_checker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the TerminationChecker.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use termination_checker_type to customize the kind.</span>
+<span class="sd">        Use termination_checker_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">termination_checker_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s">&#39;termination_checker&#39;</span><span class="p">)</span>
+        <span class="n">termination_checker_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">termination_checker</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_configurator"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_configurator">[docs]</a>    <span class="k">def</span> <span class="nf">create_configurator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Configurator agent.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use configurator_type to customize the kind.</span>
+<span class="sd">        Use configurator_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">configurator_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s">&#39;configurator&#39;</span><span class="p">,</span> <span class="n">gather_from_ancestors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">configurator_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">,</span>
+            <span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="n">full_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_node_manager"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_node_manager">[docs]</a>    <span class="k">def</span> <span class="nf">create_node_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the NodeManager.</span>
+
+<span class="sd">        The graph must have been created before calling this.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_manager</span> <span class="o">=</span> <span class="n">NodeManager</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_service_agents"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_service_agents">[docs]</a>    <span class="k">def</span> <span class="nf">create_service_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Access the component system to create:</span>
+<span class="sd">        1. agent db</span>
+<span class="sd">        2. address book</span>
+<span class="sd">        3. logger</span>
+<span class="sd">        4. termination checker</span>
+<span class="sd">        5. configurator</span>
+<span class="sd">        6. node manager (no component system)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_agent_db</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_address_book</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_termination_checker</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_configurator</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_node_manager</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">link_node_manager_with_configurator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># FIXME: clean this code! Too much dependence from internals!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_manager</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configurator</span><span class="o">.</span><span class="n">_greeenlet</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configurator</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_manager</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configurator</span><span class="o">.</span><span class="n">_greeenlet</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulation.pre_configure_network"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.pre_configure_network">[docs]</a>    <span class="k">def</span> <span class="nf">pre_configure_network</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts the NodeManager and the Configurator so that the initial</span>
+<span class="sd">        setup can occur.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_manager</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">configurator</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">link_node_manager_with_configurator</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_activator"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_activator">[docs]</a>    <span class="k">def</span> <span class="nf">create_activator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Activator.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use activator_type to customize the kind.</span>
+<span class="sd">        Use activator_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">activator_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s">&#39;activator&#39;</span><span class="p">,</span> <span class="n">gather_from_ancestors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">activator_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">,</span>
+                                <span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activator</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_clock"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_clock">[docs]</a>    <span class="k">def</span> <span class="nf">create_clock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Clock.</span>
+
+<span class="sd">        Since it uses the component system, it does not need to be overridden.</span>
+<span class="sd">        Use clock_type to customize the kind.</span>
+<span class="sd">        Use clock_options to specify which arguments need to be passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">clock_builder</span> <span class="o">=</span> <span class="n">ComponentBuilder</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s">&#39;clock&#39;</span><span class="p">)</span>
+        <span class="n">clock_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_additional_agents"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_additional_agents">[docs]</a>    <span class="k">def</span> <span class="nf">create_additional_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates all the additional agents.</span>
+
+<span class="sd">        To use this, provide &lt;role&gt;_type and &lt;role&gt;_options attributes and</span>
+<span class="sd">        the additional_agents attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">additional_agents</span> <span class="o">=</span> <span class="n">gather_from_ancestors</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s">&#39;additional_agents&#39;</span><span class="p">,</span> <span class="n">acc_type</span><span class="o">=</span><span class="nb">set</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">late_start</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">additional_agent_line</span> <span class="ow">in</span> <span class="n">additional_agents</span><span class="p">:</span>
+            <span class="n">component_builder</span> <span class="o">=</span> <span class="n">AdditionalAgentComponentBuilder</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">additional_agent_line</span><span class="p">)</span>
+            <span class="n">component</span> <span class="o">=</span> <span class="n">component_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+                <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_simulation_parameters</span><span class="p">,</span> <span class="n">set_</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">component_builder</span><span class="o">.</span><span class="n">start_after_clock</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">late_start</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">component</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Simulation.create_simulation_agents"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.create_simulation_agents">[docs]</a>    <span class="k">def</span> <span class="nf">create_simulation_agents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Activator, the Clock and the additional agents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_activator</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_clock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_additional_agents</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">start_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">start_clock</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">late_start</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_db</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulation.run"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">force_cli</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the simulation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args: a string of command line options parsed with</span>
+<span class="sd">                  :func:`parse_arguments`.</span>
+<span class="sd">            force_cli: forces the evaluation of the command</span>
+<span class="sd">                       line arguments even if args is not None</span>
+<span class="sd">            `**kwargs`: option relevant for the model can be passed</span>
+<span class="sd">                as keyword options and they override values in args.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The current simulation so that it is easier to create one-liners</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            The idea here is either to call this method with all</span>
+<span class="sd">            keyword arguments or with no arguments at all (in the case the</span>
+<span class="sd">            program is run as a standalone script). However, it also makes</span>
+<span class="sd">            sense to override (in the standalone script case) individual</span>
+<span class="sd">            options.  Deliberately mixing arguments passed with an array in</span>
+<span class="sd">            args and keywords arguments (although working) is strongly</span>
+<span class="sd">            discouraged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_parameters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_parameters</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">force_cli</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+        <span class="k">print</span> <span class="s">&#39;Initial setup...&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_service_agents</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_simulation_agents</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;Configuring network...&#39;</span>
+        <span class="k">with</span> <span class="n">timing</span><span class="o">.</span><span class="n">Timer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pre_configure_network</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;Starting simulation...&#39;</span>
+        <span class="k">with</span> <span class="n">timing</span><span class="o">.</span><span class="n">Timer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_simulation</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="k">def</span> <span class="nf">exception_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">node</span><span class="o">.</span><span class="n">exception</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Simulation.handle"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a handle to the graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">handle</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Simulation.motive"><a class="viewcode-back" href="../../api.html#pynetsym.simulation.Simulation.motive">[docs]</a>    <span class="k">def</span> <span class="nf">motive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the reason why the simulation stopped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_checker</span><span class="o">.</span><span class="n">motive</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" >pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SIR_model &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for SIR_model</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SIR Model</span>
+
+<span class="sd">Pastor-Satorras R, Vespignani A (2001) Epidemic spreading in scale-free networks. Phys Rev Lett</span>
+<span class="sd">86:3200-3203</span>
+
+<span class="sd">To run this you need a MongoDB active!</span>
+<span class="sd">I usually just do::</span>
+
+<span class="sd">    $ mongod --dbpath=mdb&amp;</span>
+
+<span class="sd">where mdb is the directory where mongo stuff is placed.</span>
+<span class="sd">I retrieve the data with the script &quot;read_from_mongo.py&quot; with</span>
+<span class="sd">the appropriate options.</span>
+
+<span class="sd">In order to create the HDF5 file that is the starting network,</span>
+<span class="sd">`make_er.py` can be used.</span>
+
+<span class="sd">For example::</span>
+
+<span class="sd">    python make_er.py -n 1000 -m 120 -o N1KM120.h5</span>
+
+<span class="sd">and then something on the lines of::</span>
+
+<span class="sd">    python SIR_model.py --h5-file N1KM120.h5 -p 1.0 -r 0.4 -f 0.01</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">traits.trait_types</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">Int</span><span class="p">,</span> <span class="n">CInt</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">import</span> <span class="nn">gevent</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">Agent</span>
+
+<span class="kn">import</span> <span class="nn">pynetsym</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym.simulation</span> <span class="kn">import</span> <span class="n">BaseClock</span>
+<span class="kn">from</span> <span class="nn">pynetsym.configurators</span> <span class="kn">import</span> <span class="n">BasicH5Configurator</span>
+<span class="kn">from</span> <span class="nn">pynetsym.termination.conditions</span> <span class="kn">import</span> <span class="n">always_true</span>
+<span class="kn">from</span> <span class="nn">pynetsym.graph</span> <span class="kn">import</span> <span class="n">BasicH5Graph</span>
+<span class="kn">from</span> <span class="nn">pynetsym.agent_db</span> <span class="kn">import</span> <span class="n">MongoAgentDB</span>
+
+<span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span>
+
+
+
+
+<div class="viewcode-block" id="Recorder"><a class="viewcode-back" href="../models.html#SIR_model.Recorder">[docs]</a><span class="k">class</span> <span class="nc">Recorder</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Recorder Agent keeps track of the number of</span>
+<span class="sd">    susceptible, infected and recovered nodes at each step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;recorder&#39;</span>
+    <span class="n">current_time</span> <span class="o">=</span> <span class="n">Int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;steps&#39;</span><span class="p">,</span> <span class="s">&#39;graph&#39;</span><span class="p">,</span> <span class="p">}</span>
+
+<div class="viewcode-block" id="Recorder.setup"><a class="viewcode-back" href="../models.html#SIR_model.Recorder.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialization of the agent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">susceptible</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infected</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># opens a connection to Mongo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">()</span>
+        <span class="c"># resets the stats of old simulations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">drop_database</span><span class="p">(</span><span class="s">&#39;stats&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">distributions</span>
+
+        <span class="c"># tells the clock that it want to be notified when</span>
+        <span class="c"># a new step begins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">BaseClock</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                  <span class="s">&#39;register_observer&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Recorder.ticked"><a class="viewcode-back" href="../models.html#SIR_model.Recorder.ticked">[docs]</a>    <span class="k">def</span> <span class="nf">ticked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Receives this message from the Clock.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">insert</span><span class="p">({</span>
+            <span class="s">&#39;current_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">,</span>
+            <span class="s">&#39;susceptible&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">susceptible</span><span class="p">,</span>
+            <span class="s">&#39;infected&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">infected</span><span class="p">,</span>
+            <span class="s">&#39;recovered&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+=</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Recorder.node_infected"><a class="viewcode-back" href="../models.html#SIR_model.Recorder.node_infected">[docs]</a>    <span class="k">def</span> <span class="nf">node_infected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The Activator signals each node that is infected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">susceptible</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infected</span> <span class="o">+=</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Recorder.node_recovered"><a class="viewcode-back" href="../models.html#SIR_model.Recorder.node_recovered">[docs]</a>    <span class="k">def</span> <span class="nf">node_recovered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The Activator signals each node that recovers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infected</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span> <span class="o">+=</span> <span class="mi">1</span>
+
+</div></div>
+<div class="viewcode-block" id="AdvancedRecorder"><a class="viewcode-back" href="../models.html#SIR_model.AdvancedRecorder">[docs]</a><span class="k">class</span> <span class="nc">AdvancedRecorder</span><span class="p">(</span><span class="n">Recorder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In addition to what the Record does, the AdvancedRecorder</span>
+<span class="sd">    also tracks when each individual node was infected and</span>
+<span class="sd">    when it did recover.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AdvancedRecorder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">infections</span>
+
+    <span class="k">def</span> <span class="nf">node_infected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AdvancedRecorder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">node_infected</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infections</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">node</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">node_recovered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AdvancedRecorder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">node_recovered</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infections</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">node</span><span class="p">)),</span>
+                <span class="p">{</span><span class="s">&#39;$set&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)})</span>
+</div>
+<span class="k">class</span> <span class="nc">Activator</span><span class="p">(</span><span class="n">pynetsym</span><span class="o">.</span><span class="n">Activator</span><span class="p">):</span>
+    <span class="n">infected_nodes</span> <span class="o">=</span> <span class="n">Set</span><span class="p">(</span><span class="n">CInt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">infected_nodes</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Activator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">tick</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># no more infected nodes, we can just quit!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">signal_termination</span><span class="p">(</span><span class="s">&#39;No more infected&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">infected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Whenever a node is infected, it notifies the Activator.</span>
+
+<span class="sd">        The activator keeps track of the infected nodes,</span>
+<span class="sd">        which are the only ones that receive an `activate` message.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infected_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Recorder</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;node_infected&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">not_infected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Whenever a node recovers, it notifies the Activator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infected_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Recorder</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;node_recovered&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">nodes_to_activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Only the infected nodes are activated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">infected_nodes</span>
+
+
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">pynetsym</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s">&#39;S&#39;</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;R&#39;</span><span class="p">)</span>
+    <span class="n">recovery_rate</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">infection_rate</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">spread_out</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="s">&#39;I&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Activator</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;infected&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">infect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;S&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;I&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Activator</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;infected&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;I&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">spread_out</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">infection_rate</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">infection_rate</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s">&#39;infect&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spread_out</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">recovery_rate</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s">&#39;R&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Activator</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;not_infected&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Simulation</span><span class="p">(</span><span class="n">pynetsym</span><span class="o">.</span><span class="n">Simulation</span><span class="p">):</span>
+    <span class="n">default_infection_rate</span> <span class="o">=</span> <span class="mf">1.</span>
+    <span class="n">default_recovery_rate</span> <span class="o">=</span> <span class="mf">1.</span>
+    <span class="n">default_infected_rate</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+    <span class="n">agent_db_type</span> <span class="o">=</span> <span class="n">MongoAgentDB</span>
+    <span class="n">agent_db_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">recorder_type</span> <span class="o">=</span> <span class="n">Recorder</span>
+    <span class="c"># recorder_type = AdvancedRecorder</span>
+
+    <span class="n">additional_agents</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;recorder&#39;</span><span class="p">,</span> <span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">termination_checker_type</span><span class="p">(</span><span class="n">Simulation</span><span class="o">.</span><span class="n">termination_checker_type</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">require_termination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">always_true</span><span class="p">(</span><span class="n">reason</span><span class="p">))</span>
+
+    <span class="n">command_line_options</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;-p&#39;</span><span class="p">,</span> <span class="s">&#39;--infection-rate&#39;</span><span class="p">,</span>
+         <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_infection_rate</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;-r&#39;</span><span class="p">,</span> <span class="s">&#39;--recovery-rate&#39;</span><span class="p">,</span>
+         <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_recovery_rate</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="s">&#39;--initial-infected-rate&#39;</span><span class="p">,</span>
+         <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_infected_rate</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;--h5-file&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+    <span class="n">activator_type</span> <span class="o">=</span> <span class="n">Activator</span>
+    <span class="n">activator_options</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c"># reads the network from and HDF5 file</span>
+    <span class="n">graph_type</span> <span class="o">=</span> <span class="n">BasicH5Graph</span>
+    <span class="n">graph_options</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;h5_file&#39;</span><span class="p">,</span> <span class="p">}</span>
+
+    <span class="k">class</span> <span class="nc">configurator_type</span><span class="p">(</span><span class="n">BasicH5Configurator</span><span class="p">):</span>
+        <span class="n">node_type</span> <span class="o">=</span> <span class="n">Node</span>
+        <span class="n">node_options</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;infection_rate&#39;</span><span class="p">,</span>
+            <span class="s">&#39;recovery_rate&#39;</span><span class="p">,}</span>
+
+        <span class="k">def</span> <span class="nf">initialize_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">infected_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_parameters</span><span class="p">[</span>
+                    <span class="s">&#39;initial_infected_rate&#39;</span><span class="p">]</span>
+            <span class="n">infected_population_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_identifiers</span><span class="p">)</span> <span class="o">*</span> <span class="n">infected_rate</span><span class="p">))</span>
+            <span class="n">infected_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+                    <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">node_identifiers</span><span class="p">,</span>
+                        <span class="n">infected_population_size</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sync_send_all</span><span class="p">(</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">node_identifiers</span><span class="p">,</span> <span class="s">&#39;initialize&#39;</span><span class="p">,</span>
+                   <span class="n">state</span><span class="o">=</span><span class="k">lambda</span> <span class="n">rid</span><span class="p">:</span> <span class="p">(</span><span class="s">&#39;I&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">rid</span> <span class="ow">in</span> <span class="n">infected_nodes</span><span class="p">)</span>
+                                            <span class="k">else</span> <span class="s">&#39;S&#39;</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">bench_mem</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;meliae-dump-&#39;</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">meliae</span> <span class="kn">import</span> <span class="n">scanner</span>
+        <span class="kn">import</span> <span class="nn">time</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gevent</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">scanner</span><span class="o">.</span><span class="n">dump_all_objects</span><span class="p">(</span>
+                <span class="s">&#39;</span><span class="si">%s%d</span><span class="s">.json&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()))</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
+
+    <span class="c">#gevent.spawn(bench_mem, 60.0 * 30.0)</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">force_cli</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="n">sim</span><span class="o">.</span><span class="n">motive</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

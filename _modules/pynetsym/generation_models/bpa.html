@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym.generation_models.bpa &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../../../index.html" />
+    <link rel="up" title="pynetsym" href="../../pynetsym.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../pynetsym.html" accesskey="U">pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym.generation_models.bpa</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Biased preferential attachment.</span>
+
+<span class="sd">Kumar R, Novak J, Tomkins A (2010) Structure and evolution of online social networks. In: Yu PSS,</span>
+<span class="sd">Han J, Faloutsos C (eds) Link mining: models, algorithms, and applications. Springer, New York,</span>
+<span class="sd">pp 337-357</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">fractions</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">traits.trait_types</span> <span class="kn">import</span> <span class="n">Float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Method</span>
+
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Simulation</span><span class="p">,</span> <span class="n">BasicConfigurator</span><span class="p">,</span> <span class="n">NodeManager</span>
+
+
+<span class="k">def</span> <span class="nf">distribution</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">fractions</span><span class="o">.</span><span class="n">Fraction</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Distribution components sum to one.&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Distribution should have three events.&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../../models.html#pynetsym.generation_models.bpa.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A BPA node.</span>
+
+<span class="sd">    If a strategy is specified, probability is ignored and strategy</span>
+<span class="sd">    is simply selected.</span>
+
+<span class="sd">    :param identifier: the node id</span>
+<span class="sd">    :param identifier: int</span>
+<span class="sd">    :param address_book: the address book</span>
+<span class="sd">    :param graph: the graph</span>
+<span class="sd">    :param gamma: the bias to select linkers</span>
+<span class="sd">    :param probability: the probability distribution of the nodes</span>
+<span class="sd">        behavior</span>
+<span class="sd">    :param strategy: the &quot;forced&quot; starting strategy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">Float</span>
+    <span class="n">probability</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">Float</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">Float</span><span class="p">)</span>
+    <span class="n">strategy</span> <span class="o">=</span> <span class="n">Method</span>
+
+    <span class="k">def</span> <span class="nf">can_be_collected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">_strategy_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">random_value</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">random_value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linker_strategy</span>
+        <span class="k">elif</span> <span class="n">random_value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inviter_strategy</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">passive_strategy</span>
+
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="k">def</span> <span class="nf">passive_strategy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>  <span class="c"># exactly what we want</span>
+
+    <span class="k">def</span> <span class="nf">inviter_strategy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">## Create a new node: as the node manager answers with a</span>
+        <span class="c">## created node message, then we can link there.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+            <span class="n">NodeManager</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;create_node&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Node</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">gamma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="n">probability</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">,</span>
+                <span class="n">strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">passive_strategy</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">created_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="s">&#39;accept_link&#39;</span><span class="p">,</span> <span class="n">originating_node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">linker_strategy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<span class="k">class</span> <span class="nc">BPA</span><span class="p">(</span><span class="n">Simulation</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">configurator_type</span><span class="p">(</span><span class="n">BasicConfigurator</span><span class="p">):</span>
+        <span class="n">node_type</span> <span class="o">=</span> <span class="n">Node</span>
+        <span class="n">node_options</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;probability&#39;</span><span class="p">,</span> <span class="s">&#39;gamma&#39;</span><span class="p">}</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;edges&#39;</span><span class="p">}</span>
+
+    <span class="n">command_line_options</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;-n&#39;</span><span class="p">,</span> <span class="s">&#39;--starting-network-size&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;--gamma&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;-p&#39;</span><span class="p">,</span> <span class="s">&#39;--probability&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;1/3:1/3:1/3&#39;</span><span class="p">,</span>
+                                     <span class="nb">type</span><span class="o">=</span><span class="n">distribution</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s">&#39;-e&#39;</span><span class="p">,</span> <span class="s">&#39;--edges&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)))</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">bpa</span> <span class="o">=</span> <span class="n">BPA</span><span class="p">()</span>
+    <span class="n">bpa</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../pynetsym.html" >pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

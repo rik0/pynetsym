@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym.nodes &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="pynetsym" href="../pynetsym.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" accesskey="U">pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym.nodes</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">traits.api</span> <span class="kn">as</span> <span class="nn">t</span>
+
+<span class="kn">import</span> <span class="nn">pynetsym.core</span> <span class="kn">as</span> <span class="nn">core</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">graph</span>
+<span class="kn">from</span> <span class="nn">pynetsym.node_manager</span> <span class="kn">import</span> <span class="n">NodeManager</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;Node&#39;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">Agent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Node in the social network.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Trait</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">IGraph</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">_node_manager</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Trait</span><span class="p">(</span><span class="n">NodeManager</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c">#_ = t.Disallow()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a Node in the network.</span>
+<span class="sd">        :param graph: the graph backing the social network</span>
+<span class="sd">        :type graph: storage.GraphWrapper</span>
+<span class="sd">        :return: the Node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">attributes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">deactivate_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">greenlet</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_manager</span><span class="o">.</span><span class="n">unset_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">greenlet</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address_book</span><span class="p">,</span> <span class="n">agent_db</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">address_book</span><span class="p">,</span> <span class="n">agent_db</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_manager</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">NodeManager</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_manager</span><span class="o">.</span><span class="n">setup_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Node-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="p">)</span>
+
+<div class="viewcode-block" id="Node.link_to"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node.link_to">[docs]</a>    <span class="k">def</span> <span class="nf">link_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criterion_or_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends an &#39;accept_link&#39; message to the specified node.</span>
+
+<span class="sd">        :param criterion_or_node: The node to link may be an identifier</span>
+<span class="sd">            or a callable extracting the node from the graph</span>
+<span class="sd">        :type criterion_or_node:</span>
+<span class="sd">            id | callable(Graph -&gt; Node)</span>
+<span class="sd">        :return: an asynchronous value representing whether the</span>
+<span class="sd">            connection succeeded or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">criterion_or_node</span><span class="p">):</span>
+            <span class="n">target_node</span> <span class="o">=</span> <span class="n">criterion_or_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_node</span> <span class="o">=</span> <span class="n">criterion_or_node</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">target_node</span><span class="p">,</span> <span class="s">&#39;accept_link&#39;</span><span class="p">,</span>
+                         <span class="n">originating_node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.unlink_from"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node.unlink_from">[docs]</a>    <span class="k">def</span> <span class="nf">unlink_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criterion_or_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends a &#39;drop_link&#39; message to the specified node.</span>
+
+<span class="sd">        :param criterion_or_node: The node to link may be an identifier</span>
+<span class="sd">            or a callable extracting the node from the graph</span>
+<span class="sd">        :type criterion_or_node:</span>
+<span class="sd">            id | callable(Graph -&gt; Node)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">criterion_or_node</span><span class="p">):</span>
+            <span class="n">target_node</span> <span class="o">=</span> <span class="n">criterion_or_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">handle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_node</span> <span class="o">=</span> <span class="n">criterion_or_node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">target_node</span><span class="p">,</span> <span class="s">&#39;drop_link&#39;</span><span class="p">,</span>
+                  <span class="n">originating_node</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.accept_link"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node.accept_link">[docs]</a>    <span class="k">def</span> <span class="nf">accept_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">originating_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accepts an &#39;accept_link&#39; message (modifying the network).</span>
+
+<span class="sd">        :param originating_node: the node that required the connection</span>
+<span class="sd">        :type originating_node: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">originating_node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Node.drop_link"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node.drop_link">[docs]</a>    <span class="k">def</span> <span class="nf">drop_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">originating_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accepts a &#39;drop_link&#39; message (modifying the network).</span>
+
+<span class="sd">        :param originating_node: the node that required the drop</span>
+<span class="sd">        :type originating_node: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">originating_node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Node.neighbors"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node.neighbors">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return an iterable with the neighbors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Node.can_be_collected"><a class="viewcode-back" href="../../api.html#pynetsym.nodes.Node.can_be_collected">[docs]</a>    <span class="k">def</span> <span class="nf">can_be_collected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return whether this agent can be collected.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            Defaults to true, do not override unless you know what</span>
+<span class="sd">            you are doing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" >pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

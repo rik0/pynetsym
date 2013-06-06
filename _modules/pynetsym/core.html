@@ -1,0 +1,675 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pynetsym.core &mdash; PyNetSym 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyNetSym 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="pynetsym" href="../pynetsym.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" accesskey="U">pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pynetsym.core</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">addressing</span>
+<span class="kn">from</span> <span class="nn">pynetsym</span> <span class="kn">import</span> <span class="n">agent_db</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+
+<span class="kn">import</span> <span class="nn">gevent</span>
+<span class="kn">import</span> <span class="nn">gevent.event</span> <span class="kn">as</span> <span class="nn">event</span>
+<span class="kn">import</span> <span class="nn">gevent.queue</span> <span class="kn">as</span> <span class="nn">queue</span>
+
+<span class="kn">from</span> <span class="nn">traits</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">t</span>
+<span class="kn">from</span> <span class="nn">pynetsym.error</span> <span class="kn">import</span> <span class="n">PyNetSymError</span>
+<span class="kn">from</span> <span class="nn">pynetsym.util</span> <span class="kn">import</span> <span class="n">SequenceAsyncResult</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cStringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">StringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;Agent&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Logger&#39;</span><span class="p">,</span>
+    <span class="s">&#39;MinimalAgentRuntime&#39;</span><span class="p">,</span>
+    <span class="s">&#39;get_logger&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Logger&#39;</span>
+<span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">NoMessage</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">,</span> <span class="n">PyNetSymError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">AgentError</span><span class="p">(</span><span class="n">PyNetSymError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="n">_M</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&#39;Message&#39;</span><span class="p">,</span> <span class="s">&#39;sender payload parameters&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Message</span><span class="p">(</span><span class="n">_M</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An immutable object that is used to send a message among agents.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">payload</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+
+    <span class="n">__str__</span> <span class="o">=</span> <span class="n">__repr__</span>
+
+
+<div class="viewcode-block" id="Agent"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent">[docs]</a><span class="k">class</span> <span class="nc">Agent</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">HasTraits</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An Agent is the basic class of the simulation.</span>
+
+<span class="sd">    Agents communicate asynchronously.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#DEBUG_RECEIVE = True</span>
+    <span class="c">#DEBUG_SEND = True</span>
+
+    <span class="n">_address_book</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Instance</span><span class="p">(</span>
+        <span class="n">addressing</span><span class="o">.</span><span class="n">AddressBook</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">_default_queue</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Instance</span><span class="p">(</span>
+        <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">_greenlet</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Instance</span><span class="p">(</span>
+        <span class="n">gevent</span><span class="o">.</span><span class="n">Greenlet</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">_node_db</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Instance</span><span class="p">(</span>
+        <span class="n">agent_db</span><span class="o">.</span><span class="n">IAgentStorage</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">Either</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">CInt</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Str</span><span class="p">)</span>
+
+    <span class="n">__</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">PythonValue</span><span class="p">(</span><span class="n">transient</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;[</span><span class="si">%s</span><span class="s">] I was caught with the hands in the jam!&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span>
+            <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_error_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">AgentError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sleep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="p">):</span>
+        <span class="n">gevent</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Agent.setup"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Additional initialization before the run loop goes here.</span>
+
+<span class="sd">        The default implementation is empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+</div>
+    <span class="k">def</span> <span class="nf">_compute_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">identifier</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">AgentError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> is not a valid Agent Id.&quot;</span> <span class="o">%</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">identifier</span>
+
+<div class="viewcode-block" id="Agent.start"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address_book</span><span class="p">,</span> <span class="n">agent_db</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start executing the agent.</span>
+
+<span class="sd">        :param address_book: the address book where the other agents references can be found.</span>
+<span class="sd">        :type address_book: :class:`addressing.AddressBook`</span>
+<span class="sd">        :param agent_db: the agent database that is used if this agent needs to be serialized</span>
+<span class="sd">        :type agent_db: :class:`agent_db.IAgentStorage`</span>
+<span class="sd">        :param identifier: this agent identifier. It is also added to the address book.</span>
+<span class="sd">        :type identifier: str | int</span>
+
+<span class="sd">        :return: the agent itself</span>
+<span class="sd">        :rtype: :class:`Agent`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_identifier</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span> <span class="o">=</span> <span class="n">address_book</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span> <span class="o">=</span> <span class="n">agent_db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span> <span class="o">=</span> <span class="n">gevent</span><span class="o">.</span><span class="n">Greenlet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">link_exception</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_error</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;on_completion&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">link_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_completion</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Agent.started"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.started">[docs]</a>    <span class="k">def</span> <span class="nf">started</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if the agent has been started.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">))</span>
+</div>
+    <span class="k">def</span> <span class="nf">_revert_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_source</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span>
+
+    <span class="k">def</span> <span class="nf">_create_error_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">ss</span><span class="p">,</span> <span class="bp">self</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">ss</span><span class="p">,</span> <span class="n">source</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">ss</span><span class="p">,</span> <span class="s">&#39;succesful:&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">successful</span><span class="p">()</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">ss</span><span class="p">,</span> <span class="s">&#39;value:&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">ss</span><span class="p">,</span> <span class="s">&#39;exception:&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">exception</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span> <span class="n">ss</span><span class="p">,</span> <span class="s">&#39;messages:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">():</span>
+                <span class="kn">import</span> <span class="nn">pprint</span>
+
+                <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">message</span> <span class="k">for</span> <span class="n">message</span><span class="p">,</span> <span class="n">_result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span><span class="o">.</span><span class="n">queue</span><span class="p">],</span>
+                    <span class="n">stream</span><span class="o">=</span><span class="n">ss</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ss</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Agent.on_error"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.on_error">[docs]</a>    <span class="k">def</span> <span class="nf">on_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This handler is called when an error arises in the greenlet executing the agent.</span>
+
+<span class="sd">        The default implementation logs the error. Other implementations may</span>
+<span class="sd">        take different actions.</span>
+
+<span class="sd">        :param source: the greenlet where the error originated.</span>
+<span class="sd">        :type source: gevent.Greenlet</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_error_text</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">put_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Agent.read"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the next message that was sent to this agent.</span>
+
+<span class="sd">        :param timeout: can specify a timeout</span>
+
+<span class="sd">        :return: (Message, event.AsyncResult)</span>
+<span class="sd">        :raise: NoMessage if no message arrives after timeout</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            It is not really meant to be called directly unless you are building a runloop.</span>
+<span class="sd">            Strictly speaking it is not non public, though.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;DEBUG_RECEIVE&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log_received</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">entry</span>
+        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoMessage</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_logger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span><span class="p">,</span> <span class="n">stream</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Agent.send_log"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.send_log">[docs]</a>    <span class="k">def</span> <span class="nf">send_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logs the message to the specified stream.</span>
+<span class="sd">        :param message: the message to be logged</span>
+<span class="sd">        :type message: :class:`Message`</span>
+<span class="sd">        :param stream: the stream where the message will be printed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_logger</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">put_log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Agent.log_sent"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.log_sent">[docs]</a>    <span class="k">def</span> <span class="nf">log_sent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">receiver</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mainly a debug hook that is called every time a messgage is sent,</span>
+<span class="sd">        if the attribute DEBUG_SEND is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">gevent</span><span class="o">.</span><span class="n">getcurrent</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">gl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;{</span><span class="si">%s</span><span class="s">} SEND </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">gl</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">receiver</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;SEND </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">payload</span><span class="p">,</span> <span class="n">receiver</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_log</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Agent.log_received"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.log_received">[docs]</a>    <span class="k">def</span> <span class="nf">log_received</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mainly a debug hook that is called every time a message is received,</span>
+<span class="sd">        if the attribute DEBUG_RECEIVE is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gl</span> <span class="o">=</span> <span class="n">gevent</span><span class="o">.</span><span class="n">getcurrent</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">gl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;RECV {</span><span class="si">%s</span><span class="s">} </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">gl</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s">&quot;RECV </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg</span><span class="p">,)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_log</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_awaken_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">agent</span>
+
+    <span class="k">def</span> <span class="nf">_store_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_db</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_revert_start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_greenlet</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">receiver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">addressing</span><span class="o">.</span><span class="n">AddressingError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">receiver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_awaken_agent</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">agent_db</span><span class="o">.</span><span class="n">MissingNode</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">return</span> <span class="n">receiver</span>
+
+    <span class="k">def</span> <span class="nf">_handle_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">receiver</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;DEBUG_SEND&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_sent</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">receiver</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AsyncResult</span><span class="p">()</span>
+        <span class="n">receiver</span><span class="o">.</span><span class="n">deliver</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">_handle_no_receiver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_logger</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">put_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AsyncResult</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="Agent.send"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">receiver_id</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send a message to the specified agent.</span>
+
+<span class="sd">        :param receiver_id: the id of the receiving agent</span>
+<span class="sd">        :type receiver_id: int|str</span>
+<span class="sd">        :param message_name: the name of the receiving agent method</span>
+<span class="sd">        :type message_name: str</span>
+<span class="sd">        :param `**additional_parameters`: additional parameters to be passed</span>
+<span class="sd">            to the function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">receiver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">receiver_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">addressing</span><span class="o">.</span><span class="n">AddressingError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_no_receiver</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># FIXME: no true message passing semantics!</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">additional_parameters</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">receiver</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Agent.sync_send"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.sync_send">[docs]</a>    <span class="k">def</span> <span class="nf">sync_send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">receiver_id</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="o">**</span><span class="n">additional_parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Like :func:`Agent.send`, but explicitly blocks until the message</span>
+<span class="sd">            is processed by the receiver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">receiver_id</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">additional_parameters</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_send_all_fixed_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_parameters</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">receivers</span><span class="p">):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">additional_parameters</span><span class="p">)</span>
+        <span class="n">result_sequence</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">receiver_id</span> <span class="ow">in</span> <span class="n">receivers</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">receiver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">receiver_id</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">addressing</span><span class="o">.</span><span class="n">AddressingError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_no_receiver</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">receiver</span><span class="p">)</span>
+            <span class="n">result_sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SequenceAsyncResult</span><span class="p">(</span><span class="n">result_sequence</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_send_all_multi_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additional_parameters</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">receivers</span><span class="p">):</span>
+        <span class="n">callable_stuff</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">func</span>
+                          <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">additional_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                          <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">func</span><span class="p">)}</span>
+        <span class="n">result_sequence</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">receiver_id</span> <span class="ow">in</span> <span class="n">receivers</span><span class="p">:</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">additional_parameters</span><span class="p">)</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">func</span><span class="p">(</span><span class="n">receiver_id</span><span class="p">)</span>
+                               <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">callable_stuff</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">receiver_id</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="o">**</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="n">result_sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SequenceAsyncResult</span><span class="p">(</span><span class="n">result_sequence</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Agent.send_all"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.send_all">[docs]</a>    <span class="k">def</span> <span class="nf">send_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">receivers</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Like :func:`Agent.send`, but sends the messages to every agent in receivers.</span>
+
+<span class="sd">        If some parameter in additional_parameters is a callable, it is called</span>
+<span class="sd">        for each agent in receivers with the agent id as a parameter and</span>
+<span class="sd">        the return value is sent instead of the callable.</span>
+
+<span class="sd">        This is used for customizing the message sent to each agent.</span>
+
+<span class="sd">        :param receivers: A collection of receivers</span>
+<span class="sd">        :type receivers: iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">callable</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">additional_parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_all_multi_params</span><span class="p">(</span>
+                <span class="n">additional_parameters</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">receivers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_all_fixed_params</span><span class="p">(</span>
+                <span class="n">additional_parameters</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="n">receivers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Agent.sync_send_all"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.sync_send_all">[docs]</a>    <span class="k">def</span> <span class="nf">sync_send_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">receivers</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Like :func:`Agent.send_all`, but explicitly blocks until the message</span>
+<span class="sd">            is processed by the receiver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_all</span><span class="p">(</span><span class="n">receivers</span><span class="p">,</span> <span class="n">message_name</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">additional_parameters</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Agent.process"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes the message.</span>
+
+<span class="sd">        This means calling the message payload with self as argument.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            This is not meant to be used direclty, unless you are writing</span>
+<span class="sd">            a runloop.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">action_name</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">payload</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bound_method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsupported_message</span><span class="p">(</span>
+                <span class="n">action_name</span><span class="p">,</span> <span class="o">**</span><span class="n">message</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">bound_method</span><span class="p">(</span><span class="o">**</span><span class="n">message</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">bound_method</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Agent.can_be_collected"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.can_be_collected">[docs]</a>    <span class="k">def</span> <span class="nf">can_be_collected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override this if the Agent should not be collected (i.e., serialized</span>
+<span class="sd">            and put to sleep in the agent_db)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="k">def</span> <span class="nf">_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override to customize the agent&#39;s behavior.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Agent.run_loop"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.run_loop">[docs]</a>    <span class="k">def</span> <span class="nf">run_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Agent main run loop.</span>
+
+<span class="sd">            1. read a message from the queue</span>
+<span class="sd">            2. process the message and elaborate the answer</span>
+<span class="sd">            3. if the answer is not None, send it to the original message</span>
+<span class="sd">            4. release control</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">message</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">message</span><span class="p">,</span> <span class="n">result</span>
+            <span class="k">except</span> <span class="n">NoMessage</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_be_collected</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_store_agent</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cooperate</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Agent.unsupported_message"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.unsupported_message">[docs]</a>    <span class="k">def</span> <span class="nf">unsupported_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_parameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prints out something if we received a message we could not process.</span>
+
+<span class="sd">        This is meant to be overridden, if a different behavior is desired.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> received &quot;</span><span class="si">%s</span><span class="s">&quot; message with parameters </span><span class="si">%s</span><span class="s">: &#39;</span>
+             <span class="s">&#39;could not process.&#39;</span><span class="p">)</span> <span class="o">%</span>
+            <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">additional_parameters</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Agent.deliver"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.deliver">[docs]</a>    <span class="k">def</span> <span class="nf">deliver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delivers message to this agent.</span>
+
+<span class="sd">        Typically this is not called directly by other agents.</span>
+<span class="sd">        Use the source agent send message, instead.</span>
+
+<span class="sd">        :param message: the message</span>
+<span class="sd">        :type message: Message</span>
+<span class="sd">        :param result: dataflow-like object we use to feed-back answers</span>
+<span class="sd">        :type result: event.AsyncResult</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Agent.cooperate"><a class="viewcode-back" href="../../api.html#pynetsym.core.Agent.cooperate">[docs]</a>    <span class="k">def</span> <span class="nf">cooperate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Release control.</span>
+
+<span class="sd">        Usually this is not explicitly needed.</span>
+<span class="sd">        If in doubt, do not use it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gevent</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="n">__repr__</span> <span class="o">=</span> <span class="n">__str__</span>
+
+</div>
+<div class="viewcode-block" id="Logger"><a class="viewcode-back" href="../../api.html#pynetsym.core.Logger">[docs]</a><span class="k">class</span> <span class="nc">Logger</span><span class="p">(</span><span class="n">Agent</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">SingletonHasTraits</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A system agents that is used to log stuff.</span>
+
+<span class="sd">    The agents expect at least one logger to be running.</span>
+<span class="sd">    Prebuilt agent environments (such as the :class:`simulation.Simulation`)</span>
+<span class="sd">    create a Logger.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DEBUG_RECEIVE</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">DEBUG_SEND</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;logger&#39;</span>
+    <span class="n">standard_stderr</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">error_stream</span><span class="o">=</span><span class="n">standard_stderr</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_stream</span> <span class="o">=</span> <span class="n">error_stream</span>
+
+<div class="viewcode-block" id="Logger.log_entry"><a class="viewcode-back" href="../../api.html#pynetsym.core.Logger.log_entry">[docs]</a>    <span class="k">def</span> <span class="nf">log_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an entry in the log.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">when</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">full_line</span> <span class="o">=</span> <span class="s">&#39;[</span><span class="si">%s</span><span class="s">: r</span><span class="si">%.3f</span><span class="s">] </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">(),</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">full_line</span> <span class="o">=</span> <span class="s">&#39;[</span><span class="si">%s</span><span class="s">: s</span><span class="si">%.3f</span><span class="s">] </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">when</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">full_line</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Logger.put_log"><a class="viewcode-back" href="../../api.html#pynetsym.core.Logger.put_log">[docs]</a>    <span class="k">def</span> <span class="nf">put_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The other agent can send a &quot;put_log&quot; message to the logger to</span>
+<span class="sd">        print a message on the default stream.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AsyncResult</span><span class="p">()</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span>
+                          <span class="s">&#39;log_entry&#39;</span><span class="p">,</span>
+                          <span class="nb">dict</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                               <span class="n">when</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deliver</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Logger.put_error"><a class="viewcode-back" href="../../api.html#pynetsym.core.Logger.put_error">[docs]</a>    <span class="k">def</span> <span class="nf">put_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The other agent can send a &quot;put_log&quot; message to the logger to</span>
+<span class="sd">        print an error on the default stream.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AsyncResult</span><span class="p">()</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="s">&#39;error_message&#39;</span><span class="p">,</span>
+                          <span class="nb">dict</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deliver</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Logger.stop_receiving"><a class="viewcode-back" href="../../api.html#pynetsym.core.Logger.stop_receiving">[docs]</a>    <span class="k">def</span> <span class="nf">stop_receiving</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send this message for killing the logger.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">message</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">message</span><span class="p">,</span> <span class="n">result</span>
+            <span class="k">except</span> <span class="n">NoMessage</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Logger.error_message"><a class="viewcode-back" href="../../api.html#pynetsym.core.Logger.error_message">[docs]</a>    <span class="k">def</span> <span class="nf">error_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method actually writes on the stream.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sender</span><span class="p">))</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="n">ss</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ss</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+
+</div></div>
+<div class="viewcode-block" id="get_logger"><a class="viewcode-back" href="../../api.html#pynetsym.core.get_logger">[docs]</a><span class="k">def</span> <span class="nf">get_logger</span><span class="p">(</span><span class="n">address_book</span><span class="p">,</span> <span class="n">node_db</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the default logger.</span>
+
+<span class="sd">    Factory function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">logger</span><span class="o">.</span><span class="n">started</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">address_book</span><span class="p">,</span> <span class="n">node_db</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logger</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_default_agent_db_factory</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">agent_db</span><span class="o">.</span><span class="n">AgentDB</span><span class="p">(</span>
+        <span class="n">agent_db</span><span class="o">.</span><span class="n">PythonPickler</span><span class="p">(),</span> <span class="nb">dict</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="MinimalAgentRuntime"><a class="viewcode-back" href="../../api.html#pynetsym.core.MinimalAgentRuntime">[docs]</a><span class="k">class</span> <span class="nc">MinimalAgentRuntime</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use this to establish a minimal agent runtime.</span>
+
+<span class="sd">    If a more elaborate runtime is being used, this is not needed.</span>
+<span class="sd">    Not necessary for Simulations: the Simulation class is just a more</span>
+<span class="sd">    elaborate runtime.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address_book_factory</span><span class="o">=</span><span class="n">addressing</span><span class="o">.</span><span class="n">FlatAddressBook</span><span class="p">,</span>
+            <span class="n">agent_db_factory</span><span class="o">=</span><span class="n">_default_agent_db_factory</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address_book</span> <span class="o">=</span> <span class="n">address_book_factory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_db</span> <span class="o">=</span> <span class="n">agent_db_factory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_agent</span><span class="p">(</span><span class="n">Logger</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">create_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">more_stuff</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">more_stuff</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">spawn_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">more_stuff</span><span class="p">):</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_agent</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">more_stuff</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">agent</span>
+
+    <span class="k">def</span> <span class="nf">start_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">address_book</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_db</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+
+</div>
+<span class="n">GreenletExit</span> <span class="o">=</span> <span class="n">gevent</span><span class="o">.</span><span class="n">GreenletExit</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyNetSym 0.7 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../pynetsym.html" >pynetsym</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Enrico Franchi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
